@@ -47,3 +47,4 @@ opt-level = 2
 # Local, documented patches (see MOBILE_PATCHES.md).
 [patch.crates-io]
 gpui-base = { path = "vendor/gpui-base" }
+gpui-fps = { path = "vendor/gpui-fps" }
