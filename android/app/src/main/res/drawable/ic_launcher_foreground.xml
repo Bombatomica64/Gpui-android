@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A 2x2 component grid with one tile highlighted. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFAFAFA" android:pathData="M34,34h18v18h-18z" />
+    <path android:fillColor="#FF71717A" android:pathData="M56,34h18v18h-18z" />
+    <path android:fillColor="#FF71717A" android:pathData="M34,56h18v18h-18z" />
+    <path android:fillColor="#FF3B82F6" android:pathData="M56,56h18v18h-18z" />
+</vector>
