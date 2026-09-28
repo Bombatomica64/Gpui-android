@@ -57,7 +57,7 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeOnCreate<'loca
     .resolve::<LogErrorAndDefault>();
     diagnostics::set_api_level(api_level);
     log::info!("LabActivity.onCreate (API {api_level}); starting GPUI render thread");
-    host::start_with_assets(gpui_kit::assets::Assets, crate::launch);
+    host::start_with_assets(gpui_kit::assets::AllAssets, crate::launch);
 }
 
 /// Android 13+ ships a COLRv1 emoji font that swash cannot draw; gpui-mobile only

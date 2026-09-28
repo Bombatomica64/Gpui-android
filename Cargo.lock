@@ -2435,6 +2435,7 @@ dependencies = [
  "log",
  "ndk",
  "ndk-sys",
+ "regex",
 ]
 
 [[package]]

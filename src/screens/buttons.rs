@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use gpui::{
     Anchor, Context, IntoElement, Keystroke, ParentElement, Render, SharedString, Styled, Window,
-    actions, prelude::*,
+    actions,
 };
 use gpui_kit::component::{
     IconName, Size,

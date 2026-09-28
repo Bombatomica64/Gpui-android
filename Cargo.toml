@@ -17,6 +17,7 @@ gpui-kit = { version = "=0.7.0", default-features = false, features = ["componen
 gpui-mobile = { package = "gpui-pre-mobile", path = "vendor/gpui-mobile", default-features = false, features = ["clipboard"] }
 anyhow = "1"
 log = "0.4"
+regex = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 
 [target.'cfg(target_os = "android")'.dependencies]

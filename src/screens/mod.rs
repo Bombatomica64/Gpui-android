@@ -3,7 +3,12 @@
 use gpui::{AnyView, App, Window};
 
 mod buttons;
+mod choice;
+mod number_otp;
+pub mod text_input;
+mod textarea;
 pub mod themes;
+mod toolbar;
 
 pub struct ScreenDef {
     pub title: &'static str,
@@ -30,6 +35,11 @@ macro_rules! screen {
 
 pub static SCREENS: &[ScreenDef] = &[
     screen!("Buttons", buttons::ButtonsScreen),
+    screen!("Toolbar", toolbar::ToolbarScreen),
+    screen!("Choice Controls", choice::ChoiceScreen),
+    screen!("Text Input", text_input::TextInputScreen),
+    screen!("Textarea & Editor", textarea::TextareaScreen),
+    screen!("Number & OTP", number_otp::NumberOtpScreen),
     screen!("Themes", themes::ThemesScreen),
 ];
 
