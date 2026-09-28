@@ -5,7 +5,7 @@ use gpui::{
     Size, Styled, Subscription, Task, Window, div, prelude::*, px, size,
 };
 use gpui_kit::component::{
-    IndexPath, VirtualListScrollHandle, h_flex,
+    Icon, IconName, IndexPath, VirtualListScrollHandle, h_flex,
     list::{List, ListDelegate, ListEvent, ListItem, ListState},
     tab::{Tab, TabBar},
     tree::{TreeEvent, TreeItem, TreeState, tree},
@@ -173,15 +173,24 @@ impl Render for ListsScreen {
                     .child(ui::value_row("Selected", format!("{selected:?}"), cx))
                     .child(div().flex_1().min_h_0().child(tree(&self.tree, |ix, entry, selected, _, _| {
                         let item = entry.item();
-                        let icon = if item.is_folder() {
-                            if entry.is_expanded() { "▾ 📂" } else { "▸ 📁" }
+                        let (chevron, icon) = if item.is_folder() {
+                            if entry.is_expanded() {
+                                (Some(IconName::ChevronDown), "📂")
+                            } else {
+                                (Some(IconName::ChevronRight), "📁")
+                            }
                         } else {
-                            "  📄"
+                            (None, "📄")
                         };
                         ListItem::new(ix)
                             .selected(selected)
                             .pl(px(12. + 16. * entry.depth() as f32))
-                            .child(format!("{icon} {}", item.label))
+                            .child(
+                                h_flex()
+                                    .gap_1()
+                                    .child(div().w_4().children(chevron.map(|c| Icon::new(c).small())))
+                                    .child(format!("{icon} {}", item.label)),
+                            )
                     })))
                     .into_any_element()
             }
@@ -200,6 +209,7 @@ impl Render for ListsScreen {
                             .map(|ix| {
                                 let height = this.item_sizes[ix].height;
                                 h_flex()
+                                    .w_full()
                                     .h(height)
                                     .px_3()
                                     .border_b_1()

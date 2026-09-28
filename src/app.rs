@@ -270,6 +270,9 @@ impl LabApp {
             .flex_1()
             .min_h_0()
             .overflow_y_scroll()
+            // Without this GPUI turns a horizontal pan into vertical scrolling of a
+            // vertical-only container (a mouse-wheel convenience that is wrong on touch).
+            .restrict_scroll_to_axis()
             .track_scroll(&self.catalog_scroll)
             .child(
                 v_flex()
@@ -407,6 +410,7 @@ impl LabApp {
                 .flex_1()
                 .min_h_0()
                 .overflow_y_scroll()
+                .restrict_scroll_to_axis()
                 .track_scroll(&self.screen_scroll)
                 .child(
                     v_flex()

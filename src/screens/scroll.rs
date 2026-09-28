@@ -92,6 +92,7 @@ impl Render for ScrollScreen {
                 .id("mixed")
                 .size_full()
                 .overflow_y_scroll()
+                .restrict_scroll_to_axis()
                 .track_scroll(&self.mixed)
                 .child(v_flex().gap_3().p_3().children((1..=12usize).map(|section| {
                     v_flex()
@@ -100,8 +101,10 @@ impl Render for ScrollScreen {
                         .child(
                             div()
                                 .id(("strip", section))
+                                .flex()
                                 .overflow_x_scroll()
-                                .child(h_flex().gap_2().children((1..=15).map(|card| {
+                                .restrict_scroll_to_axis()
+                                .child(h_flex().flex_none().gap_2().children((1..=15).map(|card| {
                                     div()
                                         .flex_none()
                                         .w(px(110.))

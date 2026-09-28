@@ -1,6 +1,6 @@
 use gpui::{Context, InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled, Window, div, prelude::*};
 use gpui_kit::component::{
-    IconName,
+    Icon, IconName,
     accordion::Accordion,
     button::Button,
     collapsible::Collapsible,
@@ -65,7 +65,7 @@ impl Render for DisclosureScreen {
                         .py_2()
                         .cursor_pointer()
                         .child(format!("Section {}", ix + 1))
-                        .child(if is_open { "▾" } else { "▸" })
+                        .child(Icon::new(if is_open { IconName::ChevronDown } else { IconName::ChevronRight }))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.collapsible_open[ix] = !this.collapsible_open[ix];
                             this.log.push(format!("collapsible {} -> {}", ix + 1, this.collapsible_open[ix]));

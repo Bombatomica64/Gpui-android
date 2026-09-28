@@ -28,6 +28,9 @@ type Vec_ = SearchableVec<&'static str>;
 
 pub struct SelectScreen {
     fruit: Entity<SelectState<Vec_>>,
+    /// Popups anchor to the last-rendered element of a state, so a disabled
+    /// demo needs its own state.
+    fruit_disabled: Entity<SelectState<Vec_>>,
     country: Entity<SelectState<Vec_>>,
     single: Entity<ComboboxState<Vec_>>,
     multi: Entity<ComboboxState<Vec_>>,
@@ -44,6 +47,9 @@ pub struct SelectScreen {
 impl SelectScreen {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let fruit = cx.new(|cx| {
+            SelectState::new(SearchableVec::new(FRUITS.to_vec()), Some(IndexPath::new(1)), window, cx)
+        });
+        let fruit_disabled = cx.new(|cx| {
             SelectState::new(SearchableVec::new(FRUITS.to_vec()), Some(IndexPath::new(1)), window, cx)
         });
         let country = cx.new(|cx| {
@@ -105,6 +111,7 @@ impl SelectScreen {
 
         Self {
             fruit,
+            fruit_disabled,
             country,
             single,
             multi,
@@ -135,7 +142,7 @@ impl Render for SelectScreen {
                             .cleanable(true),
                     )
                     .child(ui::value_row("Country", format!("{:?}", self.selected_country), cx))
-                    .child(Select::new(&self.fruit).disabled(true))
+                    .child(Select::new(&self.fruit_disabled).disabled(true))
                     .child(ui::hint(
                         "Open, scroll and fling the country list; typing in its search field \
                          should raise the keyboard without covering the list.",

@@ -67,10 +67,12 @@ impl Render for LayoutScreen {
                         div()
                             .id("h-scroll")
                             .w_full()
+                            .flex()
                             .overflow_x_scroll()
+                            .restrict_scroll_to_axis()
                             .track_scroll(&self.horizontal)
                             .child(
-                                h_flex().gap_2().py_2().children((1..=30).map(|i| {
+                                h_flex().flex_none().gap_2().py_2().children((1..=30).map(|i| {
                                     div()
                                         .flex_none()
                                         .w(px(96.))

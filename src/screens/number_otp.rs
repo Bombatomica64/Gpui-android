@@ -16,6 +16,7 @@ pub struct NumberOtpScreen {
     clamped: Entity<InputState>,
     manual: Entity<InputState>,
     decimal: Entity<InputState>,
+    disabled: Entity<InputState>,
     otp: Entity<OtpState>,
     otp_masked: Entity<OtpState>,
     manual_value: i64,
@@ -45,6 +46,7 @@ impl NumberOtpScreen {
                 .default_value("1234.5")
                 .step(0.25)
         });
+        let disabled = cx.new(|cx| InputState::new(window, cx).default_value("42"));
         let otp = cx.new(|cx| OtpState::new(6, window, cx));
         let otp_masked = cx.new(|cx| OtpState::new(4, window, cx).masked(true));
 
@@ -93,6 +95,7 @@ impl NumberOtpScreen {
             clamped,
             manual,
             decimal,
+            disabled,
             otp,
             otp_masked,
             manual_value: 100,
@@ -120,7 +123,7 @@ impl Render for NumberOtpScreen {
                     ))
                     .child(NumberInput::new(&self.decimal))
                     .child(ui::value_row("Decimal mask, step 0.25", self.decimal.read(cx).value(), cx))
-                    .child(NumberInput::new(&self.clamped).disabled(true))
+                    .child(NumberInput::new(&self.disabled).disabled(true))
                     .child(ui::hint(
                         "Tap − / + repeatedly and quickly; typing should open the numeric keyboard.",
                         cx,

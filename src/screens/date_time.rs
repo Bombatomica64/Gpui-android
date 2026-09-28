@@ -23,6 +23,11 @@ pub struct DateTimeScreen {
     time_24: Entity<TimeFieldState>,
     time_12: Entity<TimeFieldState>,
     time_seconds: Entity<TimeFieldState>,
+    /// Separate states for the invalid/disabled demos: popups and focus follow the
+    /// last-rendered element of a state.
+    disabled_date: Entity<DatePickerState>,
+    time_invalid: Entity<TimeFieldState>,
+    time_disabled: Entity<TimeFieldState>,
     values: [String; 8],
     log: EventLog,
     _subscriptions: Vec<Subscription>,
@@ -109,6 +114,9 @@ impl DateTimeScreen {
             time_24,
             time_12,
             time_seconds,
+            disabled_date: cx.new(|cx| DatePickerState::new(window, cx)),
+            time_invalid: cx.new(|cx| TimeFieldState::new(window, cx)),
+            time_disabled: cx.new(|cx| TimeFieldState::new(window, cx)),
             values: [
                 "none".into(),
                 today.to_string(),
@@ -150,7 +158,7 @@ impl Render for DateTimeScreen {
                     .child(ui::value_row("Date + time (minute)", self.values[3].clone(), cx))
                     .child(DatePicker::new(&self.presets).presets(presets).placeholder("With presets"))
                     .child(ui::value_row("Preset range", self.values[4].clone(), cx))
-                    .child(DatePicker::new(&self.single).disabled(true))
+                    .child(DatePicker::new(&self.disabled_date).disabled(true))
                     .child(ui::hint(
                         "Popups must stay inside the 411 pt wide viewport; tap outside or press \
                          back to close.",
@@ -165,8 +173,8 @@ impl Render for DateTimeScreen {
                     .child(ui::value_row("12-hour, minute", self.values[6].clone(), cx))
                     .child(TimeField::new(&self.time_seconds).small())
                     .child(ui::value_row("24-hour, second", self.values[7].clone(), cx))
-                    .child(TimeField::new(&self.time_24).invalid(true))
-                    .child(TimeField::new(&self.time_24).disabled(true))
+                    .child(TimeField::new(&self.time_invalid).invalid(true))
+                    .child(TimeField::new(&self.time_disabled).disabled(true))
                     .child(
                         h_flex().gap_1().child(
                             Button::new("set-time").small().outline().label("Set 09:30 (no event)").on_click(
