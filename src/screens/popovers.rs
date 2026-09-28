@@ -24,6 +24,7 @@ pub struct PopoversScreen {
     word_wrap: bool,
     show_hidden: bool,
     controlled_open: bool,
+    focus: gpui::FocusHandle,
     log: EventLog,
 }
 
@@ -34,6 +35,7 @@ impl PopoversScreen {
             word_wrap: true,
             show_hidden: false,
             controlled_open: false,
+            focus: cx.focus_handle(),
             log: EventLog::default(),
         }
     }
@@ -273,6 +275,9 @@ impl Render for PopoversScreen {
                         .outline()
                         .label("Show NativeMenu")
                         .on_click(cx.listener(|this, event: &gpui::ClickEvent, window, cx| {
+                            // Menu actions dispatch along the focus path; focus this
+                            // screen so its on_action handlers receive them.
+                            this.focus.focus(window, cx);
                             let position = event.position();
                             NativeMenu::new()
                                 .menu("Cut", Box::new(NativeCut))
@@ -286,6 +291,7 @@ impl Render for PopoversScreen {
                 ),
             )
             .child(self.log.render(cx))
+            .track_focus(&self.focus)
             .on_action(cx.listener(|this, _: &NativeCut, _, cx| {
                 this.log.push("native menu: Cut");
                 cx.notify();
