@@ -1,4 +1,4 @@
-use gpui::{Context, IntoElement, ParentElement, Render, SharedString, Styled, Window, div, prelude::*};
+use gpui::{Context, IntoElement, ParentElement, Render, SharedString, Styled, Window, div};
 use gpui_kit::base::{SelectionFormat, TextView};
 use gpui_kit::component::{
     button::Button,

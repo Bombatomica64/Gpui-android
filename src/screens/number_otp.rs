@@ -1,6 +1,6 @@
 use gpui::{
     AppContext as _, Context, Entity, IntoElement, ParentElement, Render, Styled, Subscription,
-    Window, prelude::*,
+    Window,
 };
 use gpui_kit::component::{
     input::{

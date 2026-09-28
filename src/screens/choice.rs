@@ -1,6 +1,6 @@
 use gpui::{
     AppContext as _, Context, Entity, IntoElement, ParentElement, Render, Styled, Subscription,
-    Window, div, prelude::*, px,
+    Window, div, px,
 };
 use gpui_kit::component::{
     IconName, Size,

@@ -302,7 +302,7 @@ impl LabApp {
     }
 
     fn render_row(&self, row: &'static matrix::Row, cx: &mut Context<Self>) -> impl IntoElement {
-        let has_screen = screens::find(row.screen).is_some();
+        let has_screen = row.included && screens::find(row.screen).is_some();
         h_flex()
             .id(SharedString::from(format!("row-{}-{}", row.category, row.component)))
             .w_full()

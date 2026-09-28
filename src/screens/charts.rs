@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use gpui::{
     AnyElement, App, Bounds, Context, ElementId, Hsla, IntoElement, ParentElement, Pixels, Point,
-    Render, SharedString, Styled, Task, Window, div, fill, point, prelude::*, px, size,
+    Render, SharedString, Styled, Task, Window, div, fill, point, px, size,
 };
 use gpui_kit::component::{
     button::Button,

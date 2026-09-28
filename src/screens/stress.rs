@@ -5,7 +5,7 @@ use std::time::{Duration, Instant};
 
 use gpui::{
     AppContext as _, Context, Entity, IntoElement, ParentElement, Render, SharedString, Styled,
-    Window, div, prelude::*, px, uniform_list,
+    Window, div, px, uniform_list,
 };
 use gpui_kit::component::{
     button::Button,

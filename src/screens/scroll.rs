@@ -1,6 +1,6 @@
 use gpui::{
     Context, InteractiveElement, IntoElement, ParentElement, Render, ScrollHandle, SharedString,
-    StatefulInteractiveElement, Styled, UniformListScrollHandle, Window, div, prelude::*, px,
+    StatefulInteractiveElement, Styled, UniformListScrollHandle, Window, div, px,
     uniform_list,
 };
 use gpui_kit::component::{

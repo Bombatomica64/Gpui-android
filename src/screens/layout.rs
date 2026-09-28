@@ -1,6 +1,6 @@
 use gpui::{
     Context, InteractiveElement, IntoElement, ParentElement, Render, ScrollHandle,
-    StatefulInteractiveElement, Styled, Window, div, prelude::*, px,
+    StatefulInteractiveElement, Styled, Window, div, px,
 };
 use gpui_kit::component::{
     h_flex,

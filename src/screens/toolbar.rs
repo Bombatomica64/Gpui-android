@@ -1,4 +1,4 @@
-use gpui::{Context, IntoElement, ParentElement, Render, Styled, Window, div, prelude::*, px};
+use gpui::{Context, IntoElement, ParentElement, Render, Styled, Window, div, px};
 use gpui_kit::component::{
     IconName, Size,
     button::{Button, Toggle},

@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use gpui::{
     AppContext as _, Context, Entity, IntoElement, ParentElement, Pixels, Render, SharedString,
-    Size, Styled, Subscription, Task, Window, div, prelude::*, px, size,
+    Size, Styled, Subscription, Task, Window, div, px, size,
 };
 use gpui_kit::component::{
     Icon, IconName, IndexPath, VirtualListScrollHandle, h_flex,

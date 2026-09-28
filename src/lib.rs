@@ -17,7 +17,7 @@ use gpui::{App, AppContext as _, WindowOptions};
 
 pub const GPUI_KIT_VERSION: &str = "0.7.0";
 pub const GPUI_VERSION: &str = "gpui-pre 0.3.7";
-pub const GPUI_MOBILE_REVISION: &str = "f379bc8 + local patches";
+pub const GPUI_MOBILE_REVISION: &str = "f379bc8 + 3 patches";
 
 /// Font files read from the APK before GPUI starts (see `host::load_bundled_fonts`).
 pub static BUNDLED_FONTS: OnceLock<Vec<Vec<u8>>> = OnceLock::new();

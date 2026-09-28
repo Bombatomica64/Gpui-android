@@ -1,4 +1,4 @@
-use gpui::{Context, InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled, Window, div, prelude::*};
+use gpui::{Context, InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled, Window, div};
 use gpui_kit::component::{
     Icon, IconName,
     accordion::Accordion,

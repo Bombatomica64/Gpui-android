@@ -1,6 +1,6 @@
 use gpui::{
     AppContext as _, ClipboardItem, Context, Entity, IntoElement, ParentElement, Render,
-    SharedString, Styled, Subscription, Window, div, prelude::*,
+    SharedString, Styled, Subscription, Window, div,
 };
 use gpui_kit::component::{
     IconName, WindowExt as _,

@@ -5,7 +5,7 @@ use std::time::Instant;
 use gpui::{
     Bounds, ClickEvent, Context, InteractiveElement, IntoElement, LongPressEvent, MouseDownEvent,
     MouseMoveEvent, MouseUpEvent, ParentElement, PinchEvent, Pixels, Point, Render, StatefulInteractiveElement,
-    Styled, TouchDragEvent, TouchPhase, Window, canvas, div, point, prelude::*, px,
+    Styled, TouchDragEvent, TouchPhase, Window, canvas, div, point, px,
 };
 use gpui_kit::component::{button::Button, h_flex, v_flex};
 
