@@ -4,6 +4,10 @@ use gpui::{AnyView, App, Window};
 
 mod buttons;
 mod choice;
+mod date_time;
+mod dialogs;
+mod popovers;
+mod select;
 mod number_otp;
 pub mod text_input;
 mod textarea;
@@ -40,6 +44,10 @@ pub static SCREENS: &[ScreenDef] = &[
     screen!("Text Input", text_input::TextInputScreen),
     screen!("Textarea & Editor", textarea::TextareaScreen),
     screen!("Number & OTP", number_otp::NumberOtpScreen),
+    screen!("Select & Combobox", select::SelectScreen),
+    screen!("Date & Time", date_time::DateTimeScreen),
+    screen!("Dialogs & Sheets", dialogs::DialogsScreen),
+    screen!("Popovers & Menus", popovers::PopoversScreen),
     screen!("Themes", themes::ThemesScreen),
 ];
 
