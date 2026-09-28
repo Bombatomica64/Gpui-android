@@ -39,7 +39,11 @@ impl DialogsScreen {
         cx.notify();
     }
 
-    fn on_close_handler(&self, what: &'static str, cx: &mut Context<Self>) -> Rc<dyn Fn(&mut Window, &mut gpui::App)> {
+    fn on_close_handler(
+        &self,
+        what: &'static str,
+        cx: &mut Context<Self>,
+    ) -> Rc<dyn Fn(&mut Window, &mut gpui::App)> {
         let view = cx.entity();
         Rc::new(move |_, cx| {
             view.update(cx, |this, cx| {
@@ -80,18 +84,21 @@ impl DialogsScreen {
                 )
                 .footer(
                     h_flex().gap_2().justify_end().child(
-                        Button::new("dialog-save").primary().label("Save").on_click({
-                            let view = view.clone();
-                            let input = input.clone();
-                            move |_, window, cx| {
-                                let value = input.read(cx).value();
-                                view.update(cx, |this, cx| {
-                                    this.log.push(format!("dialog saved {value:?}"));
-                                    cx.notify();
-                                });
-                                window.close_dialog(cx);
-                            }
-                        }),
+                        Button::new("dialog-save")
+                            .primary()
+                            .label("Save")
+                            .on_click({
+                                let view = view.clone();
+                                let input = input.clone();
+                                move |_, window, cx| {
+                                    let value = input.read(cx).value();
+                                    view.update(cx, |this, cx| {
+                                        this.log.push(format!("dialog saved {value:?}"));
+                                        cx.notify();
+                                    });
+                                    window.close_dialog(cx);
+                                }
+                            }),
                     ),
                 )
         });
@@ -106,7 +113,9 @@ impl DialogsScreen {
                     .max_h(px(360.))
                     .overflow_y_scroll()
                     .child(v_flex().gap_2().children((1..=60).map(|i| {
-                        div().child(format!("Row {i}: the page behind must not scroll with this list."))
+                        div().child(format!(
+                            "Row {i}: the page behind must not scroll with this list."
+                        ))
                     }))),
             )
         });
@@ -116,11 +125,16 @@ impl DialogsScreen {
     fn open_nested(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         window.open_dialog(cx, move |dialog, _, _| {
             dialog.title("First dialog").child(
-                Button::new("open-second").outline().label("Open a second dialog").on_click(|_, window, cx| {
-                    window.open_dialog(cx, |dialog, _, _| {
-                        dialog.title("Second dialog").child("Back closes only this one.")
-                    });
-                }),
+                Button::new("open-second")
+                    .outline()
+                    .label("Open a second dialog")
+                    .on_click(|_, window, cx| {
+                        window.open_dialog(cx, |dialog, _, _| {
+                            dialog
+                                .title("Second dialog")
+                                .child("Back closes only this one.")
+                        });
+                    }),
             )
         });
         self.opened("nested dialog", cx);
@@ -198,9 +212,13 @@ impl DialogsScreen {
                         dialog.title(format!("Sequential {}", i + 1))
                     })
                 });
-                cx.background_executor().timer(Duration::from_millis(300)).await;
+                cx.background_executor()
+                    .timer(Duration::from_millis(300))
+                    .await;
                 let _ = cx.update(|window, cx| window.close_dialog(cx));
-                cx.background_executor().timer(Duration::from_millis(150)).await;
+                cx.background_executor()
+                    .timer(Duration::from_millis(150))
+                    .await;
             }
             let _ = this.update(cx, |this, cx| {
                 this.opened += 5;
@@ -226,16 +244,38 @@ impl Render for DialogsScreen {
                         h_flex()
                             .flex_wrap()
                             .gap_2()
-                            .child(button("basic", "Basic").on_click(cx.listener(|this, _, w, cx| this.open_basic(w, cx))))
-                            .child(button("form", "With input").on_click(cx.listener(|this, _, w, cx| this.open_form(w, cx))))
-                            .child(button("long", "Long content").on_click(cx.listener(|this, _, w, cx| this.open_long(w, cx))))
-                            .child(button("nested", "Nested").on_click(cx.listener(|this, _, w, cx| this.open_nested(w, cx))))
-                            .child(button("alert", "AlertDialog").on_click(cx.listener(|this, _, w, cx| this.open_alert(w, cx))))
-                            .child(button("sequential", "Open/close ×5").on_click(cx.listener(|this, _, w, cx| this.sequential(w, cx)))),
+                            .child(
+                                button("basic", "Basic")
+                                    .on_click(cx.listener(|this, _, w, cx| this.open_basic(w, cx))),
+                            )
+                            .child(
+                                button("form", "With input")
+                                    .on_click(cx.listener(|this, _, w, cx| this.open_form(w, cx))),
+                            )
+                            .child(
+                                button("long", "Long content")
+                                    .on_click(cx.listener(|this, _, w, cx| this.open_long(w, cx))),
+                            )
+                            .child(
+                                button("nested", "Nested").on_click(
+                                    cx.listener(|this, _, w, cx| this.open_nested(w, cx)),
+                                ),
+                            )
+                            .child(
+                                button("alert", "AlertDialog")
+                                    .on_click(cx.listener(|this, _, w, cx| this.open_alert(w, cx))),
+                            )
+                            .child(
+                                button("sequential", "Open/close ×5")
+                                    .on_click(cx.listener(|this, _, w, cx| this.sequential(w, cx))),
+                            ),
                     )
                     .child(ui::value_row(
                         "Opened / closed",
-                        format!("{} / {} (dialog active: {has_dialog}, sheet active: {has_sheet})", self.opened, self.closed),
+                        format!(
+                            "{} / {} (dialog active: {has_dialog}, sheet active: {has_sheet})",
+                            self.opened, self.closed
+                        ),
                         cx,
                     )),
             )
@@ -244,10 +284,18 @@ impl Render for DialogsScreen {
                     h_flex()
                         .flex_wrap()
                         .gap_2()
-                        .child(button("sheet-bottom", "Bottom").on_click(cx.listener(|this, _, w, cx| this.open_sheet(Placement::Bottom, w, cx))))
-                        .child(button("sheet-top", "Top").on_click(cx.listener(|this, _, w, cx| this.open_sheet(Placement::Top, w, cx))))
-                        .child(button("sheet-left", "Left").on_click(cx.listener(|this, _, w, cx| this.open_sheet(Placement::Left, w, cx))))
-                        .child(button("sheet-right", "Right").on_click(cx.listener(|this, _, w, cx| this.open_sheet(Placement::Right, w, cx)))),
+                        .child(button("sheet-bottom", "Bottom").on_click(
+                            cx.listener(|this, _, w, cx| this.open_sheet(Placement::Bottom, w, cx)),
+                        ))
+                        .child(button("sheet-top", "Top").on_click(
+                            cx.listener(|this, _, w, cx| this.open_sheet(Placement::Top, w, cx)),
+                        ))
+                        .child(button("sheet-left", "Left").on_click(
+                            cx.listener(|this, _, w, cx| this.open_sheet(Placement::Left, w, cx)),
+                        ))
+                        .child(button("sheet-right", "Right").on_click(
+                            cx.listener(|this, _, w, cx| this.open_sheet(Placement::Right, w, cx)),
+                        )),
                 ),
             )
             .child(
@@ -256,41 +304,61 @@ impl Render for DialogsScreen {
                         h_flex()
                             .flex_wrap()
                             .gap_2()
-                            .child(button("n-info", "Info").on_click(cx.listener(|this, _, w, cx| this.notify(NotificationType::Info, w, cx))))
-                            .child(button("n-success", "Success").on_click(cx.listener(|this, _, w, cx| this.notify(NotificationType::Success, w, cx))))
-                            .child(button("n-warning", "Warning").on_click(cx.listener(|this, _, w, cx| this.notify(NotificationType::Warning, w, cx))))
-                            .child(button("n-error", "Error").on_click(cx.listener(|this, _, w, cx| this.notify(NotificationType::Error, w, cx))))
-                            .child(button("n-sticky", "Sticky + action").on_click(cx.listener(|this, _, window, cx| {
-                                let view = cx.entity();
-                                window.push_notification(
-                                    Notification::new()
-                                        .title("Upload finished")
-                                        .message("Tap the notification or its action.")
-                                        .autohide(false)
-                                        .on_click(move |_, _, cx| {
-                                            view.update(cx, |this, cx| {
-                                                this.log.push("sticky notification tapped");
-                                                cx.notify();
-                                            })
-                                        }),
-                                    cx,
-                                );
-                                this.log.push("sticky notification");
-                                cx.notify();
-                            })))
-                            .child(button("n-clear", "Clear all").on_click(cx.listener(|this, _, window, cx| {
-                                window.clear_notifications(cx);
-                                this.log.push("notifications cleared");
-                                cx.notify();
-                            }))),
+                            .child(button("n-info", "Info").on_click(cx.listener(
+                                |this, _, w, cx| this.notify(NotificationType::Info, w, cx),
+                            )))
+                            .child(button("n-success", "Success").on_click(cx.listener(
+                                |this, _, w, cx| this.notify(NotificationType::Success, w, cx),
+                            )))
+                            .child(button("n-warning", "Warning").on_click(cx.listener(
+                                |this, _, w, cx| this.notify(NotificationType::Warning, w, cx),
+                            )))
+                            .child(button("n-error", "Error").on_click(cx.listener(
+                                |this, _, w, cx| this.notify(NotificationType::Error, w, cx),
+                            )))
+                            .child(button("n-sticky", "Sticky + action").on_click(cx.listener(
+                                |this, _, window, cx| {
+                                    let view = cx.entity();
+                                    window.push_notification(
+                                        Notification::new()
+                                            .title("Upload finished")
+                                            .message("Tap the notification or its action.")
+                                            .autohide(false)
+                                            .on_click(move |_, _, cx| {
+                                                view.update(cx, |this, cx| {
+                                                    this.log.push("sticky notification tapped");
+                                                    cx.notify();
+                                                })
+                                            }),
+                                        cx,
+                                    );
+                                    this.log.push("sticky notification");
+                                    cx.notify();
+                                },
+                            )))
+                            .child(button("n-clear", "Clear all").on_click(cx.listener(
+                                |this, _, window, cx| {
+                                    window.clear_notifications(cx);
+                                    this.log.push("notifications cleared");
+                                    cx.notify();
+                                },
+                            ))),
                     )
-                    .child(ui::hint("Toasts are placed top-right by default; check they fit a 411 pt screen.", cx)),
+                    .child(ui::hint(
+                        "Toasts are placed top-right by default; check they fit a 411 pt screen.",
+                        cx,
+                    )),
             )
             .child(self.log.render(cx))
             .child(
                 ui::section("Background content", cx)
-                    .child(ui::hint("Rows below make the page scroll, to verify overlays block it.", cx))
-                    .children((1..=30).map(|i| div().text_sm().child(format!("Background row {i}")))),
+                    .child(ui::hint(
+                        "Rows below make the page scroll, to verify overlays block it.",
+                        cx,
+                    ))
+                    .children(
+                        (1..=30).map(|i| div().text_sm().child(format!("Background row {i}"))),
+                    ),
             )
     }
 }

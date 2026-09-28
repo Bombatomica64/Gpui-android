@@ -75,7 +75,12 @@ pub struct RichTextScreen {
 
 impl RichTextScreen {
     pub fn new(_: &mut Window, _: &mut Context<Self>) -> Self {
-        Self { tab: 0, source_selection: false, large: None, log: EventLog::default() }
+        Self {
+            tab: 0,
+            source_selection: false,
+            large: None,
+            log: EventLog::default(),
+        }
     }
 
     fn load(&mut self, sections: usize, cx: &mut Context<Self>) {
@@ -94,14 +99,19 @@ impl RichTextScreen {
 impl Render for RichTextScreen {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let view = cx.entity();
-        let on_link = move |href: &SharedString, _: &gpui::ClickEvent, _: &mut Window, cx: &mut gpui::App| {
-            let href = href.clone();
-            view.update(cx, |this, cx| {
-                this.log.push(format!("link tapped: {href}"));
-                cx.notify();
-            });
+        let on_link =
+            move |href: &SharedString, _: &gpui::ClickEvent, _: &mut Window, cx: &mut gpui::App| {
+                let href = href.clone();
+                view.update(cx, |this, cx| {
+                    this.log.push(format!("link tapped: {href}"));
+                    cx.notify();
+                });
+            };
+        let format = if self.source_selection {
+            SelectionFormat::Source
+        } else {
+            SelectionFormat::Plain
         };
-        let format = if self.source_selection { SelectionFormat::Source } else { SelectionFormat::Plain };
         let body = match self.tab {
             0 => TextView::markdown("markdown", MARKDOWN)
                 .selectable(true)
@@ -118,22 +128,23 @@ impl Render for RichTextScreen {
                 .into_any_element(),
             _ => v_flex()
                 .gap_2()
-                .child(
-                    h_flex()
-                        .gap_1()
-                        .children([100usize, 500, 2000].map(|n| {
-                            Button::new(("load", n)).small().outline().label(format!("{n} sections")).on_click(
-                                cx.listener(move |this, _, _, cx| this.load(n, cx)),
-                            )
-                        })),
-                )
+                .child(h_flex().gap_1().children([100usize, 500, 2000].map(|n| {
+                    Button::new(("load", n))
+                        .small()
+                        .outline()
+                        .label(format!("{n} sections"))
+                        .on_click(cx.listener(move |this, _, _, cx| this.load(n, cx)))
+                })))
                 .child(match &self.large {
-                    Some((sections, text)) => TextView::markdown(("large", *sections), text.clone())
-                        .selectable(true)
-                        .w_full()
-                        .min_w_0()
+                    Some((sections, text)) => {
+                        TextView::markdown(("large", *sections), text.clone())
+                            .selectable(true)
+                            .w_full()
+                            .min_w_0()
+                            .into_any_element()
+                    }
+                    None => ui::hint("Pick a size; then fling through the document.", cx)
                         .into_any_element(),
-                    None => ui::hint("Pick a size; then fling through the document.", cx).into_any_element(),
                 })
                 .into_any_element(),
         };
@@ -158,7 +169,11 @@ impl Render for RichTextScreen {
                         .small()
                         .outline()
                         .selected(self.source_selection)
-                        .label(if self.source_selection { "Copy as Markdown source" } else { "Copy as plain text" })
+                        .label(if self.source_selection {
+                            "Copy as Markdown source"
+                        } else {
+                            "Copy as plain text"
+                        })
                         .on_click(cx.listener(|this, _, _, cx| {
                             this.source_selection = !this.source_selection;
                             cx.notify();

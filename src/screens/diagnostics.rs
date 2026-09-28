@@ -3,7 +3,9 @@
 use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 
-use gpui::{Context, IntoElement, ParentElement, Render, Styled, Task, Window, div, prelude::*, px};
+use gpui::{
+    Context, IntoElement, ParentElement, Render, Styled, Task, Window, div, prelude::*, px,
+};
 use gpui_kit::component::{WindowExt as _, button::Button, h_flex, v_flex};
 
 use crate::diagnostics as host;
@@ -21,13 +23,22 @@ impl DiagnosticsScreen {
     pub fn new(_: &mut Window, cx: &mut Context<Self>) -> Self {
         // Re-render twice a second so platform-reported values stay current without
         // forcing continuous frames.
-        let refresh = cx.spawn(async move |this, cx| loop {
-            cx.background_executor().timer(Duration::from_millis(500)).await;
-            if this.update(cx, |_, cx| cx.notify()).is_err() {
-                break;
+        let refresh = cx.spawn(async move |this, cx| {
+            loop {
+                cx.background_executor()
+                    .timer(Duration::from_millis(500))
+                    .await;
+                if this.update(cx, |_, cx| cx.notify()).is_err() {
+                    break;
+                }
             }
         });
-        Self { show_hud: true, animating: false, frames: VecDeque::new(), refresh: Some(refresh) }
+        Self {
+            show_hud: true,
+            animating: false,
+            frames: VecDeque::new(),
+            refresh: Some(refresh),
+        }
     }
 
     fn cadence(&self) -> Option<(f32, f32, f32)> {
@@ -65,10 +76,25 @@ impl Render for DiagnosticsScreen {
         let cadence = self.cadence();
 
         let facts: Vec<(&str, String)> = vec![
-            ("GPUI Kit / GPUI", format!("{} / {}", crate::GPUI_KIT_VERSION, crate::GPUI_VERSION)),
+            (
+                "GPUI Kit / GPUI",
+                format!("{} / {}", crate::GPUI_KIT_VERSION, crate::GPUI_VERSION),
+            ),
             ("gpui-mobile", crate::GPUI_MOBILE_REVISION.into()),
-            ("Android API", host::api_level().map(|l| l.to_string()).unwrap_or_else(|| "unknown".into())),
-            ("Viewport (logical)", format!("{:.1} × {:.1}", viewport.width.as_f32(), viewport.height.as_f32())),
+            (
+                "Android API",
+                host::api_level()
+                    .map(|l| l.to_string())
+                    .unwrap_or_else(|| "unknown".into()),
+            ),
+            (
+                "Viewport (logical)",
+                format!(
+                    "{:.1} × {:.1}",
+                    viewport.width.as_f32(),
+                    viewport.height.as_f32()
+                ),
+            ),
             ("Scale factor", format!("{:.3}", window.scale_factor())),
             (
                 "Viewport (physical)",
@@ -88,25 +114,39 @@ impl Render for DiagnosticsScreen {
                     visual.size.height.as_f32()
                 ),
             ),
-            ("Keyboard (host)", format!("visible={keyboard}, {keyboard_px} px")),
+            (
+                "Keyboard (host)",
+                format!("visible={keyboard}, {keyboard_px} px"),
+            ),
             ("Focused text input", focused_input.to_string()),
             ("Focused handle", focused.unwrap_or_else(|| "none".into())),
             ("Screen scroll y", format!("{} pt", host::screen_scroll())),
             ("Activity foreground", host::is_foreground().to_string()),
-            ("Window active (GPUI)", window.is_window_active().to_string()),
+            (
+                "Window active (GPUI)",
+                window.is_window_active().to_string(),
+            ),
             ("Appearance", format!("{:?}", window.appearance())),
             ("Host MotionEvents", host::touch_events().to_string()),
             (
                 "Last touch (physical px)",
                 touch
-                    .map(|t| format!("action {} · {} ptr · {:.0},{:.0}", t.action, t.pointers, t.x, t.y))
+                    .map(|t| {
+                        format!(
+                            "action {} · {} ptr · {:.0},{:.0}",
+                            t.action, t.pointers, t.x, t.y
+                        )
+                    })
                     .unwrap_or_else(|| "none".into()),
             ),
             (
                 "Render cadence",
                 match (self.animating, cadence) {
                     (true, Some((fps, avg, worst))) => {
-                        format!("{fps:.1} fps · avg {avg:.1} ms · worst {worst:.1} ms (last {} frames)", self.frames.len())
+                        format!(
+                            "{fps:.1} fps · avg {avg:.1} ms · worst {worst:.1} ms (last {} frames)",
+                            self.frames.len()
+                        )
                     }
                     (true, None) => "measuring…".into(),
                     (false, _) => "off (start measuring below)".into(),

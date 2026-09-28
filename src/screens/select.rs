@@ -13,15 +13,62 @@ use gpui_kit::component::{
 
 use crate::ui::{self, EventLog, prelude::*};
 
-const FRUITS: &[&str] = &["Apple", "Banana", "Cherry", "Durian", "Elderberry", "Fig", "Grape"];
+const FRUITS: &[&str] = &[
+    "Apple",
+    "Banana",
+    "Cherry",
+    "Durian",
+    "Elderberry",
+    "Fig",
+    "Grape",
+];
 
 const COUNTRIES: &[&str] = &[
-    "Argentina", "Australia", "Austria", "Belgium", "Brazil", "Canada", "Chile", "China",
-    "Colombia", "Czechia", "Denmark", "Egypt", "Finland", "France", "Germany", "Greece",
-    "Hungary", "Iceland", "India", "Indonesia", "Ireland", "Italy", "Japan", "Kenya", "Korea",
-    "Mexico", "Morocco", "Netherlands", "New Zealand", "Nigeria", "Norway", "Peru",
-    "Philippines", "Poland", "Portugal", "Romania", "Spain", "Sweden", "Switzerland",
-    "Thailand", "Turkey", "Ukraine", "United Kingdom", "United States", "Vietnam",
+    "Argentina",
+    "Australia",
+    "Austria",
+    "Belgium",
+    "Brazil",
+    "Canada",
+    "Chile",
+    "China",
+    "Colombia",
+    "Czechia",
+    "Denmark",
+    "Egypt",
+    "Finland",
+    "France",
+    "Germany",
+    "Greece",
+    "Hungary",
+    "Iceland",
+    "India",
+    "Indonesia",
+    "Ireland",
+    "Italy",
+    "Japan",
+    "Kenya",
+    "Korea",
+    "Mexico",
+    "Morocco",
+    "Netherlands",
+    "New Zealand",
+    "Nigeria",
+    "Norway",
+    "Peru",
+    "Philippines",
+    "Poland",
+    "Portugal",
+    "Romania",
+    "Spain",
+    "Sweden",
+    "Switzerland",
+    "Thailand",
+    "Turkey",
+    "Ukraine",
+    "United Kingdom",
+    "United States",
+    "Vietnam",
 ];
 
 type Vec_ = SearchableVec<&'static str>;
@@ -47,20 +94,37 @@ pub struct SelectScreen {
 impl SelectScreen {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let fruit = cx.new(|cx| {
-            SelectState::new(SearchableVec::new(FRUITS.to_vec()), Some(IndexPath::new(1)), window, cx)
+            SelectState::new(
+                SearchableVec::new(FRUITS.to_vec()),
+                Some(IndexPath::new(1)),
+                window,
+                cx,
+            )
         });
         let fruit_disabled = cx.new(|cx| {
-            SelectState::new(SearchableVec::new(FRUITS.to_vec()), Some(IndexPath::new(1)), window, cx)
+            SelectState::new(
+                SearchableVec::new(FRUITS.to_vec()),
+                Some(IndexPath::new(1)),
+                window,
+                cx,
+            )
         });
         let country = cx.new(|cx| {
-            SelectState::new(SearchableVec::new(COUNTRIES.to_vec()), None, window, cx).searchable(true)
+            SelectState::new(SearchableVec::new(COUNTRIES.to_vec()), None, window, cx)
+                .searchable(true)
         });
         let single = cx.new(|cx| {
-            ComboboxState::new(SearchableVec::new(COUNTRIES.to_vec()), vec![], window, cx).searchable(true)
+            ComboboxState::new(SearchableVec::new(COUNTRIES.to_vec()), vec![], window, cx)
+                .searchable(true)
         });
         let multi = cx.new(|cx| {
-            ComboboxState::new(SearchableVec::new(FRUITS.to_vec()), vec![IndexPath::new(0)], window, cx)
-                .multiple(true)
+            ComboboxState::new(
+                SearchableVec::new(FRUITS.to_vec()),
+                vec![IndexPath::new(0)],
+                window,
+                cx,
+            )
+            .multiple(true)
         });
         let color = cx.new(|cx| ColorPickerState::new(window, cx));
 
@@ -96,7 +160,8 @@ impl SelectScreen {
                         this.log.push(format!("multi change -> {values:?}"));
                     }
                     ComboboxEvent::Confirm(values) => {
-                        this.log.push(format!("multi confirm (closed) -> {values:?}"));
+                        this.log
+                            .push(format!("multi confirm (closed) -> {values:?}"));
                     }
                 }
                 cx.notify();
@@ -104,7 +169,8 @@ impl SelectScreen {
             cx.subscribe(&color, |this, _, event: &ColorPickerEvent, cx| {
                 let ColorPickerEvent::Change(color) = event;
                 this.color_value = *color;
-                this.log.push(format!("color -> {:?}", color.map(|c| c.to_hex())));
+                this.log
+                    .push(format!("color -> {:?}", color.map(|c| c.to_hex())));
                 cx.notify();
             }),
         ];
@@ -134,14 +200,22 @@ impl Render for SelectScreen {
             .child(
                 ui::section("Select", cx)
                     .child(Select::new(&self.fruit).placeholder("Pick a fruit"))
-                    .child(ui::value_row("Fruit", format!("{:?}", self.selected_fruit), cx))
+                    .child(ui::value_row(
+                        "Fruit",
+                        format!("{:?}", self.selected_fruit),
+                        cx,
+                    ))
                     .child(
                         Select::new(&self.country)
                             .placeholder("Country (searchable, 45 items)")
                             .search_placeholder("Search countries…")
                             .cleanable(true),
                     )
-                    .child(ui::value_row("Country", format!("{:?}", self.selected_country), cx))
+                    .child(ui::value_row(
+                        "Country",
+                        format!("{:?}", self.selected_country),
+                        cx,
+                    ))
                     .child(Select::new(&self.fruit_disabled).disabled(true))
                     .child(ui::hint(
                         "Open, scroll and fling the country list; typing in its search field \
@@ -156,9 +230,17 @@ impl Render for SelectScreen {
                             .placeholder("Search a country…")
                             .search_placeholder("Type to filter"),
                     )
-                    .child(ui::value_row("Single", format!("{:?}", self.single_value), cx))
+                    .child(ui::value_row(
+                        "Single",
+                        format!("{:?}", self.single_value),
+                        cx,
+                    ))
                     .child(Combobox::new(&self.multi).placeholder("Fruits (multiple)"))
-                    .child(ui::value_row("Multiple", format!("{:?}", self.multi_value), cx))
+                    .child(ui::value_row(
+                        "Multiple",
+                        format!("{:?}", self.multi_value),
+                        cx,
+                    ))
                     .child(ui::hint(
                         "Multi-select stays open until you tap outside or press back.",
                         cx,

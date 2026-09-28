@@ -59,7 +59,8 @@ pub fn rows() -> &'static [Row] {
             if !line.starts_with("| ") || line.starts_with("| Component") {
                 continue;
             }
-            let cells: Vec<&'static str> = line.trim_matches('|').split('|').map(str::trim).collect();
+            let cells: Vec<&'static str> =
+                line.trim_matches('|').split('|').map(str::trim).collect();
             if cells.len() < 5 {
                 continue;
             }

@@ -49,8 +49,16 @@ fn token_content() -> InputContent {
     let content = InputContent::new(text);
     content
         .clone()
-        .with_token(alice..alice + "@Alice".len(), InlineToken::new("user-alice", "@Alice"))
-        .and_then(|c| c.with_token(issue..issue + "#1234".len(), InlineToken::new("issue-1234", "#1234")))
+        .with_token(
+            alice..alice + "@Alice".len(),
+            InlineToken::new("user-alice", "@Alice"),
+        )
+        .and_then(|c| {
+            c.with_token(
+                issue..issue + "#1234".len(),
+                InlineToken::new("issue-1234", "#1234"),
+            )
+        })
         .unwrap_or_else(|err| {
             log::error!("building inline tokens failed: {err:?}");
             content
@@ -62,7 +70,9 @@ impl TextareaScreen {
         let plain = cx.new(|cx| {
             TextareaState::new(window, cx)
                 .rows(5)
-                .default_value(format!("{UNICODE_SAMPLE}\n\nSecond paragraph.\nThird line."))
+                .default_value(format!(
+                    "{UNICODE_SAMPLE}\n\nSecond paragraph.\nThird line."
+                ))
         });
         let grow = cx.new(|cx| {
             TextareaState::new(window, cx)
@@ -81,14 +91,18 @@ impl TextareaScreen {
         });
         let mut subscriptions = Vec::new();
         for (name, state) in [("plain", &plain), ("auto-grow", &grow), ("tokens", &tokens)] {
-            subscriptions.push(cx.subscribe(state, move |this, state, event: &InputEvent, cx| {
-                this.log_event(name, event, state.read(cx).value().len(), cx)
-            }));
+            subscriptions.push(
+                cx.subscribe(state, move |this, state, event: &InputEvent, cx| {
+                    this.log_event(name, event, state.read(cx).value().len(), cx)
+                }),
+            );
         }
-        subscriptions.push(cx.subscribe(&editor, |this, state, event: &InputEvent, cx| {
-            this.lines = state.read(cx).value().lines().count();
-            this.log_event("editor", event, state.read(cx).value().len(), cx)
-        }));
+        subscriptions.push(
+            cx.subscribe(&editor, |this, state, event: &InputEvent, cx| {
+                this.lines = state.read(cx).value().lines().count();
+                this.log_event("editor", event, state.read(cx).value().len(), cx)
+            }),
+        );
         Self {
             plain,
             grow,
@@ -124,7 +138,11 @@ impl Render for TextareaScreen {
                     .child(Textarea::new(&self.plain))
                     .child(ui::value_row(
                         "Lines / chars",
-                        format!("{} / {}", plain_value.lines().count(), plain_value.chars().count()),
+                        format!(
+                            "{} / {}",
+                            plain_value.lines().count(),
+                            plain_value.chars().count()
+                        ),
                         cx,
                     ))
                     .child(ui::hint(
@@ -136,7 +154,10 @@ impl Render for TextareaScreen {
             .child(
                 ui::section("Auto-grow (1–6 rows)", cx)
                     .child(Textarea::new(&self.grow))
-                    .child(ui::hint("Type several lines; the field should grow, then scroll.", cx)),
+                    .child(ui::hint(
+                        "Type several lines; the field should grow, then scroll.",
+                        cx,
+                    )),
             )
             .child(
                 ui::section("Inline tokens", cx)
@@ -150,13 +171,17 @@ impl Render for TextareaScreen {
                     )
                     .child(
                         h_flex().gap_1().child(
-                            Button::new("reset-tokens").small().outline().label("Reset tokens").on_click(
-                                cx.listener(|this, _, window, cx| {
-                                    this.tokens.update(cx, |state, cx| state.set_value(token_content(), window, cx));
+                            Button::new("reset-tokens")
+                                .small()
+                                .outline()
+                                .label("Reset tokens")
+                                .on_click(cx.listener(|this, _, window, cx| {
+                                    this.tokens.update(cx, |state, cx| {
+                                        state.set_value(token_content(), window, cx)
+                                    });
                                     this.log.push("tokens reset");
                                     cx.notify();
-                                }),
-                            ),
+                                })),
                         ),
                     )
                     .child(ui::hint(

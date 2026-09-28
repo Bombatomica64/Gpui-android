@@ -40,7 +40,11 @@ pub fn value_row(label: impl Into<SharedString>, value: impl Into<SharedString>,
                 .text_color(cx.theme().muted_foreground)
                 .child(label.into()),
         )
-        .child(div().font_family(cx.theme().mono_font_family.clone()).child(value.into()))
+        .child(
+            div()
+                .font_family(cx.theme().mono_font_family.clone())
+                .child(value.into()),
+        )
 }
 
 pub fn status_tag(status: Status) -> Tag {
@@ -83,7 +87,8 @@ impl EventLog {
         let message = message.into();
         log::info!("event: {message}");
         self.total += 1;
-        self.entries.push_front(format!("{} {}", timestamp(), message));
+        self.entries
+            .push_front(format!("{} {}", timestamp(), message));
         self.entries.truncate(Self::CAPACITY);
     }
 
@@ -107,7 +112,11 @@ impl EventLog {
                     .child(format!("Events ({} total):", self.total)),
             )
             .when(self.entries.is_empty(), |this| {
-                this.child(div().text_color(cx.theme().muted_foreground).child("— none yet —"))
+                this.child(
+                    div()
+                        .text_color(cx.theme().muted_foreground)
+                        .child("— none yet —"),
+                )
             })
             .children(self.entries.iter().map(|entry| div().child(entry.clone())))
             .into_any_element()
@@ -118,6 +127,7 @@ impl EventLog {
 pub mod prelude {
     pub use gpui_kit::component::button::{ButtonVariants as _, ToggleVariants as _};
     pub use gpui_kit::component::{
-        ActiveTheme as _, Colorize as _, Disableable as _, WindowExt as _, Selectable as _, Sizable as _, StyledExt as _,
+        ActiveTheme as _, Colorize as _, Disableable as _, Selectable as _, Sizable as _,
+        StyledExt as _, WindowExt as _,
     };
 }

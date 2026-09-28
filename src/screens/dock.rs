@@ -3,7 +3,9 @@ use gpui::{
     ParentElement, Render, Styled, Window, div, prelude::*, px,
 };
 use gpui_kit::component::{
-    dock::{BasePanel, DockArea, DockLayout, DockPlacement, DockSkin, Panel, PanelEvent, panel_handle},
+    dock::{
+        BasePanel, DockArea, DockLayout, DockPlacement, DockSkin, Panel, PanelEvent, panel_handle,
+    },
     v_flex,
 };
 
@@ -86,7 +88,10 @@ impl DockScreen {
                             .panel_view(panel_handle(search), cx),
                         Some(px(150.)),
                     )
-                    .child(DockLayout::tabs().panel_view(panel_handle(editor), cx), None),
+                    .child(
+                        DockLayout::tabs().panel_view(panel_handle(editor), cx),
+                        None,
+                    ),
                 window,
                 cx,
             );

@@ -6,31 +6,31 @@ mod buttons;
 mod charts;
 mod chat;
 mod choice;
+mod command;
+mod date_time;
 mod diagnostics;
-mod rich_text;
-mod scroll;
-mod stress;
-mod touch;
+mod dialogs;
 mod disclosure;
 mod display;
+mod dock;
 mod feedback;
 mod layout;
-mod questionnaire;
-mod settings_form;
-mod command;
-mod dock;
 mod lists;
 mod navigation;
-mod tables;
-mod date_time;
-mod dialogs;
-mod popovers;
-mod select;
 mod number_otp;
+mod popovers;
+mod questionnaire;
+mod rich_text;
+mod scroll;
+mod select;
+mod settings_form;
+mod stress;
+mod tables;
 pub mod text_input;
 mod textarea;
 pub mod themes;
 mod toolbar;
+mod touch;
 
 pub struct ScreenDef {
     pub title: &'static str,
@@ -88,7 +88,13 @@ pub static SCREENS: &[ScreenDef] = &[
 ];
 
 /// Lab tools listed above the component catalog.
-pub static TOOLS: &[&str] = &["Touch Lab", "Scroll Stress", "Diagnostics", "Stress Test", "Themes"];
+pub static TOOLS: &[&str] = &[
+    "Touch Lab",
+    "Scroll Stress",
+    "Diagnostics",
+    "Stress Test",
+    "Themes",
+];
 
 pub fn find(title: &str) -> Option<&'static ScreenDef> {
     SCREENS.iter().find(|screen| screen.title == title)

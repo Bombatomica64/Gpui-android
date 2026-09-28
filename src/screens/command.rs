@@ -29,7 +29,10 @@ const GROUPS: &[(&str, &[(&str, IconName)])] = &[
     ),
     (
         "Help",
-        &[("Documentation", IconName::BookOpen), ("Report an issue", IconName::Github)],
+        &[
+            ("Documentation", IconName::BookOpen),
+            ("Report an issue", IconName::Github),
+        ],
     ),
 ];
 
@@ -46,7 +49,12 @@ fn build_command(state: &Entity<CommandState>, view: Entity<CommandScreen>) -> C
     for (group, items) in GROUPS {
         let mut g = CommandGroup::new().label(*group);
         for (label, icon) in *items {
-            g = g.item(CommandItem::new().label(*label).icon(icon.clone()).keywords([*group]));
+            g = g.item(
+                CommandItem::new()
+                    .label(*label)
+                    .icon(icon.clone())
+                    .keywords([*group]),
+            );
         }
         command = command.group(g);
     }
@@ -111,22 +119,28 @@ impl Render for CommandScreen {
             )
             .child(
                 ui::section("Command palette in a Dialog", cx).child(
-                    Button::new("open-palette").primary().label("Open palette").on_click(cx.listener(
-                        |this, _, window, cx| {
+                    Button::new("open-palette")
+                        .primary()
+                        .label("Open palette")
+                        .on_click(cx.listener(|this, _, window, cx| {
                             let state = this.palette.clone();
                             let view = cx.entity();
                             window.open_dialog(cx, move |dialog, _, _| {
                                 let state = state.clone();
                                 let view = view.clone();
-                                dialog.close_button(false).p_0().content(move |content, _, _| {
-                                    content.child(build_command(&state, view.clone()).bordered(false))
-                                })
+                                dialog
+                                    .close_button(false)
+                                    .p_0()
+                                    .content(move |content, _, _| {
+                                        content.child(
+                                            build_command(&state, view.clone()).bordered(false),
+                                        )
+                                    })
                             });
                             this.palette.update(cx, |state, cx| state.focus(window, cx));
                             this.log.push("palette opened");
                             cx.notify();
-                        },
-                    )),
+                        })),
                 ),
             )
             .child(self.log.render(cx))

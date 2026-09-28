@@ -4,8 +4,8 @@ use std::time::Instant;
 
 use gpui::{
     Bounds, ClickEvent, Context, InteractiveElement, IntoElement, LongPressEvent, MouseDownEvent,
-    MouseMoveEvent, MouseUpEvent, ParentElement, PinchEvent, Pixels, Point, Render, StatefulInteractiveElement,
-    Styled, TouchDragEvent, TouchPhase, Window, canvas, div, point, px,
+    MouseMoveEvent, MouseUpEvent, ParentElement, PinchEvent, Pixels, Point, Render,
+    StatefulInteractiveElement, Styled, TouchDragEvent, TouchPhase, Window, canvas, div, point, px,
 };
 use gpui_kit::component::{button::Button, h_flex, v_flex};
 
@@ -89,7 +89,10 @@ impl Render for TouchScreen {
                             this.counters.mouse_down += 1;
                             this.marker = this.local(e.position);
                             this.last_touch = Some(this.marker);
-                            this.log.push(format!("down at {:?} (click_count {})", this.marker, e.click_count));
+                            this.log.push(format!(
+                                "down at {:?} (click_count {})",
+                                this.marker, e.click_count
+                            ));
                             cx.notify();
                         });
                     }
@@ -116,7 +119,11 @@ impl Render for TouchScreen {
                                 this.counters.long_press += 1;
                             }
                             if !matches!(e.phase, TouchPhase::Moved) {
-                                this.log.push(format!("long press {:?} at {:?}", e.phase, this.local(e.position)));
+                                this.log.push(format!(
+                                    "long press {:?} at {:?}",
+                                    e.phase,
+                                    this.local(e.position)
+                                ));
                             }
                             cx.notify();
                         });
@@ -160,7 +167,8 @@ impl Render for TouchScreen {
                 this.counters.clicks += 1;
                 if event.click_count() >= 2 {
                     this.counters.double += 1;
-                    this.log.push(format!("double tap (click_count={})", event.click_count()));
+                    this.log
+                        .push(format!("double tap (click_count={})", event.click_count()));
                 } else {
                     this.log.push("tap");
                 }
@@ -186,15 +194,20 @@ impl Render for TouchScreen {
                     .child("Tap · double-tap · long-press · drag · pinch"),
             );
 
-        let row = |label: &str, value: usize| ui::value_row(label.to_string(), value.to_string(), cx);
+        let row =
+            |label: &str, value: usize| ui::value_row(label.to_string(), value.to_string(), cx);
 
         v_flex()
             .gap_3()
-            .child(ui::section("Gesture pad", cx).child(pad).child(ui::value_row(
-                "Last touch (pad-local)",
-                format!("{:?}", self.last_touch),
-                cx,
-            )))
+            .child(
+                ui::section("Gesture pad", cx)
+                    .child(pad)
+                    .child(ui::value_row(
+                        "Last touch (pad-local)",
+                        format!("{:?}", self.last_touch),
+                        cx,
+                    )),
+            )
             .child(
                 ui::section("Counters", cx)
                     .child(
@@ -215,15 +228,19 @@ impl Render for TouchScreen {
                         crate::diagnostics::touch_events().to_string(),
                         cx,
                     ))
-                    .child(Button::new("reset-counters").small().outline().label("Reset").on_click(cx.listener(
-                        |this, _, _, cx| {
-                            this.counters = Counters::default();
-                            this.rapid = 0;
-                            this.rapid_started = None;
-                            this.log.clear();
-                            cx.notify();
-                        },
-                    ))),
+                    .child(
+                        Button::new("reset-counters")
+                            .small()
+                            .outline()
+                            .label("Reset")
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.counters = Counters::default();
+                                this.rapid = 0;
+                                this.rapid_started = None;
+                                this.log.clear();
+                                cx.notify();
+                            })),
+                    ),
             )
             .child(
                 ui::section("Rapid taps", cx)
@@ -240,10 +257,18 @@ impl Render for TouchScreen {
                     )
                     .child(ui::value_row(
                         "Taps / rate",
-                        format!("{} / {}", self.rapid, rate.map(|r| format!("{r:.1} per s")).unwrap_or_else(|| "—".into())),
+                        format!(
+                            "{} / {}",
+                            self.rapid,
+                            rate.map(|r| format!("{r:.1} per s"))
+                                .unwrap_or_else(|| "—".into())
+                        ),
                         cx,
                     ))
-                    .child(ui::hint("Every physical tap should count exactly once.", cx)),
+                    .child(ui::hint(
+                        "Every physical tap should count exactly once.",
+                        cx,
+                    )),
             )
             .child(
                 ui::section("Tap targets near edges", cx).child(

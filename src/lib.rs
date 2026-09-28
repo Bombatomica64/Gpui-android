@@ -26,7 +26,10 @@ pub static BUNDLED_FONTS: OnceLock<Vec<Vec<u8>>> = OnceLock::new();
 pub fn launch(cx: &mut App) {
     log::info!("launch: initializing GPUI Kit {GPUI_KIT_VERSION}");
     if let Some(fonts) = BUNDLED_FONTS.get().filter(|fonts| !fonts.is_empty()) {
-        let fonts = fonts.iter().map(|bytes| Cow::Owned(bytes.clone())).collect();
+        let fonts = fonts
+            .iter()
+            .map(|bytes| Cow::Owned(bytes.clone()))
+            .collect();
         if let Err(err) = cx.text_system().add_fonts(fonts) {
             log::error!("registering bundled fonts failed: {err:#}");
         }

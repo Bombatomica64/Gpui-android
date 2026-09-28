@@ -9,17 +9,18 @@ use gpui_kit::component::{
     chart::{AreaChart, BarChart, CandlestickChart, LineChart, PieChart, RadarChart, SankeyChart},
     h_flex,
     plot::{
-        Plot, PlotElement,
+        Plot, PlotElement, TooltipState,
         scale::{Scale, ScaleBand, ScaleLinear},
         shape::SankeyLink,
-        TooltipState,
     },
     v_flex,
 };
 
 use crate::ui::{self, EventLog, prelude::*};
 
-const MONTHS: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS: [&str; 12] = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
 
 #[derive(Clone)]
 struct Metric {
@@ -82,28 +83,69 @@ fn candles(tick: usize) -> Vec<Candle> {
             let high = open.max(close) + 2.0 + (t * 0.7).cos().abs() * 3.0;
             let low = open.min(close) - 2.0 - (t * 0.9).sin().abs() * 3.0;
             price = close;
-            Candle { day: format!("D{}", i + 1).into(), open, high, low, close }
+            Candle {
+                day: format!("D{}", i + 1).into(),
+                open,
+                high,
+                low,
+                close,
+            }
         })
         .collect()
 }
 
 fn shares() -> Vec<Share> {
     vec![
-        Share { name: "Chrome", value: 62.0 },
-        Share { name: "Safari", value: 19.0 },
-        Share { name: "Edge", value: 6.0 },
-        Share { name: "Firefox", value: 4.0 },
-        Share { name: "Other", value: 9.0 },
+        Share {
+            name: "Chrome",
+            value: 62.0,
+        },
+        Share {
+            name: "Safari",
+            value: 19.0,
+        },
+        Share {
+            name: "Edge",
+            value: 6.0,
+        },
+        Share {
+            name: "Firefox",
+            value: 4.0,
+        },
+        Share {
+            name: "Other",
+            value: 9.0,
+        },
     ]
 }
 
 fn scores() -> Vec<Score> {
     vec![
-        Score { dimension: "Speed", alpha: 80., beta: 60. },
-        Score { dimension: "Stability", alpha: 65., beta: 90. },
-        Score { dimension: "Design", alpha: 90., beta: 70. },
-        Score { dimension: "Docs", alpha: 55., beta: 75. },
-        Score { dimension: "Mobile", alpha: 40., beta: 50. },
+        Score {
+            dimension: "Speed",
+            alpha: 80.,
+            beta: 60.,
+        },
+        Score {
+            dimension: "Stability",
+            alpha: 65.,
+            beta: 90.,
+        },
+        Score {
+            dimension: "Design",
+            alpha: 90.,
+            beta: 70.,
+        },
+        Score {
+            dimension: "Docs",
+            alpha: 55.,
+            beta: 75.,
+        },
+        Score {
+            dimension: "Mobile",
+            alpha: 40.,
+            beta: 50.,
+        },
     ]
 }
 
@@ -136,7 +178,9 @@ impl Plot for Histogram {
         let (x, y) = self.scales(&bounds);
         let band = x.band_width();
         for (ix, value) in self.values.iter().enumerate() {
-            let (Some(left), Some(top)) = (x.tick(&ix), y.tick(value)) else { continue };
+            let (Some(left), Some(top)) = (x.tick(&ix), y.tick(value)) else {
+                continue;
+            };
             let origin = bounds.origin + point(px(left), px(top));
             let bar = Bounds::new(origin, size(px(band), bounds.size.height - px(top)));
             window.paint_quad(fill(bar, if ix % 2 == 0 { self.color } else { self.muted }));
@@ -147,12 +191,23 @@ impl Plot for Histogram {
         Some("custom-histogram".into())
     }
 
-    fn tooltip_state(&self, position: Point<Pixels>, bounds: Bounds<Pixels>, _: &App) -> Option<TooltipState> {
+    fn tooltip_state(
+        &self,
+        position: Point<Pixels>,
+        bounds: Bounds<Pixels>,
+        _: &App,
+    ) -> Option<TooltipState> {
         let (x, y) = self.scales(&bounds);
-        let ix = x.nearest_index(position.x.as_f32()).min(self.values.len().saturating_sub(1));
+        let ix = x
+            .nearest_index(position.x.as_f32())
+            .min(self.values.len().saturating_sub(1));
         let left = x.tick(&ix)? + x.band_width() / 2.;
         let top = y.tick(&self.values[ix])?;
-        Some(TooltipState::new(ix, point(px(left), px(0.)), vec![point(px(left), px(top))]))
+        Some(TooltipState::new(
+            ix,
+            point(px(left), px(0.)),
+            vec![point(px(left), px(top))],
+        ))
     }
 
     fn tooltip(
@@ -187,7 +242,12 @@ pub struct ChartsScreen {
 
 impl ChartsScreen {
     pub fn new(_: &mut Window, _: &mut Context<Self>) -> Self {
-        Self { tick: 0, live: None, narrow: false, log: EventLog::default() }
+        Self {
+            tick: 0,
+            live: None,
+            narrow: false,
+            log: EventLog::default(),
+        }
     }
 
     fn toggle_live(&mut self, cx: &mut Context<Self>) {
@@ -195,13 +255,20 @@ impl ChartsScreen {
             self.log.push("live updates stopped");
         } else {
             self.log.push("live updates started (2 Hz)");
-            self.live = Some(cx.spawn(async move |this, cx| loop {
-                cx.background_executor().timer(Duration::from_millis(500)).await;
-                if this.update(cx, |this, cx| {
-                    this.tick += 1;
-                    cx.notify();
-                }).is_err() {
-                    break;
+            self.live = Some(cx.spawn(async move |this, cx| {
+                loop {
+                    cx.background_executor()
+                        .timer(Duration::from_millis(500))
+                        .await;
+                    if this
+                        .update(cx, |this, cx| {
+                            this.tick += 1;
+                            cx.notify();
+                        })
+                        .is_err()
+                    {
+                        break;
+                    }
                 }
             }));
         }
@@ -219,17 +286,36 @@ impl Render for ChartsScreen {
         let deep = cx.theme().success;
         let danger = cx.theme().danger;
         let data = metrics(self.tick);
-        let width: gpui::DefiniteLength = if self.narrow { px(220.).into() } else { gpui::relative(1.) };
+        let width: gpui::DefiniteLength = if self.narrow {
+            px(220.).into()
+        } else {
+            gpui::relative(1.)
+        };
         let chart_box = |title: &'static str, cx: &mut Context<Self>, chart: AnyElement| {
             ui::section(title, cx).child(div().w(width).h(px(200.)).child(chart))
         };
         let palette = [accent, deep, danger, cx.theme().warning, cx.theme().info];
         let nodes = vec![
-            Node { name: "Revenue", color: accent },
-            Node { name: "Mobile", color: deep },
-            Node { name: "Desktop", color: cx.theme().info },
-            Node { name: "Costs", color: danger },
-            Node { name: "Profit", color: cx.theme().warning },
+            Node {
+                name: "Revenue",
+                color: accent,
+            },
+            Node {
+                name: "Mobile",
+                color: deep,
+            },
+            Node {
+                name: "Desktop",
+                color: cx.theme().info,
+            },
+            Node {
+                name: "Costs",
+                color: danger,
+            },
+            Node {
+                name: "Profit",
+                color: cx.theme().warning,
+            },
         ];
         let links = vec![
             SankeyLink::new(1, 0, 60.),
@@ -237,7 +323,9 @@ impl Render for ChartsScreen {
             SankeyLink::new(0, 3, 70.),
             SankeyLink::new(0, 4, 30.),
         ];
-        let histogram: Vec<f64> = (0..16).map(|i| 5.0 + ((i * 7 + self.tick * 3) % 11) as f64 * 3.0).collect();
+        let histogram: Vec<f64> = (0..16)
+            .map(|i| 5.0 + ((i * 7 + self.tick * 3) % 11) as f64 * 3.0)
+            .collect();
 
         v_flex()
             .gap_3()
@@ -247,20 +335,36 @@ impl Render for ChartsScreen {
                         h_flex()
                             .flex_wrap()
                             .gap_1()
-                            .child(Button::new("live").small().outline().selected(self.live.is_some()).label("Live data").on_click(
-                                cx.listener(|this, _, _, cx| this.toggle_live(cx)),
-                            ))
-                            .child(Button::new("narrow").small().outline().selected(self.narrow).label("Narrow (220 pt)").on_click(
-                                cx.listener(|this, _, _, cx| {
-                                    this.narrow = !this.narrow;
-                                    this.log.push(format!("narrow -> {}", this.narrow));
-                                    cx.notify();
-                                }),
-                            ))
-                            .child(Button::new("step").small().outline().label("Step data").on_click(cx.listener(|this, _, _, cx| {
-                                this.tick += 1;
-                                cx.notify();
-                            }))),
+                            .child(
+                                Button::new("live")
+                                    .small()
+                                    .outline()
+                                    .selected(self.live.is_some())
+                                    .label("Live data")
+                                    .on_click(cx.listener(|this, _, _, cx| this.toggle_live(cx))),
+                            )
+                            .child(
+                                Button::new("narrow")
+                                    .small()
+                                    .outline()
+                                    .selected(self.narrow)
+                                    .label("Narrow (220 pt)")
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.narrow = !this.narrow;
+                                        this.log.push(format!("narrow -> {}", this.narrow));
+                                        cx.notify();
+                                    })),
+                            )
+                            .child(
+                                Button::new("step")
+                                    .small()
+                                    .outline()
+                                    .label("Step data")
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.tick += 1;
+                                        cx.notify();
+                                    })),
+                            ),
                     )
                     .child(ui::value_row("Data tick", self.tick.to_string(), cx))
                     .child(ui::hint(
@@ -292,7 +396,11 @@ impl Render for ChartsScreen {
                     .value(|d| d.revenue - 30.0)
                     .name("Profit")
                     .fill(move |d, _, _, _| -> gpui::Background {
-                        if d.revenue >= 30.0 { accent.into() } else { danger.into() }
+                        if d.revenue >= 30.0 {
+                            accent.into()
+                        } else {
+                            danger.into()
+                        }
                     })
                     .value_axis(true)
                     .value_tick_format(money)
@@ -324,10 +432,15 @@ impl Render for ChartsScreen {
                     .inner_radius(50.)
                     .outer_radius(85.)
                     .pad_angle(0.02)
-                    .color(move |d| palette[shares().iter().position(|s| s.name == d.name).unwrap_or(0) % palette.len()])
+                    .color(move |d| {
+                        palette[shares().iter().position(|s| s.name == d.name).unwrap_or(0)
+                            % palette.len()]
+                    })
                     .label(|d| d.name.into())
                     .tooltip_name(|d| d.name.into())
-                    .tooltip_value(|_, value, percent| format!("{value:.0} ({:.0}%)", percent * 100.).into())
+                    .tooltip_value(|_, value, percent| {
+                        format!("{value:.0} ({:.0}%)", percent * 100.).into()
+                    })
                     .name("Browsers")
                     .id("pie-chart")
                     .into_any_element(),
@@ -376,7 +489,12 @@ impl Render for ChartsScreen {
             .child(chart_box(
                 "Custom Plot (Plot trait + ScaleBand/ScaleLinear)",
                 cx,
-                Histogram { values: histogram, color: accent, muted: accent.opacity(0.5) }.into_any_element(),
+                Histogram {
+                    values: histogram,
+                    color: accent,
+                    muted: accent.opacity(0.5),
+                }
+                .into_any_element(),
             ))
             .child(self.log.render(cx))
     }

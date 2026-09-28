@@ -60,19 +60,24 @@ impl LabApp {
         focus.focus(window, cx);
         // Requests from the Java thread (IME dismissal, intent-requested screens) are
         // picked up here, on the GPUI thread.
-        cx.spawn_in(window, async move |this, cx| loop {
-            cx.background_executor().timer(std::time::Duration::from_millis(150)).await;
-            if crate::diagnostics::take_blur_request() {
-                let _ = cx.update(|window, cx| window.blur(cx));
-            }
-            #[cfg(target_os = "android")]
-            if let Some(night) = crate::diagnostics::take_night_mode_change() {
-                crate::host::apply_night_mode(night);
-            }
-            if let Some(screen) = crate::diagnostics::take_requested_screen() {
-                let result = this.update_in(cx, |this, window, cx| this.open(&screen, window, cx));
-                if result.is_err() {
-                    break;
+        cx.spawn_in(window, async move |this, cx| {
+            loop {
+                cx.background_executor()
+                    .timer(std::time::Duration::from_millis(150))
+                    .await;
+                if crate::diagnostics::take_blur_request() {
+                    let _ = cx.update(|window, cx| window.blur(cx));
+                }
+                #[cfg(target_os = "android")]
+                if let Some(night) = crate::diagnostics::take_night_mode_change() {
+                    crate::host::apply_night_mode(night);
+                }
+                if let Some(screen) = crate::diagnostics::take_requested_screen() {
+                    let result =
+                        this.update_in(cx, |this, window, cx| this.open(&screen, window, cx));
+                    if result.is_err() {
+                        break;
+                    }
                 }
             }
         })
@@ -148,21 +153,35 @@ impl LabApp {
                         .on_click(cx.listener(|this, _, window, cx| this.close_screen(window, cx))),
                 )
             })
-            .child(div().flex_1().min_w_0().truncate().font_semibold().child(title))
+            .child(
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .truncate()
+                    .font_semibold()
+                    .child(title),
+            )
             .when(self.screen.is_none(), |this| {
                 this.child(
                     Button::new("open-themes")
                         .ghost()
                         .small()
                         .icon(IconName::Palette)
-                        .on_click(cx.listener(|this, _, window, cx| this.open("Themes", window, cx))),
+                        .on_click(
+                            cx.listener(|this, _, window, cx| this.open("Themes", window, cx)),
+                        ),
                 )
             })
-            .child(div().text_xs().text_color(cx.theme().muted_foreground).child(format!(
-                "{:.0}×{:.0}",
-                window.viewport_size().width.as_f32(),
-                window.viewport_size().height.as_f32()
-            )))
+            .child(
+                div()
+                    .text_xs()
+                    .text_color(cx.theme().muted_foreground)
+                    .child(format!(
+                        "{:.0}×{:.0}",
+                        window.viewport_size().width.as_f32(),
+                        window.viewport_size().height.as_f32()
+                    )),
+            )
     }
 
     fn render_summary(&self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
@@ -204,7 +223,11 @@ impl LabApp {
                 .selected(selected)
                 .label(format!("{} {}", matrix::count(status), status.label()))
                 .on_click(cx.listener(move |this, _, _, cx| {
-                    this.filter = if this.filter == Some(status) { None } else { Some(status) };
+                    this.filter = if this.filter == Some(status) {
+                        None
+                    } else {
+                        Some(status)
+                    };
                     cx.notify();
                 }))
         });
@@ -304,7 +327,10 @@ impl LabApp {
     fn render_row(&self, row: &'static matrix::Row, cx: &mut Context<Self>) -> impl IntoElement {
         let has_screen = row.included && screens::find(row.screen).is_some();
         h_flex()
-            .id(SharedString::from(format!("row-{}-{}", row.category, row.component)))
+            .id(SharedString::from(format!(
+                "row-{}-{}",
+                row.category, row.component
+            )))
             .w_full()
             .min_h(px(48.))
             .px_3()
@@ -314,9 +340,9 @@ impl LabApp {
             .border_1()
             .border_color(cx.theme().border)
             .when(has_screen, |this| {
-                this.active(|this| this.bg(cx.theme().accent)).on_click(cx.listener(
-                    move |this, _, window, cx| this.open(row.screen, window, cx),
-                ))
+                this.active(|this| this.bg(cx.theme().accent)).on_click(
+                    cx.listener(move |this, _, window, cx| this.open(row.screen, window, cx)),
+                )
             })
             .child(
                 v_flex()
@@ -369,10 +395,17 @@ impl LabApp {
         } else {
             return;
         };
-        let handle = if self.screen.is_some() { &self.screen_scroll } else { &self.catalog_scroll };
+        let handle = if self.screen.is_some() {
+            &self.screen_scroll
+        } else {
+            &self.catalog_scroll
+        };
         let mut offset = handle.offset();
         offset.y -= delta;
-        log::info!("keyboard avoidance: scrolling focused input by {:.0} pt", delta.as_f32());
+        log::info!(
+            "keyboard avoidance: scrolling focused input by {:.0} pt",
+            delta.as_f32()
+        );
         handle.set_offset(offset);
         cx.notify();
         // Overlays anchored to the input (Kit's touch edit menu) read its bounds from

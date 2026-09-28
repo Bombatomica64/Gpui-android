@@ -10,8 +10,8 @@ use gpui_kit::component::{
         QuestionnaireChoices, QuestionnaireDescription, QuestionnaireError, QuestionnaireEvent,
         QuestionnaireInput, QuestionnaireInputDefinition, QuestionnaireItem,
         QuestionnaireItemDefinition, QuestionnaireNext, QuestionnairePrevious,
-        QuestionnaireProgress, QuestionnaireSkip, QuestionnaireState, QuestionnaireSubmit,
-        QuestionnaireSubmission, QuestionnaireTitle,
+        QuestionnaireProgress, QuestionnaireSkip, QuestionnaireState, QuestionnaireSubmission,
+        QuestionnaireSubmit, QuestionnaireTitle,
     },
     v_flex,
 };
@@ -44,9 +44,11 @@ fn summarize(submission: &QuestionnaireSubmission) -> String {
 
 impl QuestionnaireScreen {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
-        let direction_input = cx.new(|cx| InputState::new(window, cx).placeholder("Something else…"));
+        let direction_input =
+            cx.new(|cx| InputState::new(window, cx).placeholder("Something else…"));
         let tools_input = cx.new(|cx| InputState::new(window, cx).placeholder("Other tool"));
-        let handle_input = cx.new(|cx| InputState::new(window, cx).placeholder("@handle (3+ chars)"));
+        let handle_input =
+            cx.new(|cx| InputState::new(window, cx).placeholder("@handle (3+ chars)"));
         let items = vec![
             QuestionnaireItemDefinition::new("direction", "What should we prototype next?")
                 .with_required(true)
@@ -58,7 +60,10 @@ impl QuestionnaireScreen {
                     QuestionnaireChoiceDefinition::new("questions", "Question prompts"),
                     QuestionnaireChoiceDefinition::new("both", "Both together"),
                 ])
-                .with_input(QuestionnaireInputDefinition::new(direction_input, "Custom direction")),
+                .with_input(QuestionnaireInputDefinition::new(
+                    direction_input,
+                    "Custom direction",
+                )),
             QuestionnaireItemDefinition::new("tools", "Which tools do you use?")
                 .with_multiple(true)
                 .with_description("Multiple choice; Browser is disabled.")
@@ -71,9 +76,16 @@ impl QuestionnaireScreen {
             QuestionnaireItemDefinition::new("handle", "Choose a public handle")
                 .with_required(true)
                 .with_description("The validator rejects handles shorter than 3 characters.")
-                .with_input(QuestionnaireInputDefinition::new(handle_input, "Public handle"))
+                .with_input(QuestionnaireInputDefinition::new(
+                    handle_input,
+                    "Public handle",
+                ))
                 .with_validator(|context| {
-                    if context.answer().freeform().is_some_and(|value| value.as_ref().len() >= 3) {
+                    if context
+                        .answer()
+                        .freeform()
+                        .is_some_and(|value| value.as_ref().len() >= 3)
+                    {
                         Ok(())
                     } else {
                         Err("Use at least three characters.".into())
@@ -86,7 +98,8 @@ impl QuestionnaireScreen {
                     QuestionnaireChoiceDefinition::new("detailed", "Detailed"),
                 ]),
         ];
-        let state = cx.new(|cx| QuestionnaireState::new(items, cx).expect("valid questionnaire schema"));
+        let state =
+            cx.new(|cx| QuestionnaireState::new(items, cx).expect("valid questionnaire schema"));
         let subscription = cx.subscribe(&state, |this, _, event: &QuestionnaireEvent, cx| {
             match event {
                 QuestionnaireEvent::CurrentItemChanged { current, .. } => {
@@ -158,14 +171,16 @@ impl Render for QuestionnaireScreen {
                         cx,
                     ))
                     .child(
-                        Button::new("reset-questionnaire").small().outline().label("Reset").on_click(cx.listener(
-                            |this, _, window, cx| {
+                        Button::new("reset-questionnaire")
+                            .small()
+                            .outline()
+                            .label("Reset")
+                            .on_click(cx.listener(|this, _, window, cx| {
                                 this.state.update(cx, |state, cx| state.reset(window, cx));
                                 this.submission = None;
                                 this.log.push("reset");
                                 cx.notify();
-                            },
-                        )),
+                            })),
                     )
                     .child(ui::hint(
                         "Next is blocked until required items are answered; the handle \

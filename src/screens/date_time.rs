@@ -67,42 +67,59 @@ impl DateTimeScreen {
                 .hour_cycle(HourCycle::H23)
         });
         time_12.update(cx, |state, cx| {
-            state.set_time(NaiveTime::from_hms_opt(14, 30, 0).expect("valid time"), window, cx)
+            state.set_time(
+                NaiveTime::from_hms_opt(14, 30, 0).expect("valid time"),
+                window,
+                cx,
+            )
         });
 
-        let mut subscriptions = vec![cx.subscribe(&calendar, |this, _, event: &CalendarEvent, cx| {
-            let CalendarEvent::Selected(date) = event;
-            this.values[0] = describe_date(date);
-            this.log.push(format!("calendar selected {}", this.values[0]));
-            cx.notify();
-        })];
+        let mut subscriptions =
+            vec![
+                cx.subscribe(&calendar, |this, _, event: &CalendarEvent, cx| {
+                    let CalendarEvent::Selected(date) = event;
+                    this.values[0] = describe_date(date);
+                    this.log
+                        .push(format!("calendar selected {}", this.values[0]));
+                    cx.notify();
+                }),
+            ];
         for (ix, name, state) in [
             (1, "date", &single),
             (2, "range", &range),
             (3, "date+time", &date_time),
             (4, "presets", &presets),
         ] {
-            subscriptions.push(cx.subscribe(state, move |this, _, event: &DatePickerEvent, cx| {
-                let DatePickerEvent::Change(value) = event;
-                this.values[ix] = if ix == 3 {
-                    value
-                        .format("%Y-%m-%d %H:%M")
-                        .map(|text| text.to_string())
-                        .unwrap_or_else(|| "none".into())
-                } else {
-                    describe_date(&value.date())
-                };
-                this.log.push(format!("{name} picker -> {}", this.values[ix]));
-                cx.notify();
-            }));
+            subscriptions.push(
+                cx.subscribe(state, move |this, _, event: &DatePickerEvent, cx| {
+                    let DatePickerEvent::Change(value) = event;
+                    this.values[ix] = if ix == 3 {
+                        value
+                            .format("%Y-%m-%d %H:%M")
+                            .map(|text| text.to_string())
+                            .unwrap_or_else(|| "none".into())
+                    } else {
+                        describe_date(&value.date())
+                    };
+                    this.log
+                        .push(format!("{name} picker -> {}", this.values[ix]));
+                    cx.notify();
+                }),
+            );
         }
-        for (ix, name, state) in [(5, "24h", &time_24), (6, "12h", &time_12), (7, "seconds", &time_seconds)] {
-            subscriptions.push(cx.subscribe(state, move |this, _, event: &TimeFieldEvent, cx| {
-                let TimeFieldEvent::Change(time) = event;
-                this.values[ix] = time.to_string();
-                this.log.push(format!("time {name} -> {time}"));
-                cx.notify();
-            }));
+        for (ix, name, state) in [
+            (5, "24h", &time_24),
+            (6, "12h", &time_12),
+            (7, "seconds", &time_seconds),
+        ] {
+            subscriptions.push(
+                cx.subscribe(state, move |this, _, event: &TimeFieldEvent, cx| {
+                    let TimeFieldEvent::Change(time) = event;
+                    this.values[ix] = time.to_string();
+                    this.log.push(format!("time {name} -> {time}"));
+                    cx.notify();
+                }),
+            );
         }
 
         Self {
@@ -150,13 +167,29 @@ impl Render for DateTimeScreen {
             )
             .child(
                 ui::section("DatePicker", cx)
-                    .child(DatePicker::new(&self.single).placeholder("Pick a weekday").cleanable(true))
-                    .child(ui::value_row("Date (weekends disabled)", self.values[1].clone(), cx))
+                    .child(
+                        DatePicker::new(&self.single)
+                            .placeholder("Pick a weekday")
+                            .cleanable(true),
+                    )
+                    .child(ui::value_row(
+                        "Date (weekends disabled)",
+                        self.values[1].clone(),
+                        cx,
+                    ))
                     .child(DatePicker::new(&self.range).placeholder("Pick a range"))
                     .child(ui::value_row("Range", self.values[2].clone(), cx))
                     .child(DatePicker::new(&self.date_time).placeholder("Date and time"))
-                    .child(ui::value_row("Date + time (minute)", self.values[3].clone(), cx))
-                    .child(DatePicker::new(&self.presets).presets(presets).placeholder("With presets"))
+                    .child(ui::value_row(
+                        "Date + time (minute)",
+                        self.values[3].clone(),
+                        cx,
+                    ))
+                    .child(
+                        DatePicker::new(&self.presets)
+                            .presets(presets)
+                            .placeholder("With presets"),
+                    )
                     .child(ui::value_row("Preset range", self.values[4].clone(), cx))
                     .child(DatePicker::new(&self.disabled_date).disabled(true))
                     .child(ui::hint(
@@ -177,16 +210,22 @@ impl Render for DateTimeScreen {
                     .child(TimeField::new(&self.time_disabled).disabled(true))
                     .child(
                         h_flex().gap_1().child(
-                            Button::new("set-time").small().outline().label("Set 09:30 (no event)").on_click(
-                                cx.listener(|this, _, window, cx| {
-                                    let time = NaiveTime::from_hms_opt(9, 30, 0).expect("valid time");
-                                    for state in [&this.time_24, &this.time_12, &this.time_seconds] {
-                                        state.update(cx, |state, cx| state.set_time(time, window, cx));
+                            Button::new("set-time")
+                                .small()
+                                .outline()
+                                .label("Set 09:30 (no event)")
+                                .on_click(cx.listener(|this, _, window, cx| {
+                                    let time =
+                                        NaiveTime::from_hms_opt(9, 30, 0).expect("valid time");
+                                    for state in [&this.time_24, &this.time_12, &this.time_seconds]
+                                    {
+                                        state.update(cx, |state, cx| {
+                                            state.set_time(time, window, cx)
+                                        });
                                     }
                                     this.log.push("set_time(09:30) on all fields");
                                     cx.notify();
-                                }),
-                            ),
+                                })),
                         ),
                     )
                     .child(ui::hint(

@@ -109,20 +109,24 @@ impl Render for ToolbarScreen {
                     .on_click(cx.listener(|this, _, _, cx| this.action("More", cx))),
             );
 
-        let sizes = [("XSmall", Size::XSmall), ("Small", Size::Small), ("Medium", Size::Medium)]
-            .into_iter()
-            .map(|(label, size)| {
-                Button::new(label)
-                    .small()
-                    .label(label)
-                    .selected(self.size == size)
-                    .outline()
-                    .on_click(cx.listener(move |this, _, _, cx| {
-                        this.size = size;
-                        this.log.push(format!("size -> {label}"));
-                        cx.notify();
-                    }))
-            });
+        let sizes = [
+            ("XSmall", Size::XSmall),
+            ("Small", Size::Small),
+            ("Medium", Size::Medium),
+        ]
+        .into_iter()
+        .map(|(label, size)| {
+            Button::new(label)
+                .small()
+                .label(label)
+                .selected(self.size == size)
+                .outline()
+                .on_click(cx.listener(move |this, _, _, cx| {
+                    this.size = size;
+                    this.log.push(format!("size -> {label}"));
+                    cx.notify();
+                }))
+        });
 
         v_flex()
             .gap_3()
@@ -142,16 +146,24 @@ impl Render for ToolbarScreen {
                         Button::new("toggle-toolbar-disabled")
                             .small()
                             .outline()
-                            .label(if disabled { "Enable toolbar" } else { "Disable toolbar" })
+                            .label(if disabled {
+                                "Enable toolbar"
+                            } else {
+                                "Disable toolbar"
+                            })
                             .on_click(cx.listener(|this, _, _, cx| {
                                 this.disabled = !this.disabled;
-                                this.log.push(format!("toolbar disabled = {}", this.disabled));
+                                this.log
+                                    .push(format!("toolbar disabled = {}", this.disabled));
                                 cx.notify();
                             })),
                     )
                     .child(ui::value_row(
                         "State",
-                        format!("bold={} italic={} undo depth={}", self.bold, self.italic, self.undo_depth),
+                        format!(
+                            "bold={} italic={} undo depth={}",
+                            self.bold, self.italic, self.undo_depth
+                        ),
                         cx,
                     ))
                     .child(ui::hint(
@@ -162,17 +174,19 @@ impl Render for ToolbarScreen {
             )
             .child(
                 ui::section("Narrow toolbar (overflow)", cx)
-                    .child(
-                        div().w(px(220.)).overflow_hidden().child(
-                            Toolbar::new("narrow")
-                                .children((0..8usize).map(|i| {
-                                    Button::new(("narrow", i)).label(format!("B{i}")).on_click(cx.listener(
-                                        move |this, _, _, cx| this.action(&format!("narrow B{i}"), cx),
-                                    ))
-                                })),
-                        ),
-                    )
-                    .child(ui::hint("8 buttons in a 220 px box: check clipping at the edge.", cx)),
+                    .child(div().w(px(220.)).overflow_hidden().child(
+                        Toolbar::new("narrow").children((0..8usize).map(|i| {
+                            Button::new(("narrow", i))
+                                .label(format!("B{i}"))
+                                .on_click(cx.listener(move |this, _, _, cx| {
+                                    this.action(&format!("narrow B{i}"), cx)
+                                }))
+                        })),
+                    ))
+                    .child(ui::hint(
+                        "8 buttons in a 220 px box: check clipping at the edge.",
+                        cx,
+                    )),
             )
             .child(self.log.render(cx))
     }

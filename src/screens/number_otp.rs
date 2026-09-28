@@ -50,8 +50,10 @@ impl NumberOtpScreen {
         let otp = cx.new(|cx| OtpState::new(6, window, cx));
         let otp_masked = cx.new(|cx| OtpState::new(4, window, cx).masked(true));
 
-        let mut subscriptions = vec![
-            cx.subscribe_in(&manual, window, |this, state, event: &NumberInputEvent, window, cx| {
+        let mut subscriptions = vec![cx.subscribe_in(
+            &manual,
+            window,
+            |this, state, event: &NumberInputEvent, window, cx| {
                 let NumberInputEvent::Step(action) = event;
                 this.manual_value += match action {
                     StepAction::Increment => 10,
@@ -61,15 +63,22 @@ impl NumberOtpScreen {
                 this.log.push(format!("manual step {action:?} -> {value}"));
                 state.update(cx, |state, cx| state.set_value(value, window, cx));
                 cx.notify();
-            }),
-        ];
-        for (name, state) in [("clamped 0–10", &clamped), ("manual ±10", &manual), ("decimal", &decimal)] {
-            subscriptions.push(cx.subscribe(state, move |this, state, event: &InputEvent, cx| {
-                if let InputEvent::Change = event {
-                    this.log.push(format!("{name}: change -> {}", state.read(cx).value()));
-                    cx.notify();
-                }
-            }));
+            },
+        )];
+        for (name, state) in [
+            ("clamped 0–10", &clamped),
+            ("manual ±10", &manual),
+            ("decimal", &decimal),
+        ] {
+            subscriptions.push(
+                cx.subscribe(state, move |this, state, event: &InputEvent, cx| {
+                    if let InputEvent::Change = event {
+                        this.log
+                            .push(format!("{name}: change -> {}", state.read(cx).value()));
+                        cx.notify();
+                    }
+                }),
+            );
         }
         subscriptions.push(cx.subscribe(&otp, |this, state, event: &OtpEvent, cx| {
             this.otp_value = state.read(cx).value().to_string();

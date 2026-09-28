@@ -38,7 +38,9 @@ fn stocks() -> Vec<Stock> {
     };
     (0..ROWS)
         .map(|i| {
-            let letters: String = (0..3).map(|k| (b'A' + ((i * 7 + k * 11) % 26) as u8) as char).collect();
+            let letters: String = (0..3)
+                .map(|k| (b'A' + ((i * 7 + k * 11) % 26) as u8) as char)
+                .collect();
             Stock {
                 symbol: format!("{letters}{i:03}"),
                 price: 10.0 + (next() % 50_000) as f64 / 100.0,
@@ -61,9 +63,18 @@ impl StockDelegate {
             columns: vec![
                 Column::new("#", "#").width(px(56.)).fixed_left(),
                 Column::new("symbol", "Symbol").width(px(100.)).sortable(),
-                Column::new("price", "Price").width(px(96.)).text_right().sortable(),
-                Column::new("change", "Change %").width(px(96.)).text_right().sortable(),
-                Column::new("volume", "Volume").width(px(120.)).text_right().sortable(),
+                Column::new("price", "Price")
+                    .width(px(96.))
+                    .text_right()
+                    .sortable(),
+                Column::new("change", "Change %")
+                    .width(px(96.))
+                    .text_right()
+                    .sortable(),
+                Column::new("volume", "Volume")
+                    .width(px(120.))
+                    .text_right()
+                    .sortable(),
             ],
         }
     }
@@ -95,13 +106,23 @@ impl TableDelegate for StockDelegate {
             1 => div().child(row.symbol.clone()),
             2 => div().child(format!("{:.2}", row.price)),
             3 => div()
-                .text_color(if row.change >= 0.0 { cx.theme().success } else { cx.theme().danger })
+                .text_color(if row.change >= 0.0 {
+                    cx.theme().success
+                } else {
+                    cx.theme().danger
+                })
                 .child(format!("{:+.2}", row.change)),
             _ => div().child(row.volume.to_string()),
         }
     }
 
-    fn perform_sort(&mut self, col_ix: usize, sort: ColumnSort, _: &mut Window, _: &mut Context<TableState<Self>>) {
+    fn perform_sort(
+        &mut self,
+        col_ix: usize,
+        sort: ColumnSort,
+        _: &mut Window,
+        _: &mut Context<TableState<Self>>,
+    ) {
         let descending = matches!(sort, ColumnSort::Descending);
         self.rows.sort_by(|a, b| {
             let ordering = match col_ix {
@@ -110,7 +131,11 @@ impl TableDelegate for StockDelegate {
                 3 => a.change.total_cmp(&b.change),
                 _ => a.volume.cmp(&b.volume),
             };
-            if descending { ordering.reverse() } else { ordering }
+            if descending {
+                ordering.reverse()
+            } else {
+                ordering
+            }
         });
     }
 }
@@ -176,21 +201,26 @@ impl TablesScreen {
                                 .child(TableHead::new().text_right().child("Amount")),
                         ),
                     )
-                    .child(TableBody::new().children(invoices.iter().map(|(id, status, method, amount)| {
-                        let tag = match *status {
-                            "Paid" => Tag::success(),
-                            "Pending" => Tag::warning(),
-                            _ => Tag::danger(),
-                        };
-                        TableRow::new()
-                            .child(TableCell::new().w(px(80.)).child(*id))
-                            .child(TableCell::new().child(tag.small().child(*status)))
-                            .child(TableCell::new().child(*method))
-                            .child(TableCell::new().text_right().child(*amount))
-                    })))
+                    .child(TableBody::new().children(invoices.iter().map(
+                        |(id, status, method, amount)| {
+                            let tag = match *status {
+                                "Paid" => Tag::success(),
+                                "Pending" => Tag::warning(),
+                                _ => Tag::danger(),
+                            };
+                            TableRow::new()
+                                .child(TableCell::new().w(px(80.)).child(*id))
+                                .child(TableCell::new().child(tag.small().child(*status)))
+                                .child(TableCell::new().child(*method))
+                                .child(TableCell::new().text_right().child(*amount))
+                        },
+                    )))
                     .child(TableCaption::new().child("Five invoices on a 411 pt wide screen.")),
             )
-            .child(ui::hint("Stateless Table: check column squeezing and wrapping.", cx))
+            .child(ui::hint(
+                "Stateless Table: check column squeezing and wrapping.",
+                cx,
+            ))
     }
 }
 
@@ -212,29 +242,43 @@ impl Render for TablesScreen {
                     h_flex()
                         .flex_wrap()
                         .gap_1()
-                        .child(Button::new("stripe").small().outline().selected(self.stripe).label("Stripe").on_click(
-                            cx.listener(|this, _, _, cx| {
-                                this.stripe = !this.stripe;
-                                cx.notify();
-                            }),
-                        ))
-                        .child(Button::new("size").small().outline().label(format!("Size: {:?}", self.size)).on_click(
-                            cx.listener(|this, _, _, cx| {
-                                this.size = match this.size {
-                                    Size::Small => Size::Medium,
-                                    Size::Medium => Size::Large,
-                                    _ => Size::Small,
-                                };
-                                cx.notify();
-                            }),
-                        ))
-                        .child(Button::new("jump").small().outline().label("Scroll to row 900").on_click(cx.listener(
-                            |this, _, _, cx| {
-                                this.table.update(cx, |state, cx| state.scroll_to_row(900, cx));
-                                this.log.push("scroll_to_row(900)");
-                                cx.notify();
-                            },
-                        ))),
+                        .child(
+                            Button::new("stripe")
+                                .small()
+                                .outline()
+                                .selected(self.stripe)
+                                .label("Stripe")
+                                .on_click(cx.listener(|this, _, _, cx| {
+                                    this.stripe = !this.stripe;
+                                    cx.notify();
+                                })),
+                        )
+                        .child(
+                            Button::new("size")
+                                .small()
+                                .outline()
+                                .label(format!("Size: {:?}", self.size))
+                                .on_click(cx.listener(|this, _, _, cx| {
+                                    this.size = match this.size {
+                                        Size::Small => Size::Medium,
+                                        Size::Medium => Size::Large,
+                                        _ => Size::Small,
+                                    };
+                                    cx.notify();
+                                })),
+                        )
+                        .child(
+                            Button::new("jump")
+                                .small()
+                                .outline()
+                                .label("Scroll to row 900")
+                                .on_click(cx.listener(|this, _, _, cx| {
+                                    this.table
+                                        .update(cx, |state, cx| state.scroll_to_row(900, cx));
+                                    this.log.push("scroll_to_row(900)");
+                                    cx.notify();
+                                })),
+                        ),
                 )
                 .child(ui::value_row(
                     "Selection",
@@ -242,10 +286,11 @@ impl Render for TablesScreen {
                     cx,
                 ))
                 .child(
-                    div()
-                        .flex_1()
-                        .min_h_0()
-                        .child(DataTable::new(&self.table).stripe(self.stripe).with_size(self.size)),
+                    div().flex_1().min_h_0().child(
+                        DataTable::new(&self.table)
+                            .stripe(self.stripe)
+                            .with_size(self.size),
+                    ),
                 )
                 .child(self.log.render(cx))
                 .into_any_element()

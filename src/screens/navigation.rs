@@ -128,9 +128,19 @@ impl Render for NavigationScreen {
             .child(
                 ui::section("Tabs", cx)
                     .child(self.tab_bar("tabs-default", self.tab, 0, cx, |this, ix| this.tab = ix))
-                    .child(self.tab_bar("tabs-pill", self.tab_pill, 1, cx, |this, ix| this.tab_pill = ix))
-                    .child(self.tab_bar("tabs-segmented", self.tab_segmented, 2, cx, |this, ix| this.tab_segmented = ix))
-                    .child(self.tab_bar("tabs-underline", self.tab_underline, 3, cx, |this, ix| this.tab_underline = ix))
+                    .child(self.tab_bar("tabs-pill", self.tab_pill, 1, cx, |this, ix| {
+                        this.tab_pill = ix
+                    }))
+                    .child(
+                        self.tab_bar("tabs-segmented", self.tab_segmented, 2, cx, |this, ix| {
+                            this.tab_segmented = ix
+                        }),
+                    )
+                    .child(
+                        self.tab_bar("tabs-underline", self.tab_underline, 3, cx, |this, ix| {
+                            this.tab_underline = ix
+                        }),
+                    )
                     .child(
                         TabBar::new("many-tabs")
                             .underline()
@@ -146,25 +156,37 @@ impl Render for NavigationScreen {
                         "Selected",
                         format!(
                             "{} / {} / {} / {} / many {}",
-                            self.tab, self.tab_pill, self.tab_segmented, self.tab_underline, self.many_tabs
+                            self.tab,
+                            self.tab_pill,
+                            self.tab_segmented,
+                            self.tab_underline,
+                            self.many_tabs
                         ),
                         cx,
                     ))
-                    .child(ui::hint("12 tabs overflow a phone width: swipe the bar horizontally.", cx)),
+                    .child(ui::hint(
+                        "12 tabs overflow a phone width: swipe the bar horizontally.",
+                        cx,
+                    )),
             )
             .child(
                 ui::section("Breadcrumb", cx)
                     .child(Breadcrumb::new().children(crumbs))
                     .child(
-                        Button::new("reset-crumbs").small().outline().label("Reset path").on_click(cx.listener(
-                            |this, _, _, cx| {
+                        Button::new("reset-crumbs")
+                            .small()
+                            .outline()
+                            .label("Reset path")
+                            .on_click(cx.listener(|this, _, _, cx| {
                                 this.depth = PATH.len();
                                 this.log.push("breadcrumb reset");
                                 cx.notify();
-                            },
-                        )),
+                            })),
                     )
-                    .child(ui::hint("Six levels wrap on a narrow screen. Tap a level to go up.", cx)),
+                    .child(ui::hint(
+                        "Six levels wrap on a narrow screen. Tap a level to go up.",
+                        cx,
+                    )),
             )
             .child(
                 ui::section("Pagination", cx)
@@ -196,28 +218,38 @@ impl Render for NavigationScreen {
                     .child(
                         Carousel::new("carousel", &self.carousel)
                             .w_full()
+                            .child(CarouselContent::new(&self.carousel).children(
+                                slides.iter().enumerate().map(|(ix, name)| {
+                                    CarouselItem::new(("slide", ix), ix, &self.carousel).child(
+                                        div()
+                                            .h(px(140.))
+                                            .flex()
+                                            .items_center()
+                                            .justify_center()
+                                            .rounded(cx.theme().radius_lg)
+                                            .bg(gpui::rgb(slide_colors[ix]))
+                                            .text_color(gpui::white())
+                                            .text_xl()
+                                            .child(*name),
+                                    )
+                                }),
+                            ))
                             .child(
-                                CarouselContent::new(&self.carousel).children(slides.iter().enumerate().map(
-                                    |(ix, name)| {
-                                        CarouselItem::new(("slide", ix), ix, &self.carousel).child(
-                                            div()
-                                                .h(px(140.))
-                                                .flex()
-                                                .items_center()
-                                                .justify_center()
-                                                .rounded(cx.theme().radius_lg)
-                                                .bg(gpui::rgb(slide_colors[ix]))
-                                                .text_color(gpui::white())
-                                                .text_xl()
-                                                .child(*name),
-                                        )
-                                    },
-                                )),
-                            )
-                            .child(h_flex().justify_between().child(CarouselPrevious::new(&self.carousel)).child(CarouselNext::new(&self.carousel))),
+                                h_flex()
+                                    .justify_between()
+                                    .child(CarouselPrevious::new(&self.carousel))
+                                    .child(CarouselNext::new(&self.carousel)),
+                            ),
                     )
-                    .child(ui::value_row("Slide", format!("{} ({})", self.slide, slides[self.slide.min(4)]), cx))
-                    .child(ui::hint("Swipe horizontally; a vertical swipe must still scroll the page.", cx)),
+                    .child(ui::value_row(
+                        "Slide",
+                        format!("{} ({})", self.slide, slides[self.slide.min(4)]),
+                        cx,
+                    ))
+                    .child(ui::hint(
+                        "Swipe horizontally; a vertical swipe must still scroll the page.",
+                        cx,
+                    )),
             )
             .child(
                 ui::section("Sidebar", cx)
@@ -233,7 +265,10 @@ impl Render for NavigationScreen {
                                 Sidebar::new("sidebar")
                                     .collapsed(self.sidebar_collapsed)
                                     .header(SidebarHeader::new().child("Mail"))
-                                    .child(SidebarGroup::new("Navigation").child(SidebarMenu::new().children(sidebar_items))),
+                                    .child(
+                                        SidebarGroup::new("Navigation")
+                                            .child(SidebarMenu::new().children(sidebar_items)),
+                                    ),
                             )
                             .child(
                                 v_flex()
@@ -245,10 +280,17 @@ impl Render for NavigationScreen {
                                         Button::new("collapse-sidebar")
                                             .small()
                                             .outline()
-                                            .label(if self.sidebar_collapsed { "Expand" } else { "Collapse" })
+                                            .label(if self.sidebar_collapsed {
+                                                "Expand"
+                                            } else {
+                                                "Collapse"
+                                            })
                                             .on_click(cx.listener(|this, _, _, cx| {
                                                 this.sidebar_collapsed = !this.sidebar_collapsed;
-                                                this.log.push(format!("sidebar collapsed -> {}", this.sidebar_collapsed));
+                                                this.log.push(format!(
+                                                    "sidebar collapsed -> {}",
+                                                    this.sidebar_collapsed
+                                                ));
                                                 cx.notify();
                                             })),
                                     ),

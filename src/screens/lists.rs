@@ -15,11 +15,20 @@ use gpui_kit::component::{
 use crate::ui::{self, EventLog, prelude::*};
 
 const CONTACTS: usize = 1_000;
-const FIRST: &[&str] = &["Ada", "Bruno", "Chiara", "Dmitri", "Emi", "Farah", "Giulia", "Hiro", "Ines", "Jae"];
-const LAST: &[&str] = &["Rossi", "Tanaka", "Kim", "Müller", "García", "Nguyen", "Okafor", "Silva", "Novak", "Li"];
+const FIRST: &[&str] = &[
+    "Ada", "Bruno", "Chiara", "Dmitri", "Emi", "Farah", "Giulia", "Hiro", "Ines", "Jae",
+];
+const LAST: &[&str] = &[
+    "Rossi", "Tanaka", "Kim", "Müller", "García", "Nguyen", "Okafor", "Silva", "Novak", "Li",
+];
 
 fn contact(ix: usize) -> SharedString {
-    format!("{} {} #{ix:04}", FIRST[ix % FIRST.len()], LAST[(ix / 7) % LAST.len()]).into()
+    format!(
+        "{} {} #{ix:04}",
+        FIRST[ix % FIRST.len()],
+        LAST[(ix / 7) % LAST.len()]
+    )
+    .into()
 }
 
 struct ContactDelegate {
@@ -31,7 +40,12 @@ struct ContactDelegate {
 impl ListDelegate for ContactDelegate {
     type Item = ListItem;
 
-    fn perform_search(&mut self, query: &str, _: &mut Window, cx: &mut Context<ListState<Self>>) -> Task<()> {
+    fn perform_search(
+        &mut self,
+        query: &str,
+        _: &mut Window,
+        cx: &mut Context<ListState<Self>>,
+    ) -> Task<()> {
         let query = query.to_lowercase();
         self.matches = (0..self.all.len())
             .filter(|ix| query.is_empty() || self.all[*ix].to_lowercase().contains(&query))
@@ -44,7 +58,12 @@ impl ListDelegate for ContactDelegate {
         self.matches.len()
     }
 
-    fn render_item(&mut self, ix: IndexPath, _: &mut Window, cx: &mut Context<ListState<Self>>) -> Option<ListItem> {
+    fn render_item(
+        &mut self,
+        ix: IndexPath,
+        _: &mut Window,
+        cx: &mut Context<ListState<Self>>,
+    ) -> Option<ListItem> {
         let contact_ix = *self.matches.get(ix.row)?;
         Some(
             ListItem::new(ix.row)
@@ -60,16 +79,32 @@ impl ListDelegate for ContactDelegate {
                                 .flex()
                                 .items_center()
                                 .justify_center()
-                                .child(self.all[contact_ix].chars().next().unwrap_or('?').to_string()),
+                                .child(
+                                    self.all[contact_ix]
+                                        .chars()
+                                        .next()
+                                        .unwrap_or('?')
+                                        .to_string(),
+                                ),
                         )
-                        .child(v_flex().child(self.all[contact_ix].clone()).child(
-                            div().text_xs().text_color(cx.theme().muted_foreground).child(format!("+39 02 {contact_ix:06}")),
-                        )),
+                        .child(
+                            v_flex().child(self.all[contact_ix].clone()).child(
+                                div()
+                                    .text_xs()
+                                    .text_color(cx.theme().muted_foreground)
+                                    .child(format!("+39 02 {contact_ix:06}")),
+                            ),
+                        ),
                 ),
         )
     }
 
-    fn set_selected_index(&mut self, ix: Option<IndexPath>, _: &mut Window, cx: &mut Context<ListState<Self>>) {
+    fn set_selected_index(
+        &mut self,
+        ix: Option<IndexPath>,
+        _: &mut Window,
+        cx: &mut Context<ListState<Self>>,
+    ) {
         self.selected = ix;
         cx.notify();
     }
@@ -91,10 +126,10 @@ fn tree_items() -> Vec<TreeItem> {
                 .child(file("android/app", "build.gradle.kts"))
                 .child(file("android/app", "AndroidManifest.xml")),
         ),
-        TreeItem::new("vendor", "vendor").child(TreeItem::new("vendor/gpui-mobile", "gpui-mobile").child(file(
-            "vendor/gpui-mobile",
-            "Cargo.toml",
-        ))),
+        TreeItem::new("vendor", "vendor").child(
+            TreeItem::new("vendor/gpui-mobile", "gpui-mobile")
+                .child(file("vendor/gpui-mobile", "Cargo.toml")),
+        ),
         file("", "Cargo.toml"),
         file("", "README.md"),
         TreeItem::new("disabled", "disabled folder").disabled(true),
@@ -142,7 +177,11 @@ impl ListsScreen {
             }),
         ];
         // Variable heights (32–88 px), deterministic.
-        let item_sizes = Rc::new((0..1_000).map(|i| size(px(0.), px(32. + ((i * 37) % 57) as f32))).collect());
+        let item_sizes = Rc::new(
+            (0..1_000)
+                .map(|i| size(px(0.), px(32. + ((i * 37) % 57) as f32)))
+                .collect(),
+        );
         Self {
             view: 0,
             list,
@@ -162,36 +201,55 @@ impl Render for ListsScreen {
             0 => v_flex()
                 .flex_1()
                 .min_h_0()
-                .child(ui::hint("1,000 contacts, virtualized, with built-in search. Fling hard.", cx))
-                .child(div().flex_1().min_h_0().child(List::new(&self.list).search_placeholder("Search contacts…")))
+                .child(ui::hint(
+                    "1,000 contacts, virtualized, with built-in search. Fling hard.",
+                    cx,
+                ))
+                .child(
+                    div()
+                        .flex_1()
+                        .min_h_0()
+                        .child(List::new(&self.list).search_placeholder("Search contacts…")),
+                )
                 .into_any_element(),
             1 => {
-                let selected = self.tree.read(cx).selected_entry().map(|entry| entry.item().id.clone());
+                let selected = self
+                    .tree
+                    .read(cx)
+                    .selected_entry()
+                    .map(|entry| entry.item().id.clone());
                 v_flex()
                     .flex_1()
                     .min_h_0()
                     .child(ui::value_row("Selected", format!("{selected:?}"), cx))
-                    .child(div().flex_1().min_h_0().child(tree(&self.tree, |ix, entry, selected, _, _| {
-                        let item = entry.item();
-                        let (chevron, icon) = if item.is_folder() {
-                            if entry.is_expanded() {
-                                (Some(IconName::ChevronDown), "📂")
+                    .child(div().flex_1().min_h_0().child(tree(
+                        &self.tree,
+                        |ix, entry, selected, _, _| {
+                            let item = entry.item();
+                            let (chevron, icon) = if item.is_folder() {
+                                if entry.is_expanded() {
+                                    (Some(IconName::ChevronDown), "📂")
+                                } else {
+                                    (Some(IconName::ChevronRight), "📁")
+                                }
                             } else {
-                                (Some(IconName::ChevronRight), "📁")
-                            }
-                        } else {
-                            (None, "📄")
-                        };
-                        ListItem::new(ix)
-                            .selected(selected)
-                            .pl(px(12. + 16. * entry.depth() as f32))
-                            .child(
-                                h_flex()
-                                    .gap_1()
-                                    .child(div().w_4().children(chevron.map(|c| Icon::new(c).small())))
-                                    .child(format!("{icon} {}", item.label)),
-                            )
-                    })))
+                                (None, "📄")
+                            };
+                            ListItem::new(ix)
+                                .selected(selected)
+                                .pl(px(12. + 16. * entry.depth() as f32))
+                                .child(
+                                    h_flex()
+                                        .gap_1()
+                                        .child(
+                                            div()
+                                                .w_4()
+                                                .children(chevron.map(|c| Icon::new(c).small())),
+                                        )
+                                        .child(format!("{icon} {}", item.label)),
+                                )
+                        },
+                    )))
                     .into_any_element()
             }
             _ => v_flex()
@@ -203,22 +261,30 @@ impl Render for ListsScreen {
                     cx,
                 ))
                 .child(
-                    v_virtual_list(cx.entity(), "virtual", self.item_sizes.clone(), |this, range, _, cx| {
-                        this.visible = range.clone();
-                        range
-                            .map(|ix| {
-                                let height = this.item_sizes[ix].height;
-                                h_flex()
-                                    .w_full()
-                                    .h(height)
-                                    .px_3()
-                                    .border_b_1()
-                                    .border_color(cx.theme().border)
-                                    .text_sm()
-                                    .child(format!("Virtual row {ix} — {:.0} px", height.as_f32()))
-                            })
-                            .collect()
-                    })
+                    v_virtual_list(
+                        cx.entity(),
+                        "virtual",
+                        self.item_sizes.clone(),
+                        |this, range, _, cx| {
+                            this.visible = range.clone();
+                            range
+                                .map(|ix| {
+                                    let height = this.item_sizes[ix].height;
+                                    h_flex()
+                                        .w_full()
+                                        .h(height)
+                                        .px_3()
+                                        .border_b_1()
+                                        .border_color(cx.theme().border)
+                                        .text_sm()
+                                        .child(format!(
+                                            "Virtual row {ix} — {:.0} px",
+                                            height.as_f32()
+                                        ))
+                                })
+                                .collect()
+                        },
+                    )
                     .track_scroll(&self.virtual_scroll)
                     .flex_1(),
                 )

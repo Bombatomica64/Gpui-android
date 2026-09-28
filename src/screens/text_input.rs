@@ -42,10 +42,15 @@ impl TextInputScreen {
         };
         let fields = vec![
             make("unicode", window, cx, &|s| s.default_value(UNICODE_SAMPLE)),
-            make("empty", window, cx, &|s| s.placeholder("Type here…").clean_on_escape()),
-            make("password", window, cx, &|s| s.masked(true).placeholder("Password")),
+            make("empty", window, cx, &|s| {
+                s.placeholder("Type here…").clean_on_escape()
+            }),
+            make("password", window, cx, &|s| {
+                s.masked(true).placeholder("Password")
+            }),
             make("phone mask", window, cx, &|s| {
-                s.mask_pattern("(999) 999-9999").placeholder("(555) 123-4567")
+                s.mask_pattern("(999) 999-9999")
+                    .placeholder("(555) 123-4567")
             }),
             make("amount mask", window, cx, &|s| {
                 s.mask_pattern(MaskPattern::Number {
@@ -58,8 +63,12 @@ impl TextInputScreen {
                 s.pattern(regex::Regex::new(r"^\d*$").expect("valid regex"))
                     .placeholder("0-9 only")
             }),
-            make("disabled", window, cx, &|s| s.default_value("Disabled input")),
-            make("url", window, cx, &|s| s.default_value("https://gpui-kit.com/docs/mobile/")),
+            make("disabled", window, cx, &|s| {
+                s.default_value("Disabled input")
+            }),
+            make("url", window, cx, &|s| {
+                s.default_value("https://gpui-kit.com/docs/mobile/")
+            }),
             make("group", window, cx, &|s| s.placeholder("username")),
             make("highlight", window, cx, &|s| s.default_value("Hello")),
             make("long", window, cx, &|s| {
@@ -73,20 +82,26 @@ impl TextInputScreen {
             .iter()
             .enumerate()
             .map(|(ix, field)| {
-                cx.subscribe_in(&field.state, window, move |this, state, event: &InputEvent, _, cx| {
-                    let name = this.fields[ix].name;
-                    this.active = ix;
-                    let message = match event {
-                        InputEvent::Change => format!("{name}: change -> {:?}", truncate(&state.read(cx).value())),
-                        InputEvent::PressEnter { secondary, shift } => {
-                            format!("{name}: enter (secondary={secondary}, shift={shift})")
-                        }
-                        InputEvent::Focus => format!("{name}: focus"),
-                        InputEvent::Blur => format!("{name}: blur"),
-                    };
-                    this.log.push(message);
-                    cx.notify();
-                })
+                cx.subscribe_in(
+                    &field.state,
+                    window,
+                    move |this, state, event: &InputEvent, _, cx| {
+                        let name = this.fields[ix].name;
+                        this.active = ix;
+                        let message = match event {
+                            InputEvent::Change => {
+                                format!("{name}: change -> {:?}", truncate(&state.read(cx).value()))
+                            }
+                            InputEvent::PressEnter { secondary, shift } => {
+                                format!("{name}: enter (secondary={secondary}, shift={shift})")
+                            }
+                            InputEvent::Focus => format!("{name}: focus"),
+                            InputEvent::Blur => format!("{name}: blur"),
+                        };
+                        this.log.push(message);
+                        cx.notify();
+                    },
+                )
             })
             .collect();
         Self {
@@ -98,7 +113,12 @@ impl TextInputScreen {
     }
 
     fn field(&self, name: &str) -> &Entity<InputState> {
-        &self.fields.iter().find(|f| f.name == name).expect("known field").state
+        &self
+            .fields
+            .iter()
+            .find(|f| f.name == name)
+            .expect("known field")
+            .state
     }
 
     fn active_state(&self) -> Entity<InputState> {
@@ -132,47 +152,70 @@ impl Render for TextInputScreen {
         let tools = h_flex()
             .flex_wrap()
             .gap_1()
-            .child(Button::new("select-all").small().outline().label("Select all").on_click(cx.listener(
-                |this, _, window, cx| {
-                    let state = this.active_state();
-                    state.update(cx, |state, cx| {
-                        state.focus(window, cx);
-                        state.select_all(window, cx);
-                    });
-                    this.log.push(format!("select all in {}", this.fields[this.active].name));
-                    cx.notify();
-                },
-            )))
-            .child(Button::new("copy-sel").small().outline().label("Copy selection").on_click(cx.listener(
-                |this, _, _, cx| {
-                    let text = this.active_state().read(cx).selected_text().to_string();
-                    cx.write_to_clipboard(ClipboardItem::new_string(text.clone()));
-                    this.log.push(format!("copied {:?}", truncate(&text)));
-                    cx.notify();
-                },
-            )))
-            .child(Button::new("read-clip").small().outline().label("Read clipboard").on_click(cx.listener(
-                |this, _, _, cx| {
-                    let text = cx.read_from_clipboard().and_then(|item| item.text());
-                    this.log.push(format!("clipboard = {:?}", text.as_deref().map(truncate)));
-                    cx.notify();
-                },
-            )))
-            .child(Button::new("insert-sample").small().outline().label("Set Unicode sample").on_click(
-                cx.listener(|this, _, window, cx| {
-                    this.active_state()
-                        .update(cx, |state, cx| state.set_value(UNICODE_SAMPLE, window, cx));
-                    this.log.push("value set programmatically (no Change event expected)");
-                    cx.notify();
-                }),
-            ))
-            .child(Button::new("blur").small().outline().label("Blur (hide keyboard)").on_click(cx.listener(
-                |this, _, window, cx| {
-                    window.blur(cx);
-                    this.log.push("window.blur()");
-                    cx.notify();
-                },
-            )));
+            .child(
+                Button::new("select-all")
+                    .small()
+                    .outline()
+                    .label("Select all")
+                    .on_click(cx.listener(|this, _, window, cx| {
+                        let state = this.active_state();
+                        state.update(cx, |state, cx| {
+                            state.focus(window, cx);
+                            state.select_all(window, cx);
+                        });
+                        this.log
+                            .push(format!("select all in {}", this.fields[this.active].name));
+                        cx.notify();
+                    })),
+            )
+            .child(
+                Button::new("copy-sel")
+                    .small()
+                    .outline()
+                    .label("Copy selection")
+                    .on_click(cx.listener(|this, _, _, cx| {
+                        let text = this.active_state().read(cx).selected_text().to_string();
+                        cx.write_to_clipboard(ClipboardItem::new_string(text.clone()));
+                        this.log.push(format!("copied {:?}", truncate(&text)));
+                        cx.notify();
+                    })),
+            )
+            .child(
+                Button::new("read-clip")
+                    .small()
+                    .outline()
+                    .label("Read clipboard")
+                    .on_click(cx.listener(|this, _, _, cx| {
+                        let text = cx.read_from_clipboard().and_then(|item| item.text());
+                        this.log
+                            .push(format!("clipboard = {:?}", text.as_deref().map(truncate)));
+                        cx.notify();
+                    })),
+            )
+            .child(
+                Button::new("insert-sample")
+                    .small()
+                    .outline()
+                    .label("Set Unicode sample")
+                    .on_click(cx.listener(|this, _, window, cx| {
+                        this.active_state()
+                            .update(cx, |state, cx| state.set_value(UNICODE_SAMPLE, window, cx));
+                        this.log
+                            .push("value set programmatically (no Change event expected)");
+                        cx.notify();
+                    })),
+            )
+            .child(
+                Button::new("blur")
+                    .small()
+                    .outline()
+                    .label("Blur (hide keyboard)")
+                    .on_click(cx.listener(|this, _, window, cx| {
+                        window.blur(cx);
+                        this.log.push("window.blur()");
+                        cx.notify();
+                    })),
+            );
 
         v_flex()
             .gap_3()

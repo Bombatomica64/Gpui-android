@@ -36,14 +36,34 @@ pub struct ChoiceScreen {
 
 impl ChoiceScreen {
     pub fn new(_: &mut Window, cx: &mut Context<Self>) -> Self {
-        let slider = cx.new(|_| SliderState::new().min(0.).max(100.).default_value(40.).step(1.));
-        let range = cx.new(|_| SliderState::new().min(0.).max(1000.).default_value(200.0..700.0).step(10.));
-        let vertical = cx.new(|_| SliderState::new().min(0.).max(10.).default_value(3.).step(1.));
+        let slider = cx.new(|_| {
+            SliderState::new()
+                .min(0.)
+                .max(100.)
+                .default_value(40.)
+                .step(1.)
+        });
+        let range = cx.new(|_| {
+            SliderState::new()
+                .min(0.)
+                .max(1000.)
+                .default_value(200.0..700.0)
+                .step(10.)
+        });
+        let vertical = cx.new(|_| {
+            SliderState::new()
+                .min(0.)
+                .max(10.)
+                .default_value(3.)
+                .step(1.)
+        });
         let subscriptions = vec![
             cx.subscribe(&slider, |this, _, event: &SliderEvent, cx| {
                 this.on_slider("slider", event, cx)
             }),
-            cx.subscribe(&range, |this, _, event: &SliderEvent, cx| this.on_slider("range", event, cx)),
+            cx.subscribe(&range, |this, _, event: &SliderEvent, cx| {
+                this.on_slider("range", event, cx)
+            }),
             cx.subscribe(&vertical, |this, _, event: &SliderEvent, cx| {
                 this.on_slider("vertical", event, cx)
             }),

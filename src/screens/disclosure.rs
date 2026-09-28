@@ -1,10 +1,9 @@
-use gpui::{Context, InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled, Window, div};
+use gpui::{
+    Context, InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement,
+    Styled, Window, div,
+};
 use gpui_kit::component::{
-    Icon, IconName,
-    accordion::Accordion,
-    button::Button,
-    collapsible::Collapsible,
-    h_flex, v_flex,
+    Icon, IconName, accordion::Accordion, button::Button, collapsible::Collapsible, h_flex, v_flex,
 };
 
 use crate::ui::{self, EventLog, prelude::*};
@@ -65,10 +64,18 @@ impl Render for DisclosureScreen {
                         .py_2()
                         .cursor_pointer()
                         .child(format!("Section {}", ix + 1))
-                        .child(Icon::new(if is_open { IconName::ChevronDown } else { IconName::ChevronRight }))
+                        .child(Icon::new(if is_open {
+                            IconName::ChevronDown
+                        } else {
+                            IconName::ChevronRight
+                        }))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.collapsible_open[ix] = !this.collapsible_open[ix];
-                            this.log.push(format!("collapsible {} -> {}", ix + 1, this.collapsible_open[ix]));
+                            this.log.push(format!(
+                                "collapsible {} -> {}",
+                                ix + 1,
+                                this.collapsible_open[ix]
+                            ));
                             cx.notify();
                         })),
                 )
@@ -77,7 +84,9 @@ impl Render for DisclosureScreen {
                         .pb_2()
                         .text_sm()
                         .text_color(cx.theme().muted_foreground)
-                        .children((1..=3).map(move |line| div().child(format!("Content {} line {line}", ix + 1)))),
+                        .children((1..=3).map(move |line| {
+                            div().child(format!("Content {} line {line}", ix + 1))
+                        })),
                 )
         });
 
@@ -88,18 +97,28 @@ impl Render for DisclosureScreen {
                     .child(
                         h_flex()
                             .gap_1()
-                            .child(Button::new("acc-multiple").small().outline().selected(self.multiple).label("Multiple").on_click(
-                                cx.listener(|this, _, _, cx| {
-                                    this.multiple = !this.multiple;
-                                    cx.notify();
-                                }),
-                            ))
-                            .child(Button::new("acc-bordered").small().outline().selected(self.bordered).label("Bordered").on_click(
-                                cx.listener(|this, _, _, cx| {
-                                    this.bordered = !this.bordered;
-                                    cx.notify();
-                                }),
-                            )),
+                            .child(
+                                Button::new("acc-multiple")
+                                    .small()
+                                    .outline()
+                                    .selected(self.multiple)
+                                    .label("Multiple")
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.multiple = !this.multiple;
+                                        cx.notify();
+                                    })),
+                            )
+                            .child(
+                                Button::new("acc-bordered")
+                                    .small()
+                                    .outline()
+                                    .selected(self.bordered)
+                                    .label("Bordered")
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.bordered = !this.bordered;
+                                        cx.notify();
+                                    })),
+                            ),
                     )
                     .child(accordion)
                     .child(ui::value_row("Open items", format!("{:?}", self.open), cx)),
@@ -107,7 +126,11 @@ impl Render for DisclosureScreen {
             .child(
                 ui::section("Collapsible", cx)
                     .children(collapsibles)
-                    .child(ui::value_row("Open", format!("{:?}", self.collapsible_open), cx)),
+                    .child(ui::value_row(
+                        "Open",
+                        format!("{:?}", self.collapsible_open),
+                        cx,
+                    )),
             )
             .child(self.log.render(cx))
     }

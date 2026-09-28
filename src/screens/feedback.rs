@@ -46,9 +46,15 @@ impl FeedbackScreen {
             self.log.push("progress started");
             self.running = Some(cx.spawn(async move |this, cx| {
                 loop {
-                    cx.background_executor().timer(Duration::from_millis(100)).await;
+                    cx.background_executor()
+                        .timer(Duration::from_millis(100))
+                        .await;
                     let alive = this.update(cx, |this, cx| {
-                        this.progress = if this.progress >= 100. { 0. } else { this.progress + 2. };
+                        this.progress = if this.progress >= 100. {
+                            0.
+                        } else {
+                            this.progress + 2.
+                        };
                         cx.notify();
                     });
                     if alive.is_err() {
@@ -64,11 +70,13 @@ impl FeedbackScreen {
 impl Render for FeedbackScreen {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let alert = |this: &Self, id: &'static str, alert: Alert, cx: &mut Context<Self>| {
-            alert.visible(!this.closed_alerts.contains(&id)).on_close(cx.listener(move |this, _, _, cx| {
-                this.closed_alerts.push(id);
-                this.log.push(format!("alert {id} closed"));
-                cx.notify();
-            }))
+            alert
+                .visible(!this.closed_alerts.contains(&id))
+                .on_close(cx.listener(move |this, _, _, cx| {
+                    this.closed_alerts.push(id);
+                    this.log.push(format!("alert {id} closed"));
+                    cx.notify();
+                }))
         };
         v_flex()
             .gap_3()

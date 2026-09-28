@@ -44,9 +44,18 @@ impl StressScreen {
             render_times: VecDeque::new(),
             intervals: VecDeque::new(),
             last_frame: None,
-            series: (0..60).map(|i| Point { x: i.to_string().into(), y: 50.0 }).collect(),
+            series: (0..60)
+                .map(|i| Point {
+                    x: i.to_string().into(),
+                    y: 50.0,
+                })
+                .collect(),
             inputs: (0..4)
-                .map(|i| cx.new(|cx| InputState::new(window, cx).default_value(format!("Input {i}: 日本語 😀"))))
+                .map(|i| {
+                    cx.new(|cx| {
+                        InputState::new(window, cx).default_value(format!("Input {i}: 日本語 😀"))
+                    })
+                })
                 .collect(),
         }
     }
@@ -57,7 +66,12 @@ impl StressScreen {
         self.render_times.clear();
         self.intervals.clear();
         self.last_frame = None;
-        self.series = (0..60).map(|i| Point { x: i.to_string().into(), y: 50.0 }).collect();
+        self.series = (0..60)
+            .map(|i| Point {
+                x: i.to_string().into(),
+                y: 50.0,
+            })
+            .collect();
     }
 
     fn stats(samples: &VecDeque<Duration>) -> String {
@@ -96,7 +110,8 @@ impl Render for StressScreen {
         let fps = if self.intervals.is_empty() {
             None
         } else {
-            let avg = self.intervals.iter().map(|d| d.as_secs_f32()).sum::<f32>() / self.intervals.len() as f32;
+            let avg = self.intervals.iter().map(|d| d.as_secs_f32()).sum::<f32>()
+                / self.intervals.len() as f32;
             Some(1.0 / avg)
         };
         let frame = self.frame;
@@ -104,28 +119,41 @@ impl Render for StressScreen {
 
         let controls = h_flex()
             .gap_2()
-            .child(Button::new("start").primary().label("Start").disabled(self.running).on_click(cx.listener(
-                |this, _, _, cx| {
-                    this.running = true;
-                    this.started.get_or_insert_with(Instant::now);
-                    this.last_frame = None;
-                    log::info!("event: stress start");
-                    cx.notify();
-                },
-            )))
-            .child(Button::new("stop").outline().label("Stop").disabled(!self.running).on_click(cx.listener(
-                |this, _, _, cx| {
-                    this.running = false;
-                    log::info!("event: stress stop after {} frames", this.frame);
-                    cx.notify();
-                },
-            )))
-            .child(Button::new("reset").outline().label("Reset").on_click(cx.listener(|this, _, _, cx| {
-                this.running = false;
-                this.reset();
-                log::info!("event: stress reset");
-                cx.notify();
-            })));
+            .child(
+                Button::new("start")
+                    .primary()
+                    .label("Start")
+                    .disabled(self.running)
+                    .on_click(cx.listener(|this, _, _, cx| {
+                        this.running = true;
+                        this.started.get_or_insert_with(Instant::now);
+                        this.last_frame = None;
+                        log::info!("event: stress start");
+                        cx.notify();
+                    })),
+            )
+            .child(
+                Button::new("stop")
+                    .outline()
+                    .label("Stop")
+                    .disabled(!self.running)
+                    .on_click(cx.listener(|this, _, _, cx| {
+                        this.running = false;
+                        log::info!("event: stress stop after {} frames", this.frame);
+                        cx.notify();
+                    })),
+            )
+            .child(
+                Button::new("reset")
+                    .outline()
+                    .label("Reset")
+                    .on_click(cx.listener(|this, _, _, cx| {
+                        this.running = false;
+                        this.reset();
+                        log::info!("event: stress reset");
+                        cx.notify();
+                    })),
+            );
 
         let buttons = (0..120).map(|i| {
             Button::new(("stress-btn", i))
@@ -137,7 +165,12 @@ impl Render for StressScreen {
         let texts = (0..400).map(|i| {
             div()
                 .text_xs()
-                .text_color(gpui::hsla((hue_shift + i as f32 / 400.) % 1., 0.6, 0.45, 1.))
+                .text_color(gpui::hsla(
+                    (hue_shift + i as f32 / 400.) % 1.,
+                    0.6,
+                    0.45,
+                    1.,
+                ))
                 .child(format!("t{}", (i as u64 * 7 + frame) % 997))
         });
 
@@ -152,11 +185,21 @@ impl Render for StressScreen {
                         fps.map(|f| format!("{f:.1}")).unwrap_or_else(|| "—".into()),
                         cx,
                     ))
-                    .child(ui::value_row("Frame interval", Self::stats(&self.intervals), cx))
-                    .child(ui::value_row("StressScreen::render()", Self::stats(&self.render_times), cx))
+                    .child(ui::value_row(
+                        "Frame interval",
+                        Self::stats(&self.intervals),
+                        cx,
+                    ))
+                    .child(ui::value_row(
+                        "StressScreen::render()",
+                        Self::stats(&self.render_times),
+                        cx,
+                    ))
                     .child(ui::value_row(
                         "Elapsed",
-                        self.started.map(|s| format!("{:.1} s", s.elapsed().as_secs_f32())).unwrap_or_else(|| "—".into()),
+                        self.started
+                            .map(|s| format!("{:.1} s", s.elapsed().as_secs_f32()))
+                            .unwrap_or_else(|| "—".into()),
                         cx,
                     ))
                     .child(Progress::new("stress-progress").value((frame % 100) as f32)),
@@ -175,9 +218,18 @@ impl Render for StressScreen {
                     ),
                 ),
             )
-            .child(ui::section("120 buttons", cx).child(h_flex().flex_wrap().gap_1().children(buttons)))
-            .child(ui::section("400 text nodes", cx).child(h_flex().flex_wrap().gap_1().children(texts)))
-            .child(ui::section("Inputs", cx).children(self.inputs.iter().map(|input| Input::new(input))))
+            .child(
+                ui::section("120 buttons", cx)
+                    .child(h_flex().flex_wrap().gap_1().children(buttons)),
+            )
+            .child(
+                ui::section("400 text nodes", cx)
+                    .child(h_flex().flex_wrap().gap_1().children(texts)),
+            )
+            .child(
+                ui::section("Inputs", cx)
+                    .children(self.inputs.iter().map(|input| Input::new(input))),
+            )
             .child(
                 ui::section("Long list (5,000 rows, virtualized, fixed height)", cx).child(
                     uniform_list(

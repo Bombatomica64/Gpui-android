@@ -47,76 +47,93 @@ impl Render for PopoversScreen {
         let word_wrap = self.word_wrap;
         let show_hidden = self.show_hidden;
 
-        let dropdown = Button::new("dropdown").outline().label("Dropdown menu").dropdown_menu({
-            let view = view.clone();
-            move |menu, window, cx| {
-                let item = |label: &'static str| {
-                    let view = view.clone();
-                    PopupMenuItem::new(label).on_click(move |_, _, cx| {
-                        view.update(cx, |this, cx| {
-                            this.log.push(format!("menu: {label}"));
-                            cx.notify();
-                        })
-                    })
-                };
-                let wrap_view = view.clone();
-                let hidden_view = view.clone();
-                menu.label("File")
-                    .item(item("New").icon(IconName::Plus))
-                    .item(item("Open…").icon(IconName::FolderOpen))
-                    .item(item("Disabled item").disabled(true))
-                    .separator()
-                    .item(PopupMenuItem::new("Word wrap").checked(word_wrap).on_click(move |_, _, cx| {
-                        wrap_view.update(cx, |this, cx| {
-                            this.word_wrap = !this.word_wrap;
-                            this.log.push(format!("word wrap -> {}", this.word_wrap));
-                            cx.notify();
-                        })
-                    }))
-                    .item(PopupMenuItem::new("Show hidden").checked(show_hidden).on_click(move |_, _, cx| {
-                        hidden_view.update(cx, |this, cx| {
-                            this.show_hidden = !this.show_hidden;
-                            this.log.push(format!("show hidden -> {}", this.show_hidden));
-                            cx.notify();
-                        })
-                    }))
-                    .separator()
-                    .submenu("Open recent", window, cx, {
+        let dropdown = Button::new("dropdown")
+            .outline()
+            .label("Dropdown menu")
+            .dropdown_menu({
+                let view = view.clone();
+                move |menu, window, cx| {
+                    let item = |label: &'static str| {
                         let view = view.clone();
-                        move |menu, _, _| {
-                            let mut menu = menu;
-                            for name in ["project-alpha", "project-beta", "project-gamma"] {
-                                let view = view.clone();
-                                menu = menu.item(PopupMenuItem::new(name).on_click(move |_, _, cx| {
-                                    view.update(cx, |this, cx| {
-                                        this.log.push(format!("recent: {name}"));
+                        PopupMenuItem::new(label).on_click(move |_, _, cx| {
+                            view.update(cx, |this, cx| {
+                                this.log.push(format!("menu: {label}"));
+                                cx.notify();
+                            })
+                        })
+                    };
+                    let wrap_view = view.clone();
+                    let hidden_view = view.clone();
+                    menu.label("File")
+                        .item(item("New").icon(IconName::Plus))
+                        .item(item("Open…").icon(IconName::FolderOpen))
+                        .item(item("Disabled item").disabled(true))
+                        .separator()
+                        .item(PopupMenuItem::new("Word wrap").checked(word_wrap).on_click(
+                            move |_, _, cx| {
+                                wrap_view.update(cx, |this, cx| {
+                                    this.word_wrap = !this.word_wrap;
+                                    this.log.push(format!("word wrap -> {}", this.word_wrap));
+                                    cx.notify();
+                                })
+                            },
+                        ))
+                        .item(
+                            PopupMenuItem::new("Show hidden")
+                                .checked(show_hidden)
+                                .on_click(move |_, _, cx| {
+                                    hidden_view.update(cx, |this, cx| {
+                                        this.show_hidden = !this.show_hidden;
+                                        this.log
+                                            .push(format!("show hidden -> {}", this.show_hidden));
                                         cx.notify();
                                     })
-                                }));
+                                }),
+                        )
+                        .separator()
+                        .submenu("Open recent", window, cx, {
+                            let view = view.clone();
+                            move |menu, _, _| {
+                                let mut menu = menu;
+                                for name in ["project-alpha", "project-beta", "project-gamma"] {
+                                    let view = view.clone();
+                                    menu = menu.item(PopupMenuItem::new(name).on_click(
+                                        move |_, _, cx| {
+                                            view.update(cx, |this, cx| {
+                                                this.log.push(format!("recent: {name}"));
+                                                cx.notify();
+                                            })
+                                        },
+                                    ));
+                                }
+                                menu
                             }
-                            menu
-                        }
-                    })
-                    .link("GPUI Kit website", "https://gpui-kit.com")
-            }
-        });
-
-        let long_menu = Button::new("long-menu").outline().label("Long menu (40 items)").dropdown_menu({
-            let view = view.clone();
-            move |menu, _, _| {
-                let mut menu = menu.scrollable(true).max_h(px(300.));
-                for i in 1..=40 {
-                    let view = view.clone();
-                    menu = menu.item(PopupMenuItem::new(format!("Item {i}")).on_click(move |_, _, cx| {
-                        view.update(cx, |this, cx| {
-                            this.log.push(format!("long menu item {i}"));
-                            cx.notify();
                         })
-                    }));
+                        .link("GPUI Kit website", "https://gpui-kit.com")
                 }
-                menu
-            }
-        });
+            });
+
+        let long_menu = Button::new("long-menu")
+            .outline()
+            .label("Long menu (40 items)")
+            .dropdown_menu({
+                let view = view.clone();
+                move |menu, _, _| {
+                    let mut menu = menu.scrollable(true).max_h(px(300.));
+                    for i in 1..=40 {
+                        let view = view.clone();
+                        menu = menu.item(PopupMenuItem::new(format!("Item {i}")).on_click(
+                            move |_, _, cx| {
+                                view.update(cx, |this, cx| {
+                                    this.log.push(format!("long menu item {i}"));
+                                    cx.notify();
+                                })
+                            },
+                        ));
+                    }
+                    menu
+                }
+            });
 
         v_flex()
             .gap_3()

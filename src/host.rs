@@ -77,9 +77,8 @@ fn load_bundled_fonts(env: &mut jni::Env, activity: &JObject) -> jni::errors::Re
         .l()?;
     // SAFETY: `assets` is a live local reference to the Activity's AssetManager for
     // the duration of this native call; the NDK manager is only used inside it.
-    let manager = unsafe {
-        ndk_sys::AAssetManager_fromJava(env.get_raw() as _, assets.as_raw() as _)
-    };
+    let manager =
+        unsafe { ndk_sys::AAssetManager_fromJava(env.get_raw() as _, assets.as_raw() as _) };
     let Some(manager) = std::ptr::NonNull::new(manager) else {
         log::error!("AAssetManager_fromJava returned null");
         return Ok(());
@@ -87,7 +86,10 @@ fn load_bundled_fonts(env: &mut jni::Env, activity: &JObject) -> jni::errors::Re
     let manager = unsafe { ndk::asset::AssetManager::from_ptr(manager) };
     let mut fonts = Vec::new();
     for path in [c"fonts/NotoColorEmoji.ttf"] {
-        match manager.open(path).map(|mut asset| asset.buffer().map(|b| b.to_vec())) {
+        match manager
+            .open(path)
+            .map(|mut asset| asset.buffer().map(|b| b.to_vec()))
+        {
             Some(Ok(bytes)) => {
                 log::info!("bundled font {path:?}: {} bytes", bytes.len());
                 fonts.push(bytes);
@@ -154,7 +156,11 @@ pub fn apply_night_mode(night: bool) {
     let window = mobile_jni::platform().and_then(|platform| platform.primary_window());
     if let Some(window) = window {
         use gpui_mobile::android::window::WindowAppearance;
-        window.set_appearance(if night { WindowAppearance::Dark } else { WindowAppearance::Light });
+        window.set_appearance(if night {
+            WindowAppearance::Dark
+        } else {
+            WindowAppearance::Light
+        });
     }
 }
 

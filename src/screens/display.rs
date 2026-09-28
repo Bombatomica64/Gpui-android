@@ -10,7 +10,10 @@ use gpui_kit::component::{
     badge::Badge,
     button::Button,
     description_list::DescriptionList,
-    empty::{Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyMediaVariant, EmptyTitle},
+    empty::{
+        Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyMediaVariant,
+        EmptyTitle,
+    },
     h_flex,
     tag::Tag,
     v_flex,
@@ -42,13 +45,40 @@ impl DisplayScreen {
 
 impl Render for DisplayScreen {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let names = ["Ada Lovelace", "Bruno Rossi", "Chiara Bianchi", "Dmitri Ivanov", "Emi Tanaka", "Farah Khan", "김민준"];
+        let names = [
+            "Ada Lovelace",
+            "Bruno Rossi",
+            "Chiara Bianchi",
+            "Dmitri Ivanov",
+            "Emi Tanaka",
+            "Farah Khan",
+            "김민준",
+        ];
         let icons = [
-            IconName::Bell, IconName::Calendar, IconName::Check, IconName::CircleAlert,
-            IconName::Copy, IconName::Eye, IconName::Folder, IconName::Github, IconName::Globe,
-            IconName::Heart, IconName::Inbox, IconName::Info, IconName::Loader, IconName::Map,
-            IconName::Menu, IconName::Moon, IconName::Palette, IconName::Search, IconName::Settings,
-            IconName::Star, IconName::Sun, IconName::ThumbsUp, IconName::TriangleAlert, IconName::User,
+            IconName::Bell,
+            IconName::Calendar,
+            IconName::Check,
+            IconName::CircleAlert,
+            IconName::Copy,
+            IconName::Eye,
+            IconName::Folder,
+            IconName::Github,
+            IconName::Globe,
+            IconName::Heart,
+            IconName::Inbox,
+            IconName::Info,
+            IconName::Loader,
+            IconName::Map,
+            IconName::Menu,
+            IconName::Moon,
+            IconName::Palette,
+            IconName::Search,
+            IconName::Settings,
+            IconName::Star,
+            IconName::Sun,
+            IconName::ThumbsUp,
+            IconName::TriangleAlert,
+            IconName::User,
         ];
         let size = self.size;
         v_flex()

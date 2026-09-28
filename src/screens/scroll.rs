@@ -1,7 +1,6 @@
 use gpui::{
     Context, InteractiveElement, IntoElement, ParentElement, Render, ScrollHandle, SharedString,
-    StatefulInteractiveElement, Styled, UniformListScrollHandle, Window, div, px,
-    uniform_list,
+    StatefulInteractiveElement, Styled, UniformListScrollHandle, Window, div, px, uniform_list,
 };
 use gpui_kit::component::{
     button::Button,
@@ -80,7 +79,9 @@ impl Render for ScrollScreen {
                                 .border_color(cx.theme().border)
                                 .active(|this| this.bg(cx.theme().accent))
                                 .child(format!("Virtual row {i} of {VIRTUAL_ROWS}"))
-                                .on_click(move |_, _, _| log::info!("event: virtual row {i} tapped"))
+                                .on_click(move |_, _, _| {
+                                    log::info!("event: virtual row {i} tapped")
+                                })
                         })
                         .collect()
                 }),
@@ -94,30 +95,37 @@ impl Render for ScrollScreen {
                 .overflow_y_scroll()
                 .restrict_scroll_to_axis()
                 .track_scroll(&self.mixed)
-                .child(v_flex().gap_3().p_3().children((1..=12usize).map(|section| {
+                .child(
                     v_flex()
-                        .gap_1()
-                        .child(div().font_semibold().child(format!("Section {section}")))
-                        .child(
-                            div()
-                                .id(("strip", section))
-                                .flex()
-                                .overflow_x_scroll()
-                                .restrict_scroll_to_axis()
-                                .child(h_flex().flex_none().gap_2().children((1..=15).map(|card| {
+                        .gap_3()
+                        .p_3()
+                        .children((1..=12usize).map(|section| {
+                            v_flex()
+                                .gap_1()
+                                .child(div().font_semibold().child(format!("Section {section}")))
+                                .child(
                                     div()
-                                        .flex_none()
-                                        .w(px(110.))
-                                        .h(px(80.))
-                                        .rounded(cx.theme().radius)
-                                        .bg(cx.theme().muted)
+                                        .id(("strip", section))
                                         .flex()
-                                        .items_center()
-                                        .justify_center()
-                                        .child(format!("{section}.{card}"))
-                                }))),
-                        )
-                })))
+                                        .overflow_x_scroll()
+                                        .restrict_scroll_to_axis()
+                                        .child(h_flex().flex_none().gap_2().children(
+                                            (1..=15).map(|card| {
+                                                div()
+                                                    .flex_none()
+                                                    .w(px(110.))
+                                                    .h(px(80.))
+                                                    .rounded(cx.theme().radius)
+                                                    .bg(cx.theme().muted)
+                                                    .flex()
+                                                    .items_center()
+                                                    .justify_center()
+                                                    .child(format!("{section}.{card}"))
+                                            }),
+                                        )),
+                                )
+                        })),
+                )
                 .into_any_element(),
             _ => div()
                 .id("long-text")
@@ -155,14 +163,21 @@ impl Render for ScrollScreen {
                     .py_1()
                     .gap_2()
                     .justify_between()
-                    .child(ui::value_row("Offset y", format!("{:.0}", -offset.y.as_f32()), cx))
-                    .child(Button::new("top").xsmall().outline().label("Top").on_click(cx.listener(|this, _, _, cx| {
-                        this.plain.set_offset(Default::default());
-                        this.mixed.set_offset(Default::default());
-                        this.text.set_offset(Default::default());
-                        this.virtual_list.scroll_to_item(0, gpui::ScrollStrategy::Top);
-                        cx.notify();
-                    }))),
+                    .child(ui::value_row(
+                        "Offset y",
+                        format!("{:.0}", -offset.y.as_f32()),
+                        cx,
+                    ))
+                    .child(Button::new("top").xsmall().outline().label("Top").on_click(
+                        cx.listener(|this, _, _, cx| {
+                            this.plain.set_offset(Default::default());
+                            this.mixed.set_offset(Default::default());
+                            this.text.set_offset(Default::default());
+                            this.virtual_list
+                                .scroll_to_item(0, gpui::ScrollStrategy::Top);
+                            cx.notify();
+                        }),
+                    )),
             )
             .child(div().px_3().child(ui::hint(hints[self.tab.min(3)], cx)))
             .child(div().flex_1().min_h_0().child(body))

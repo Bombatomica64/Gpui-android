@@ -7,9 +7,7 @@ use gpui::{
     prelude::*,
 };
 use gpui_kit::component::{
-    Theme, ThemeConfig, ThemeMode, ThemeRegistry,
-    button::Button,
-    h_flex, v_flex,
+    Theme, ThemeConfig, ThemeMode, ThemeRegistry, button::Button, h_flex, v_flex,
 };
 
 use crate::ui::{self, EventLog, prelude::*};
@@ -44,7 +42,10 @@ pub fn init(cx: &mut App) {
 /// Re-applies the theme when the platform appearance changes and the user picked System.
 pub fn follow_system(window: &mut Window, cx: &mut App) {
     if cx.global::<CurrentChoice>().0 == Choice::System {
-        log::info!("theme: following system appearance {:?}", window.appearance());
+        log::info!(
+            "theme: following system appearance {:?}",
+            window.appearance()
+        );
         Theme::sync_system_appearance(Some(window), cx);
     }
 }
@@ -80,7 +81,8 @@ pub fn apply(choice: Choice, window: &mut Window, cx: &mut App) {
             Theme::change(ThemeMode::Dark, Some(window), cx);
         }
         Choice::Named(name) => {
-            let config: Option<Rc<ThemeConfig>> = ThemeRegistry::global(cx).themes().get(name).cloned();
+            let config: Option<Rc<ThemeConfig>> =
+                ThemeRegistry::global(cx).themes().get(name).cloned();
             match config {
                 Some(config) => {
                     Theme::update(cx, |theme| theme.apply_config(&config));
@@ -102,7 +104,8 @@ impl ThemesScreen {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let appearance = cx.observe_window_appearance(window, |this, window, cx| {
             // The app-level observer (LabApp) applies the theme; this only logs it.
-            this.log.push(format!("system appearance -> {:?}", window.appearance()));
+            this.log
+                .push(format!("system appearance -> {:?}", window.appearance()));
             cx.notify();
         });
         Self {
@@ -133,16 +136,13 @@ impl Render for ThemesScreen {
                 .label(label)
                 .when(selected, |b| b.primary())
                 .when(!selected, |b| b.outline())
-                .on_click(cx.listener(move |this, _, window, cx| {
-                    this.choose(choice.clone(), window, cx)
-                }))
+                .on_click(
+                    cx.listener(move |this, _, window, cx| this.choose(choice.clone(), window, cx)),
+                )
         });
 
-        let mut named: Vec<SharedString> = ThemeRegistry::global(cx)
-            .themes()
-            .keys()
-            .cloned()
-            .collect();
+        let mut named: Vec<SharedString> =
+            ThemeRegistry::global(cx).themes().keys().cloned().collect();
         named.sort();
         let named = named.into_iter().map(|name| {
             let selected = current == Choice::Named(name.clone());
@@ -191,7 +191,11 @@ impl Render for ThemesScreen {
                 ui::section("Mode", cx)
                     .child(h_flex().gap_2().children(base))
                     .child(ui::value_row("Current", format!("{current:?}"), cx))
-                    .child(ui::value_row("Theme name", cx.theme().theme_name().clone(), cx))
+                    .child(ui::value_row(
+                        "Theme name",
+                        cx.theme().theme_name().clone(),
+                        cx,
+                    ))
                     .child(ui::value_row(
                         "Window appearance (from platform)",
                         format!("{:?}", window.appearance()),
@@ -203,8 +207,13 @@ impl Render for ThemesScreen {
                         cx,
                     )),
             )
-            .child(ui::section("Bundled Kit themes", cx).child(h_flex().flex_wrap().gap_1().children(named)))
-            .child(ui::section("Palette", cx).child(h_flex().flex_wrap().gap_2().children(swatches)))
+            .child(
+                ui::section("Bundled Kit themes", cx)
+                    .child(h_flex().flex_wrap().gap_1().children(named)),
+            )
+            .child(
+                ui::section("Palette", cx).child(h_flex().flex_wrap().gap_2().children(swatches)),
+            )
             .child(self.log.render(cx))
     }
 }
