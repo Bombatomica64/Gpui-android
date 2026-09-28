@@ -171,11 +171,18 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeKeyboardDismis
 
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeSurfaceDestroyed<'local>(
-    _env: EnvUnowned<'local>,
+    env: EnvUnowned<'local>,
     _this: JObject<'local>,
+    surface: JObject<'local>,
 ) {
     log::info!("surface destroyed");
-    host::surface_destroyed();
+    // SAFETY: as in nativeSurfaceChanged; the Surface is still valid during this call.
+    let window = unsafe { NativeWindow::from_surface(env.as_raw() as _, surface.as_raw() as _) };
+    match window {
+        // A recreated Activity's new surface may already be attached; name the old one.
+        Some(window) => host::surface_destroyed_for(&window),
+        None => host::surface_destroyed(),
+    }
 }
 
 #[unsafe(no_mangle)]

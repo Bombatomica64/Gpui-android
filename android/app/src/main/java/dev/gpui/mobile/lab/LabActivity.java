@@ -115,7 +115,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
 
     @Override public void surfaceDestroyed(SurfaceHolder holder) {
         // Blocks until the render thread has let go of the surface.
-        nativeSurfaceDestroyed();
+        nativeSurfaceDestroyed(holder.getSurface());
     }
 
     // ── Input ──────────────────────────────────────────────────────────────
@@ -381,7 +381,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     private static native void nativeKeyboardDismissed();
     private static native void nativeNightMode(boolean night);
     private static native void nativeSurfaceChanged(android.view.Surface surface, float scale);
-    private static native void nativeSurfaceDestroyed();
+    private static native void nativeSurfaceDestroyed(android.view.Surface surface);
     private static native void nativeResumed();
     private static native void nativePaused();
     private static native void nativeKeyboardInsets(boolean visible, int heightPx);
