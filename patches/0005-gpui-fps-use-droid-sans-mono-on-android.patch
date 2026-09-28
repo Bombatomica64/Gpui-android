@@ -1,0 +1,38 @@
+From 1a7d18193eda0264a4fbfcdbad35b8cda04854b8 Mon Sep 17 00:00:00 2001
+From: lorenzomicheli <lorenzo.micheli@instal.com>
+Date: Mon, 28 Sep 2026 18:44:16 +0000
+Subject: [PATCH] gpui-fps: use Droid Sans Mono on Android
+
+GPUI panics when the HUD's generic 'monospace' family and all of its desktop
+fallbacks fail to resolve, which is always the case on Android.
+
+Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+---
+ gpui-fps/src/monitor.rs | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/gpui-fps/src/monitor.rs b/gpui-fps/src/monitor.rs
+index c5d7d1e..46d9d5f 100644
+--- a/gpui-fps/src/monitor.rs
++++ b/gpui-fps/src/monitor.rs
+@@ -91,7 +91,16 @@ const DEFAULT_FONT: &str = "Consolas";
+ // The iOS backend resolves this native family but not the generic monospace alias.
+ #[cfg(target_os = "ios")]
+ const DEFAULT_FONT: &str = ".SystemUIFont";
+-#[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "ios")))]
++// Android's cosmic-text backend has no `monospace` alias either (GPUI panics when
++// neither it nor its desktop fallbacks resolve); every Android ships this family.
++#[cfg(target_os = "android")]
++const DEFAULT_FONT: &str = "Droid Sans Mono";
++#[cfg(not(any(
++    target_os = "macos",
++    target_os = "windows",
++    target_os = "ios",
++    target_os = "android"
++)))]
+ const DEFAULT_FONT: &str = "monospace";
+ 
+ /// A realtime performance HUD: frames per second, a rolling frame time chart,
+-- 
+2.43.0
+

@@ -1,0 +1,50 @@
+[package]
+name = "gpui-mobile-lab"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "On-device test gallery for GPUI Kit v0.7.0 on Android"
+
+[lib]
+name = "gpui_mobile_lab"
+crate-type = ["cdylib"]
+
+[dependencies]
+# One GPUI snapshot for everything: gpui-kit 0.7.0 pins gpui-pre =0.3.7, and the
+# vendored gpui-mobile is bumped to the same snapshot (see MOBILE_PATCHES.md).
+gpui = { package = "gpui-pre", version = "=0.3.7", default-features = false }
+gpui-kit = { version = "=0.7.0", default-features = false, features = ["component", "assets"] }
+gpui-mobile = { package = "gpui-pre-mobile", path = "vendor/gpui-mobile", default-features = false, features = ["clipboard"] }
+# Kit's FPS / frame-time HUD (enables gpui's `profiler` frame trace).
+gpui-fps = "=0.7.0"
+anyhow = "1"
+log = "0.4"
+regex = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger = "0.15"
+jni = "0.22"
+ndk = { version = "0.9", features = ["nativewindow"] }
+ndk-sys = "0.6"
+android-activity = { version = "0.6", features = ["native-activity"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 4
+strip = true
+panic = "abort"
+
+[profile.dev]
+panic = "abort"
+opt-level = 1
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+opt-level = 2
+
+# Local, documented patches (see MOBILE_PATCHES.md).
+[patch.crates-io]
+gpui-base = { path = "vendor/gpui-base" }
+gpui-fps = { path = "vendor/gpui-fps" }
