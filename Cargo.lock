@@ -2427,12 +2427,14 @@ dependencies = [
  "android-activity",
  "android_logger",
  "anyhow",
+ "chrono",
  "gpui-kit",
  "gpui-pre",
  "gpui-pre-mobile",
  "jni",
  "log",
  "ndk",
+ "ndk-sys",
 ]
 
 [[package]]

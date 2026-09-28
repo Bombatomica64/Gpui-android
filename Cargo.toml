@@ -17,11 +17,13 @@ gpui-kit = { version = "=0.7.0", default-features = false, features = ["componen
 gpui-mobile = { package = "gpui-pre-mobile", path = "vendor/gpui-mobile", default-features = false, features = ["clipboard"] }
 anyhow = "1"
 log = "0.4"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.15"
 jni = "0.22"
 ndk = { version = "0.9", features = ["nativewindow"] }
+ndk-sys = "0.6"
 android-activity = { version = "0.6", features = ["native-activity"] }
 
 [profile.release]

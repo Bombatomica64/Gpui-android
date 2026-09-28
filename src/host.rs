@@ -52,12 +52,52 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeOnCreate<'loca
         if let Err(err) = mobile_jni::set_host_activity(env, &activity) {
             log::error!("set_host_activity failed: {err}");
         }
-        Ok(())
+        load_bundled_fonts(env, &activity)
     })
     .resolve::<LogErrorAndDefault>();
     diagnostics::set_api_level(api_level);
     log::info!("LabActivity.onCreate (API {api_level}); starting GPUI render thread");
     host::start_with_assets(gpui_kit::assets::Assets, crate::launch);
+}
+
+/// Android 13+ ships a COLRv1 emoji font that swash cannot draw; gpui-mobile only
+/// falls back to a bundled CBDT font on the `android-activity` path, where it has an
+/// `AAssetManager`. Read the same asset here; `launch` registers it with GPUI.
+fn load_bundled_fonts(env: &mut jni::Env, activity: &JObject) -> jni::errors::Result<()> {
+    if crate::BUNDLED_FONTS.get().is_some() {
+        return Ok(());
+    }
+    let assets = env
+        .call_method(
+            activity,
+            jni::jni_str!("getAssets"),
+            jni::jni_sig!("()Landroid/content/res/AssetManager;"),
+            &[],
+        )?
+        .l()?;
+    // SAFETY: `assets` is a live local reference to the Activity's AssetManager for
+    // the duration of this native call; the NDK manager is only used inside it.
+    let manager = unsafe {
+        ndk_sys::AAssetManager_fromJava(env.get_raw() as _, assets.as_raw() as _)
+    };
+    let Some(manager) = std::ptr::NonNull::new(manager) else {
+        log::error!("AAssetManager_fromJava returned null");
+        return Ok(());
+    };
+    let manager = unsafe { ndk::asset::AssetManager::from_ptr(manager) };
+    let mut fonts = Vec::new();
+    for path in [c"fonts/NotoColorEmoji.ttf"] {
+        match manager.open(path).map(|mut asset| asset.buffer().map(|b| b.to_vec())) {
+            Some(Ok(bytes)) => {
+                log::info!("bundled font {path:?}: {} bytes", bytes.len());
+                fonts.push(bytes);
+            }
+            Some(Err(err)) => log::error!("reading {path:?} failed: {err}"),
+            None => log::error!("bundled font {path:?} missing from APK assets"),
+        }
+    }
+    let _ = crate::BUNDLED_FONTS.set(fonts);
+    Ok(())
 }
 
 #[unsafe(no_mangle)]
