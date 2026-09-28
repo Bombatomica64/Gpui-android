@@ -4,6 +4,12 @@ use gpui::{AnyView, App, Window};
 
 mod buttons;
 mod choice;
+mod disclosure;
+mod display;
+mod feedback;
+mod layout;
+mod questionnaire;
+mod settings_form;
 mod command;
 mod dock;
 mod lists;
@@ -58,6 +64,12 @@ pub static SCREENS: &[ScreenDef] = &[
     screen!("Dock", dock::DockScreen, true),
     screen!("Tables", tables::TablesScreen, true),
     screen!("Lists & Trees", lists::ListsScreen, true),
+    screen!("Display", display::DisplayScreen),
+    screen!("Disclosure", disclosure::DisclosureScreen),
+    screen!("Feedback", feedback::FeedbackScreen),
+    screen!("Layout", layout::LayoutScreen),
+    screen!("Settings & Form", settings_form::SettingsFormScreen),
+    screen!("Questionnaire", questionnaire::QuestionnaireScreen),
     screen!("Themes", themes::ThemesScreen),
 ];
 
