@@ -41,6 +41,14 @@ pub fn init(cx: &mut App) {
     cx.set_global(CurrentChoice(Choice::System));
 }
 
+/// Re-applies the theme when the platform appearance changes and the user picked System.
+pub fn follow_system(window: &mut Window, cx: &mut App) {
+    if cx.global::<CurrentChoice>().0 == Choice::System {
+        log::info!("theme: following system appearance {:?}", window.appearance());
+        Theme::sync_system_appearance(Some(window), cx);
+    }
+}
+
 /// Applies the current choice to a freshly opened window.
 pub fn apply_saved(window: &mut Window, cx: &mut App) {
     let choice = cx.global::<CurrentChoice>().0.clone();
@@ -93,10 +101,8 @@ pub struct ThemesScreen {
 impl ThemesScreen {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let appearance = cx.observe_window_appearance(window, |this, window, cx| {
+            // The app-level observer (LabApp) applies the theme; this only logs it.
             this.log.push(format!("system appearance -> {:?}", window.appearance()));
-            if cx.global::<CurrentChoice>().0 == Choice::System {
-                Theme::sync_system_appearance(Some(window), cx);
-            }
             cx.notify();
         });
         Self {

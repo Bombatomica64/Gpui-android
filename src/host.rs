@@ -138,6 +138,26 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeOpenScreen<'lo
     .resolve::<LogErrorAndDefault>();
 }
 
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeNightMode<'local>(
+    _env: EnvUnowned<'local>,
+    _this: JObject<'local>,
+    night: bool,
+) {
+    log::info!("system night mode: {night}");
+    diagnostics::set_night_mode(night);
+}
+
+/// Apply the system night mode to the GPUI window. Render thread only: the
+/// appearance callback runs into GPUI.
+pub fn apply_night_mode(night: bool) {
+    let window = mobile_jni::platform().and_then(|platform| platform.primary_window());
+    if let Some(window) = window {
+        use gpui_mobile::android::window::WindowAppearance;
+        window.set_appearance(if night { WindowAppearance::Dark } else { WindowAppearance::Light });
+    }
+}
+
 /// The user hid the IME (back, or the Done key). The shell blurs the focused
 /// input on the render thread; see `LabActivity.InputProxy.onKeyPreIme`.
 #[unsafe(no_mangle)]

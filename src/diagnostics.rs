@@ -16,6 +16,18 @@ static SCREEN_SCROLL_Y: AtomicI32 = AtomicI32::new(0);
 
 static REQUESTED_SCREEN: Mutex<Option<String>> = Mutex::new(None);
 static BLUR_REQUESTED: AtomicBool = AtomicBool::new(false);
+/// 0 = unknown, 1 = light, 2 = dark; bit 4 set while not yet applied to GPUI.
+static NIGHT_MODE: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
+
+pub fn set_night_mode(night: bool) {
+    NIGHT_MODE.store(if night { 2 | 4 } else { 1 | 4 }, Ordering::Relaxed);
+}
+
+/// The night mode reported by the host, if it changed since the last call.
+pub fn take_night_mode_change() -> Option<bool> {
+    let value = NIGHT_MODE.fetch_and(!4, Ordering::Relaxed);
+    (value & 4 != 0).then_some(value & 3 == 2)
+}
 
 pub fn request_blur() {
     BLUR_REQUESTED.store(true, Ordering::Relaxed);

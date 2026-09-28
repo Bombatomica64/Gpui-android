@@ -65,6 +65,10 @@ impl LabApp {
             if crate::diagnostics::take_blur_request() {
                 let _ = cx.update(|window, cx| window.blur(cx));
             }
+            #[cfg(target_os = "android")]
+            if let Some(night) = crate::diagnostics::take_night_mode_change() {
+                crate::host::apply_night_mode(night);
+            }
             if let Some(screen) = crate::diagnostics::take_requested_screen() {
                 let result = this.update_in(cx, |this, window, cx| this.open(&screen, window, cx));
                 if result.is_err() {
@@ -73,6 +77,9 @@ impl LabApp {
             }
         })
         .detach();
+        let appearance = cx.observe_window_appearance(window, |_, window, cx| {
+            screens::themes::follow_system(window, cx)
+        });
         Self {
             focus,
             search,
@@ -82,7 +89,7 @@ impl LabApp {
             catalog_scroll: ScrollHandle::new(),
             screen_scroll: ScrollHandle::new(),
             revealed: None,
-            _subscriptions: vec![subscription],
+            _subscriptions: vec![subscription, appearance],
         }
     }
 

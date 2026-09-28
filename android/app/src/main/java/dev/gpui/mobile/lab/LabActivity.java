@@ -70,7 +70,21 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
         });
 
         nativeOnCreate(this, Build.VERSION.SDK_INT);
+        forwardNightMode(getResources().getConfiguration());
         forwardScreenExtra(getIntent());
+    }
+
+    // uiMode is in configChanges, so dark-mode toggles arrive here instead of
+    // recreating the Activity; the host path has no other source for GPUI's appearance.
+    @Override
+    public void onConfigurationChanged(android.content.res.Configuration config) {
+        super.onConfigurationChanged(config);
+        forwardNightMode(config);
+    }
+
+    private static void forwardNightMode(android.content.res.Configuration config) {
+        int night = config.uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        nativeNightMode(night == android.content.res.Configuration.UI_MODE_NIGHT_YES);
     }
 
     // Testing aid: `adb shell am start -n dev.gpui.mobile.lab/.LabActivity --es screen "Charts"`
@@ -365,6 +379,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     private static native void nativeOnCreate(Activity activity, int apiLevel);
     private static native void nativeOpenScreen(String screen);
     private static native void nativeKeyboardDismissed();
+    private static native void nativeNightMode(boolean night);
     private static native void nativeSurfaceChanged(android.view.Surface surface, float scale);
     private static native void nativeSurfaceDestroyed();
     private static native void nativeResumed();

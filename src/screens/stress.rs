@@ -105,12 +105,11 @@ impl Render for StressScreen {
         let controls = h_flex()
             .gap_2()
             .child(Button::new("start").primary().label("Start").disabled(self.running).on_click(cx.listener(
-                |this, _, window, cx| {
+                |this, _, _, cx| {
                     this.running = true;
                     this.started.get_or_insert_with(Instant::now);
                     this.last_frame = None;
                     log::info!("event: stress start");
-                    window.request_animation_frame();
                     cx.notify();
                 },
             )))

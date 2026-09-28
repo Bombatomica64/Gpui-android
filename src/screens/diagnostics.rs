@@ -135,11 +135,12 @@ impl Render for DiagnosticsScreen {
                             .gap_1()
                             .child(Button::new("measure").small().outline().selected(self.animating).label(
                                 if self.animating { "Stop measuring" } else { "Measure render cadence" },
-                            ).on_click(cx.listener(|this, _, window, cx| {
+                            ).on_click(cx.listener(|this, _, _, cx| {
                                 this.animating = !this.animating;
                                 this.frames.clear();
                                 log::info!("event: render cadence measurement -> {}", this.animating);
-                                window.request_animation_frame();
+                                // request_animation_frame is only valid while rendering;
+                                // render() keeps requesting frames while measuring.
                                 cx.notify();
                             })))
                             .child(Button::new("hud").small().outline().selected(self.show_hud).label("gpui-fps HUD").on_click(
