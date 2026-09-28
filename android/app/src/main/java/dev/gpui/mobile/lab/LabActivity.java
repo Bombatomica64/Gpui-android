@@ -70,6 +70,20 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
         });
 
         nativeOnCreate(this, Build.VERSION.SDK_INT);
+        forwardScreenExtra(getIntent());
+    }
+
+    // Testing aid: `adb shell am start -n dev.gpui.mobile.lab/.LabActivity --es screen "Charts"`
+    // opens a demo screen directly.
+    @Override
+    protected void onNewIntent(android.content.Intent intent) {
+        super.onNewIntent(intent);
+        forwardScreenExtra(intent);
+    }
+
+    private static void forwardScreenExtra(android.content.Intent intent) {
+        String screen = intent == null ? null : intent.getStringExtra("screen");
+        if (screen != null) nativeOpenScreen(screen);
     }
 
     @Override protected void onResume() { super.onResume(); nativeResumed(); }
@@ -246,8 +260,11 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
         }
 
         @Override public boolean onKeyPreIme(int code, KeyEvent event) {
+            // Back while the IME is up only hides the keyboard. gpui-mobile's IME
+            // "done" event (kind 4) would inject an `escape` keystroke into GPUI, which
+            // the app would also treat as navigation back; blur the field instead.
             if (code == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
-                nativeIme(session, 4, "", 0, 0);
+                nativeKeyboardDismissed();
             }
             return super.onKeyPreIme(code, event);
         }
@@ -334,7 +351,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
                     if (connectionSession != session) return false;
                     if (action == EditorInfo.IME_ACTION_DONE) {
                         finishComposingText();
-                        nativeIme(session, 4, "", 0, 0);
+                        nativeKeyboardDismissed();
                         return true;
                     }
                     return commitText("\n", 1);
@@ -346,6 +363,8 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     // ── Native (src/host.rs) ───────────────────────────────────────────────
 
     private static native void nativeOnCreate(Activity activity, int apiLevel);
+    private static native void nativeOpenScreen(String screen);
+    private static native void nativeKeyboardDismissed();
     private static native void nativeSurfaceChanged(android.view.Surface surface, float scale);
     private static native void nativeSurfaceDestroyed();
     private static native void nativeResumed();

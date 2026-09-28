@@ -124,6 +124,32 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeSurfaceChanged
 }
 
 #[unsafe(no_mangle)]
+pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeOpenScreen<'local>(
+    mut env: EnvUnowned<'local>,
+    _this: JObject<'local>,
+    screen: JString<'local>,
+) {
+    env.with_env(|env| -> jni::errors::Result<()> {
+        let screen = screen.try_to_string(env)?;
+        log::info!("intent requested screen {screen:?}");
+        diagnostics::request_screen(screen);
+        Ok(())
+    })
+    .resolve::<LogErrorAndDefault>();
+}
+
+/// The user hid the IME (back, or the Done key). The shell blurs the focused
+/// input on the render thread; see `LabActivity.InputProxy.onKeyPreIme`.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeKeyboardDismissed<'local>(
+    _env: EnvUnowned<'local>,
+    _this: JObject<'local>,
+) {
+    log::info!("IME dismissed by the user");
+    diagnostics::request_blur();
+}
+
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeSurfaceDestroyed<'local>(
     _env: EnvUnowned<'local>,
     _this: JObject<'local>,

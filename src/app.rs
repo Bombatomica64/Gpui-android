@@ -2,14 +2,14 @@
 
 use gpui::{
     AnyView, App, AppContext as _, Context, Entity, FocusHandle, Focusable, InteractiveElement,
-    IntoElement, KeyBinding, ParentElement, Render, ScrollHandle, SharedString,
+    IntoElement, KeyBinding, ParentElement, Pixels, Render, ScrollHandle, SharedString,
     StatefulInteractiveElement, Styled, Subscription, Window, actions, div, prelude::*, px,
 };
 use gpui_kit::component::{
     IconName,
     button::Button,
     h_flex,
-    input::{Input, InputEvent, InputState},
+    input::{AnyInputState, Input, InputEvent, InputState},
     v_flex,
 };
 
@@ -40,8 +40,12 @@ pub struct LabApp {
     screen: Option<OpenScreen>,
     catalog_scroll: ScrollHandle,
     screen_scroll: ScrollHandle,
+    /// Focused input and viewport height last revealed by keyboard avoidance.
+    revealed: Option<(String, Pixels)>,
     _subscriptions: Vec<Subscription>,
 }
+
+const HEADER_HEIGHT: f32 = 52.;
 
 impl LabApp {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
@@ -54,6 +58,21 @@ impl LabApp {
         });
         let focus = cx.focus_handle();
         focus.focus(window, cx);
+        // Requests from the Java thread (IME dismissal, intent-requested screens) are
+        // picked up here, on the GPUI thread.
+        cx.spawn_in(window, async move |this, cx| loop {
+            cx.background_executor().timer(std::time::Duration::from_millis(150)).await;
+            if crate::diagnostics::take_blur_request() {
+                let _ = cx.update(|window, cx| window.blur(cx));
+            }
+            if let Some(screen) = crate::diagnostics::take_requested_screen() {
+                let result = this.update_in(cx, |this, window, cx| this.open(&screen, window, cx));
+                if result.is_err() {
+                    break;
+                }
+            }
+        })
+        .detach();
         Self {
             focus,
             search,
@@ -62,6 +81,7 @@ impl LabApp {
             screen: None,
             catalog_scroll: ScrollHandle::new(),
             screen_scroll: ScrollHandle::new(),
+            revealed: None,
             _subscriptions: vec![subscription],
         }
     }
@@ -307,6 +327,49 @@ impl LabApp {
             .child(ui::status_tag(row.status))
     }
 
+    /// Keyboard avoidance. adjustResize shrinks GPUI's viewport when the IME opens,
+    /// but neither GPUI nor Kit scrolls a focused input back into view (Kit's mobile
+    /// guide leaves keyboard avoidance to the host). Reveal it once per change of
+    /// viewport height or focused field, so later manual scrolling is not undone.
+    fn reveal_focused_input(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let focused = window.focused_input(cx);
+        let bounds = match &focused {
+            Some(AnyInputState::Input(state)) => Some(state.read(cx).input_bounds()),
+            Some(AnyInputState::Textarea(state)) => Some(state.read(cx).input_bounds()),
+            Some(AnyInputState::Editor(state)) => Some(state.read(cx).input_bounds()),
+            _ => None,
+        };
+        let height = window.viewport_size().height;
+        let key = focused.as_ref().map(|input| (format!("{input:?}"), height));
+        if key == self.revealed {
+            return;
+        }
+        self.revealed = key;
+        let Some(bounds) = bounds.filter(|b| b.size.height > px(0.)) else {
+            return;
+        };
+        let top_limit = px(HEADER_HEIGHT + 8.);
+        let bottom_limit = height - px(16.);
+        // Tall fields (textareas) only need their top part visible.
+        let bottom = bounds.bottom().min(bounds.top() + px(120.));
+        let delta = if bottom > bottom_limit {
+            bottom - bottom_limit
+        } else if bounds.top() < top_limit {
+            bounds.top() - top_limit
+        } else {
+            return;
+        };
+        let handle = if self.screen.is_some() { &self.screen_scroll } else { &self.catalog_scroll };
+        let mut offset = handle.offset();
+        offset.y -= delta;
+        log::info!("keyboard avoidance: scrolling focused input by {:.0} pt", delta.as_f32());
+        handle.set_offset(offset);
+        cx.notify();
+        // Overlays anchored to the input (Kit's touch edit menu) read its bounds from
+        // the previous layout; one more full refresh re-anchors them after the scroll.
+        window.on_next_frame(|window, _| window.refresh());
+    }
+
     fn render_screen(&self, screen: &OpenScreen, cx: &mut Context<Self>) -> impl IntoElement {
         crate::diagnostics::set_screen_scroll(-self.screen_scroll.offset().y.as_f32());
         let covered: Vec<_> = matrix::for_screen(screen.def.title).collect();
@@ -369,6 +432,7 @@ impl Render for LabApp {
         if window.focused(cx).is_none() {
             self.focus.focus(window, cx);
         }
+        self.reveal_focused_input(window, cx);
         let body = match &self.screen {
             Some(screen) => self.render_screen(screen, cx).into_any_element(),
             None => self.render_catalog(window, cx).into_any_element(),

@@ -118,6 +118,6 @@ impl EventLog {
 pub mod prelude {
     pub use gpui_kit::component::button::{ButtonVariants as _, ToggleVariants as _};
     pub use gpui_kit::component::{
-        ActiveTheme as _, Colorize as _, Disableable as _, Selectable as _, Sizable as _, StyledExt as _,
+        ActiveTheme as _, Colorize as _, Disableable as _, WindowExt as _, Selectable as _, Sizable as _, StyledExt as _,
     };
 }

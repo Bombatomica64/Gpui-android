@@ -104,12 +104,19 @@ impl Render for TouchScreen {
                     }
                 });
                 let v = view.clone();
-                window.on_mouse_event(move |e: &LongPressEvent, phase, _, cx| {
+                window.on_mouse_event(move |e: &LongPressEvent, phase, window, cx| {
                     if phase.bubble() && inside(e.start_position) {
+                        // GPUI only continues a long press (Moved/Ended) that a
+                        // handler claims; unclaimed, the touch ends as a tap.
+                        if matches!(e.phase, TouchPhase::Started) {
+                            window.prevent_default();
+                        }
                         let _ = v.update(cx, |this, cx| {
                             if matches!(e.phase, TouchPhase::Started) {
                                 this.counters.long_press += 1;
-                                this.log.push(format!("long press at {:?}", this.local(e.position)));
+                            }
+                            if !matches!(e.phase, TouchPhase::Moved) {
+                                this.log.push(format!("long press {:?} at {:?}", e.phase, this.local(e.position)));
                             }
                             cx.notify();
                         });

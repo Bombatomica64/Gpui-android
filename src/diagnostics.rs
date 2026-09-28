@@ -14,6 +14,26 @@ static LAST_TOUCH: Mutex<Option<TouchSample>> = Mutex::new(None);
 /// Vertical scroll offset of the open screen's container, in logical pixels.
 static SCREEN_SCROLL_Y: AtomicI32 = AtomicI32::new(0);
 
+static REQUESTED_SCREEN: Mutex<Option<String>> = Mutex::new(None);
+static BLUR_REQUESTED: AtomicBool = AtomicBool::new(false);
+
+pub fn request_blur() {
+    BLUR_REQUESTED.store(true, Ordering::Relaxed);
+}
+
+pub fn take_blur_request() -> bool {
+    BLUR_REQUESTED.swap(false, Ordering::Relaxed)
+}
+
+/// A screen asked for through the launch intent (`--es screen <title>`).
+pub fn request_screen(screen: String) {
+    *REQUESTED_SCREEN.lock().expect("poisoned") = Some(screen);
+}
+
+pub fn take_requested_screen() -> Option<String> {
+    REQUESTED_SCREEN.lock().expect("poisoned").take()
+}
+
 pub fn set_screen_scroll(y: f32) {
     SCREEN_SCROLL_Y.store(y.round() as i32, Ordering::Relaxed);
 }
