@@ -4,6 +4,11 @@ use gpui::{AnyView, App, Window};
 
 mod buttons;
 mod choice;
+mod command;
+mod dock;
+mod lists;
+mod navigation;
+mod tables;
 mod date_time;
 mod dialogs;
 mod popovers;
@@ -48,6 +53,11 @@ pub static SCREENS: &[ScreenDef] = &[
     screen!("Date & Time", date_time::DateTimeScreen),
     screen!("Dialogs & Sheets", dialogs::DialogsScreen),
     screen!("Popovers & Menus", popovers::PopoversScreen),
+    screen!("Navigation", navigation::NavigationScreen),
+    screen!("Command", command::CommandScreen),
+    screen!("Dock", dock::DockScreen, true),
+    screen!("Tables", tables::TablesScreen, true),
+    screen!("Lists & Trees", lists::ListsScreen, true),
     screen!("Themes", themes::ThemesScreen),
 ];
 
