@@ -43,3 +43,7 @@ debug = "line-tables-only"
 
 [profile.dev.package."*"]
 opt-level = 2
+
+# Local, documented patches (see MOBILE_PATCHES.md).
+[patch.crates-io]
+gpui-base = { path = "vendor/gpui-base" }
