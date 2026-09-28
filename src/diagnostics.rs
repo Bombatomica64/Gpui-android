@@ -11,6 +11,16 @@ static KEYBOARD_VISIBLE: AtomicBool = AtomicBool::new(false);
 static KEYBOARD_HEIGHT_PX: AtomicI32 = AtomicI32::new(0);
 static TOUCH_EVENTS: AtomicU64 = AtomicU64::new(0);
 static LAST_TOUCH: Mutex<Option<TouchSample>> = Mutex::new(None);
+/// Vertical scroll offset of the open screen's container, in logical pixels.
+static SCREEN_SCROLL_Y: AtomicI32 = AtomicI32::new(0);
+
+pub fn set_screen_scroll(y: f32) {
+    SCREEN_SCROLL_Y.store(y.round() as i32, Ordering::Relaxed);
+}
+
+pub fn screen_scroll() -> i32 {
+    SCREEN_SCROLL_Y.load(Ordering::Relaxed)
+}
 
 #[derive(Clone, Copy, Debug)]
 pub struct TouchSample {

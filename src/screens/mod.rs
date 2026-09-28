@@ -3,7 +3,14 @@
 use gpui::{AnyView, App, Window};
 
 mod buttons;
+mod charts;
+mod chat;
 mod choice;
+mod diagnostics;
+mod rich_text;
+mod scroll;
+mod stress;
+mod touch;
 mod disclosure;
 mod display;
 mod feedback;
@@ -70,11 +77,18 @@ pub static SCREENS: &[ScreenDef] = &[
     screen!("Layout", layout::LayoutScreen),
     screen!("Settings & Form", settings_form::SettingsFormScreen),
     screen!("Questionnaire", questionnaire::QuestionnaireScreen),
+    screen!("Charts", charts::ChartsScreen),
+    screen!("Rich Text", rich_text::RichTextScreen),
+    screen!("Chat", chat::ChatScreen, true),
+    screen!("Touch Lab", touch::TouchScreen),
+    screen!("Scroll Stress", scroll::ScrollScreen, true),
+    screen!("Diagnostics", diagnostics::DiagnosticsScreen),
+    screen!("Stress Test", stress::StressScreen),
     screen!("Themes", themes::ThemesScreen),
 ];
 
 /// Lab tools listed above the component catalog.
-pub static TOOLS: &[&str] = &["Themes"];
+pub static TOOLS: &[&str] = &["Touch Lab", "Scroll Stress", "Diagnostics", "Stress Test", "Themes"];
 
 pub fn find(title: &str) -> Option<&'static ScreenDef> {
     SCREENS.iter().find(|screen| screen.title == title)

@@ -308,6 +308,7 @@ impl LabApp {
     }
 
     fn render_screen(&self, screen: &OpenScreen, cx: &mut Context<Self>) -> impl IntoElement {
+        crate::diagnostics::set_screen_scroll(-self.screen_scroll.offset().y.as_f32());
         let covered: Vec<_> = matrix::for_screen(screen.def.title).collect();
         let header = (!covered.is_empty()).then(|| {
             h_flex()
