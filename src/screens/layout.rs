@@ -87,7 +87,7 @@ impl Render for LayoutScreen {
                             )
                             .horizontal_scrollbar(&self.horizontal),
                     )
-                    .child(ui::value_row("Scroll x", format!("{:.0}", -offset.x.as_f32()), cx))
+                    .child(ui::value_row("Scroll x", format!("{:.0}", offset.x.as_f32().abs()), cx))
                     .child(ui::hint(
                         "Swipe horizontally inside the strip; a vertical swipe that starts on it \
                          must scroll the page instead (one scroll owner per axis).",

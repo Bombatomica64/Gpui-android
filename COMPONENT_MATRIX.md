@@ -23,7 +23,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | Button | Yes | WORKING | Buttons | All variants and sizes; disabled buttons ignore taps; a loading button ignores repeat taps. |
 | ButtonGroup | Yes | WORKING | Buttons | Multi-select reports the selected indices. |
 | DropdownButton | Yes | WORKING | Buttons | Menu flips above the trigger when there is no room below. The row under the finger keeps a hover highlight after the tap. |
-| Toggle / ToggleGroup | Yes | WORKING | Buttons | Segmented group and single toggle report state. |
+| Toggle / ToggleGroup | Yes | WORKING | Buttons | Segmented group and single toggle report state. Checked items use `accent`, which is low-contrast in the dark theme. |
 | Link | Yes | WORKING | Buttons | `on_click` fires. Opening an `href` (`cx.open_url`) was not verified: the test device has no browser. |
 | Kbd | Yes | WORKING | Buttons | Display only; Linux-style labels. |
 | Toolbar | Yes | WORKING | Toolbar | Buttons, toggles, sizes and the disabled state work. A toolbar wider than the screen is clipped (no overflow menu). |
@@ -123,7 +123,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | Progress / ProgressCircle | Yes | WORKING | Feedback | Values, animation and indeterminate mode. |
 | Spinner | Yes | WORKING | Feedback | Sizes, colors, custom icon. |
 | Skeleton | Yes | WORKING | Feedback | Pulse animation. |
-| ShimmerText | Yes | WORKING | Feedback | Repeating and one-shot sweeps. |
+| ShimmerText | Yes | PARTIAL | Feedback | Repeating and one-shot sweeps animate, but in dark mode the default highlight is invisible on `foreground` text and faint on muted text (it mixes the text color toward `foreground`; not Android-specific). The demo sets muted text and a `foreground` highlight. |
 | Marker | Yes | WORKING | Feedback | Separator, spinner and shimmer loading styles. |
 | StatusBar | Yes | WORKING | Feedback | Left/right items with a tappable button. |
 
@@ -170,7 +170,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | TextView (HTML) | Yes | WORKING | Rich Text | Paragraphs, lists, links, table. |
 | Text selection (TextView) | Yes | PARTIAL | Rich Text | Long-press shows handles and Copy/Select All, and Copy reaches the system clipboard, but the initial selection is not reliably the pressed word (collapsed or starting mid-word). |
 | Message / MessageGroup | Yes | WORKING | Chat | Avatars, headers, footers, alignment. |
-| Bubble | Yes | WORKING | Chat | All variants. A Markdown TextView inside a Filled bubble keeps its own dark text color. |
+| Bubble | Yes | PARTIAL | Chat | All variants render, but a TextView inside a `Filled` bubble ignores the bubble's `primary_foreground` and paints the theme `foreground`, so in dark mode it is white on white (not Android-specific). The demo passes a `TextViewStyle` with `primary_foreground`. |
 | MessageScroller | Yes | WORKING | Chat | Tail-follow, append, `scroll_to_end`, jump-to-latest button. |
 | Attachment | Yes | WORKING | Chat | Status, progress, remove. Without an AttachmentGroup a second card overflows the edge. |
 

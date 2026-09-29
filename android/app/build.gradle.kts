@@ -11,8 +11,8 @@ android {
         minSdk = 26
         // 34 keeps adjustResize semantics (35 forces edge-to-edge).
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.1.1"
         ndk {
             abiFilters += listOf("arm64-v8a", "x86_64")
         }
