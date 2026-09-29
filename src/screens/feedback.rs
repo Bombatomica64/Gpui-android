@@ -140,8 +140,20 @@ impl Render for FeedbackScreen {
                             .child(Skeleton::new().size_12().rounded_full())
                             .child(v_flex().flex_1().gap_2().child(Skeleton::new().w_full().h_4()).child(Skeleton::new().secondary().w(px(160.)).h_4())),
                     )
-                    .child(ShimmerText::new("Thinking about your question…"))
-                    .child(ShimmerText::new("Shimmer once").once(true).id("shimmer-once")),
+                    // Kit's default highlight mixes the text color toward `foreground`,
+                    // which is invisible on `foreground` text in dark mode.
+                    .child(
+                        ShimmerText::new("Thinking about your question…")
+                            .text_color(cx.theme().muted_foreground)
+                            .highlight_color(cx.theme().foreground),
+                    )
+                    .child(
+                        ShimmerText::new("Shimmer once")
+                            .once(true)
+                            .id("shimmer-once")
+                            .text_color(cx.theme().muted_foreground)
+                            .highlight_color(cx.theme().foreground),
+                    ),
             )
             .child(
                 ui::section("Marker", cx)

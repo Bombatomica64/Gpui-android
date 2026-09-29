@@ -5,7 +5,7 @@ use gpui::{
     AppContext as _, Axis, Context, Entity, IntoElement, ParentElement, Render, Styled,
     Subscription, Window, div, prelude::*,
 };
-use gpui_kit::base::TextView;
+use gpui_kit::base::{TextView, Theme as BaseTheme, text::TextViewStyle};
 use gpui_kit::component::{
     Icon, IconName,
     attachment::{
@@ -123,11 +123,21 @@ impl ChatScreen {
     }
 }
 
+/// A `Filled` bubble paints `primary` and sets `primary_foreground`, but TextView
+/// always applies the theme's `foreground`: white-on-white in dark mode.
+fn filled_bubble_text(cx: &gpui::App) -> TextViewStyle {
+    let theme = BaseTheme::global(cx);
+    let text = theme.tokens.colors.primary_foreground;
+    TextViewStyle::from_theme(&theme)
+        .with_foreground(text)
+        .with_link(text)
+}
+
 impl Render for ChatScreen {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let messages = self.messages.clone();
         let scroller =
-            MessageScroller::new("chat-scroller", self.scroller.clone(), move |ix, _, _| {
+            MessageScroller::new("chat-scroller", self.scroller.clone(), move |ix, _, cx| {
                 let message = messages.borrow().get(ix).cloned();
                 let Some(message) = message else {
                     return div().into_any_element();
@@ -150,6 +160,10 @@ impl Render for ChatScreen {
                                     Bubble::new().with_variant(message.variant.clone()).content(
                                         BubbleContent::new().child(
                                             TextView::markdown(("chat", ix), message.text.clone())
+                                                .when(
+                                                    message.variant == BubbleVariant::Filled,
+                                                    |this| this.style(filled_bubble_text(cx)),
+                                                )
                                                 .selectable(true)
                                                 .w_full()
                                                 .min_w_0(),

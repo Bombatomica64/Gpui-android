@@ -62,7 +62,7 @@ sideloaded without a keystore. It is a test app, not for store distribution.
 ## Install
 
 ```sh
-adb install -r dist/gpui-mobile-lab-0.1.0-release.apk
+adb install -r dist/gpui-mobile-lab-0.1.1-release.apk
 adb shell am start -n dev.gpui.mobile.lab/.LabActivity
 ```
 
@@ -123,6 +123,9 @@ Interactions were driven with `adb shell input` (taps, swipes, raw
 `motionevent` DOWN/MOVE/UP for long-press and drags, key events and IME
 typing), and verified from screenshots and the in-app event logs in logcat.
 
+Several screens were later checked on a physical phone (360×736 pt); the
+Bubble, ShimmerText and Toggle notes in the matrix come from that.
+
 Limits of that setup:
 
 - Rendering is CPU-based (SwiftShader Vulkan). GPUI's own draw time was
@@ -167,6 +170,10 @@ Each is detailed in the matrix; fixes applied locally are in MOBILE_PATCHES.md.
   always requests the default keyboard type.
 - A disabled `Radio` inside a `RadioGroup` is still selectable; a `.rows(5)`
   Textarea renders one row tall (both not Android-specific).
+- In dark mode, a TextView inside a `Filled` chat `Bubble` renders white on
+  white (TextView ignores the bubble's text color), and the default
+  `ShimmerText` highlight is invisible on regular text. Both are not
+  Android-specific; the demos work around them.
 - Kit tooltips are disabled on mobile by design; a raw GPUI `.tooltip()` did
   not show on long-press either.
 - Closing a sheet while a fling is still running hands the remaining momentum
