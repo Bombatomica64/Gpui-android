@@ -62,7 +62,7 @@ sideloaded without a keystore. It is a test app, not for store distribution.
 ## Install
 
 ```sh
-adb install -r dist/gpui-mobile-lab-0.1.1-release.apk
+adb install -r dist/gpui-mobile-lab-0.1.2-release.apk
 adb shell am start -n dev.gpui.mobile.lab/.LabActivity
 ```
 
@@ -169,11 +169,13 @@ Each is detailed in the matrix; fixes applied locally are in MOBILE_PATCHES.md.
 - `NumberInput` and masked number inputs open the full text keyboard; gpui-mobile
   always requests the default keyboard type.
 - A disabled `Radio` inside a `RadioGroup` is still selectable; a `.rows(5)`
-  Textarea renders one row tall (both not Android-specific).
+  Textarea renders one row tall (both not Android-specific; reported as
+  longbridge/gpui-kit#3324 and #3325, fixes proposed in #3331 and #3330).
 - In dark mode, a TextView inside a `Filled` chat `Bubble` renders white on
   white (TextView ignores the bubble's text color), and the default
   `ShimmerText` highlight is invisible on regular text. Both are not
-  Android-specific; the demos work around them.
+  Android-specific (#3326 and #3327, fixes proposed in #3329 and #3328); the
+  demos work around them.
 - Kit tooltips are disabled on mobile by design; a raw GPUI `.tooltip()` did
   not show on long-press either.
 - Closing a sheet while a fling is still running hands the remaining momentum
