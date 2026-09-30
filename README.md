@@ -9,6 +9,8 @@ tools for touch, scrolling, diagnostics, rendering stress and themes.
 - Component coverage and per-component Android status: **[COMPONENT_MATRIX.md](COMPONENT_MATRIX.md)**
   (the app renders its catalog from this file).
 - Changes made to upstream crates: **[MOBILE_PATCHES.md](MOBILE_PATCHES.md)**.
+- Assessment and possible work for the GPUI / GPUI Kit teams:
+  **[CONTRIBUTING_IDEAS.md](CONTRIBUTING_IDEAS.md)**.
 
 ## Tested dependency revisions
 
