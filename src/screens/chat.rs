@@ -124,13 +124,22 @@ impl ChatScreen {
 }
 
 /// A `Filled` bubble paints `primary` and sets `primary_foreground`, but TextView
-/// always applies the theme's `foreground`: white-on-white in dark mode.
+/// always applies the theme's `foreground`: white-on-white in dark mode. Links and
+/// code backgrounds use roles tuned for the page, so derive them from the text
+/// color too (the same colors as `BubbleVariant::text_view_style`,
+/// longbridge/gpui-kit#3329).
 fn filled_bubble_text(cx: &gpui::App) -> TextViewStyle {
     let theme = BaseTheme::global(cx);
     let text = theme.tokens.colors.primary_foreground;
+    let code_background = text.opacity(0.12);
     TextViewStyle::from_theme(&theme)
         .with_foreground(text)
         .with_link(text)
+        .with_code_background(code_background)
+        .with_inline_code(gpui::HighlightStyle {
+            background_color: Some(code_background),
+            ..Default::default()
+        })
 }
 
 impl Render for ChatScreen {

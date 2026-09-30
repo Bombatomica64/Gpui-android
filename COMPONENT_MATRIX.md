@@ -34,7 +34,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | Component | Included in APK | Mobile status | Demo screen | Notes |
 |---|---|---|---|---|
 | Checkbox | Yes | WORKING | Choice Controls | Wrapped labels are tappable; disabled ignores taps. |
-| Radio / RadioGroup | Yes | PARTIAL | Choice Controls | Selection works, but a `Radio` marked `.disabled(true)` inside a `RadioGroup` can still be selected (not Android-specific). |
+| Radio / RadioGroup | Yes | PARTIAL | Choice Controls | Selection works, but a `Radio` marked `.disabled(true)` inside a `RadioGroup` can still be selected (not Android-specific; longbridge/gpui-kit#3324, fix in #3331). |
 | Switch | Yes | WORKING | Choice Controls | Default and small sizes; disabled ignores taps. |
 | Slider | Yes | WORKING | Choice Controls | (patched) Tap-to-set works upstream; dragging the thumb needs patch 4, because Slider only handled mouse drags. Horizontal, vertical and range. |
 | Rating | Yes | WORKING | Choice Controls | Tap sets the value; disabled is read-only. |
@@ -54,7 +54,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | InputGroup | Yes | WORKING | Text Input | Addons and the addon button work. |
 | Clipboard | Yes | WORKING | Text Input | `value_fn` + notification and static values copy to the system clipboard. |
 | Label | Yes | WORKING | Text Input | Highlights, secondary text and masking render. |
-| Textarea | Yes | PARTIAL | Textarea & Editor | Typing, newlines and `auto_grow` work; a `.rows(5)` textarea renders one row tall and clips its content. |
+| Textarea | Yes | PARTIAL | Textarea & Editor | Typing, newlines and `auto_grow` work; a `.rows(5)` textarea renders one row tall and clips its content (not Android-specific; longbridge/gpui-kit#3325, fix in #3330). |
 | Inline tokens (InputToken) | Yes | WORKING | Textarea & Editor | Tokens render with icons; backspace deletes a whole token. |
 | Editor | Yes | WORKING | Textarea & Editor | Line numbers, soft wrap, typing and internal scrolling. |
 | Highlighter (tree-sitter) | No | NOT_APPLICABLE | Textarea & Editor | Behind the `tree-sitter` feature, not enabled to keep the APK small; the Editor runs without syntax colors. |
@@ -123,7 +123,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | Progress / ProgressCircle | Yes | WORKING | Feedback | Values, animation and indeterminate mode. |
 | Spinner | Yes | WORKING | Feedback | Sizes, colors, custom icon. |
 | Skeleton | Yes | WORKING | Feedback | Pulse animation. |
-| ShimmerText | Yes | PARTIAL | Feedback | Repeating and one-shot sweeps animate, but in dark mode the default highlight is invisible on `foreground` text and faint on muted text (it mixes the text color toward `foreground`; not Android-specific). The demo sets muted text and a `foreground` highlight. |
+| ShimmerText | Yes | PARTIAL | Feedback | Repeating and one-shot sweeps animate, but in dark mode the default highlight is invisible on `foreground` text: it is the text color mixed 80% toward `foreground`, i.e. the text's own color (not Android-specific; longbridge/gpui-kit#3327, fix in #3328). Muted text shimmers normally. The demo uses muted text with a `foreground` highlight. |
 | Marker | Yes | WORKING | Feedback | Separator, spinner and shimmer loading styles. |
 | StatusBar | Yes | WORKING | Feedback | Left/right items with a tappable button. |
 
@@ -170,7 +170,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | TextView (HTML) | Yes | WORKING | Rich Text | Paragraphs, lists, links, table. |
 | Text selection (TextView) | Yes | PARTIAL | Rich Text | Long-press shows handles and Copy/Select All, and Copy reaches the system clipboard, but the initial selection is not reliably the pressed word (collapsed or starting mid-word). |
 | Message / MessageGroup | Yes | WORKING | Chat | Avatars, headers, footers, alignment. |
-| Bubble | Yes | PARTIAL | Chat | All variants render, but a TextView inside a `Filled` bubble ignores the bubble's `primary_foreground` and paints the theme `foreground`, so in dark mode it is white on white (not Android-specific). The demo passes a `TextViewStyle` with `primary_foreground`. |
+| Bubble | Yes | PARTIAL | Chat | All variants render, but a TextView inside a `Filled` bubble ignores the bubble's `primary_foreground` and paints the theme `foreground`, so in dark mode it is white on white (not Android-specific). The demo passes a `TextViewStyle` with `primary_foreground` text and links and code backgrounds derived from it (longbridge/gpui-kit#3326, fix in #3329). |
 | MessageScroller | Yes | WORKING | Chat | Tail-follow, append, `scroll_to_end`, jump-to-latest button. |
 | Attachment | Yes | WORKING | Chat | Status, progress, remove. Without an AttachmentGroup a second card overflows the edge. |
 
