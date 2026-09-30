@@ -51,6 +51,8 @@ rm -rf "$JNI_LIBS"
 
 cargo_flags=()
 [[ "$PROFILE" == release ]] && cargo_flags+=(--release)
+# Optional Cargo features, e.g. LAB_FEATURES=demo-pr3329 for demo builds.
+[[ -n "${LAB_FEATURES:-}" ]] && cargo_flags+=(--features "$LAB_FEATURES")
 ndk_targets=()
 for abi in "${ABIS[@]}"; do
     ndk_targets+=(-t "$abi")

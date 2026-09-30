@@ -142,6 +142,24 @@ fn filled_bubble_text(cx: &gpui::App) -> TextViewStyle {
         })
 }
 
+/// Markdown in a `Filled` bubble with Kit's default TextView style, for before/after
+/// recordings of longbridge/gpui-kit#3329 (the chat below keeps its workaround).
+/// Built with `--features demo-pr3329` against a Kit carrying that PR, it uses
+/// `BubbleVariant::text_view_style` instead.
+fn filled_bubble_demo(cx: &gpui::App) -> impl IntoElement {
+    let text = TextView::markdown(
+        "filled-bubble-demo",
+        "Markdown in a **Filled** bubble with `inline code` and a [link](https://gpui-kit.com).",
+    );
+    #[cfg(feature = "demo-pr3329")]
+    let text = text.style(BubbleVariant::Filled.text_view_style(cx));
+    ui::section("Filled bubble + TextView", cx).child(
+        Bubble::new()
+            .with_variant(BubbleVariant::Filled)
+            .content(BubbleContent::new().child(text)),
+    )
+}
+
 impl Render for ChatScreen {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let messages = self.messages.clone();
@@ -218,6 +236,7 @@ impl Render for ChatScreen {
 
         v_flex()
             .size_full()
+            .child(filled_bubble_demo(cx))
             .child(div().flex_1().min_h_0().child(scroller))
             .child(
                 v_flex()
