@@ -45,6 +45,10 @@ debug = "line-tables-only"
 opt-level = 2
 
 # Local, documented patches (see MOBILE_PATCHES.md).
+[features]
+# Before/after demo builds for upstream PRs; each needs a Kit carrying that PR.
+demo-pr3329 = []
+
 [patch.crates-io]
 gpui-base = { path = "vendor/gpui-base" }
 gpui-fps = { path = "vendor/gpui-fps" }
