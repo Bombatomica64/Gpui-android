@@ -81,6 +81,14 @@ impl Render for FeedbackScreen {
         v_flex()
             .gap_3()
             .child(
+                // Unstyled, exactly as in Kit's Shimmer story (longbridge/gpui-kit#3327):
+                // in dark mode the first line shows no sweep on Kit 0.7.0.
+                ui::section("ShimmerText defaults", cx)
+                    .child(ShimmerText::new("Thinking…"))
+                    .child(ShimmerText::new("Searching the current project…").text_color(cx.theme().muted_foreground))
+                    .child(ui::hint("Default text color, then muted. Switch to dark mode to compare.", cx)),
+            )
+            .child(
                 ui::section("Alert", cx)
                     .child(alert(self, "info", Alert::info("info", "Maintenance starts Friday at 22:00 UTC.").title("Scheduled maintenance"), cx))
                     .child(alert(self, "success", Alert::success("success", "Your changes were saved."), cx))
