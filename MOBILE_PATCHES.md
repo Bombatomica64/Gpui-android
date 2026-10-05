@@ -8,7 +8,7 @@ exported in [`patches/`](patches/) (paths relative to `vendor/`).
 
 | # | Crate (vendored copy) | Upstream |
 |---|---|---|
-| 1–3 | `vendor/gpui-mobile` — `gpui-pre-mobile` 0.1.0 at `f379bc8` | https://github.com/longbridge/gpui-mobile |
+| 1–3, 6 | `vendor/gpui-mobile` — `gpui-pre-mobile` 0.1.0 at `f379bc8` | https://github.com/longbridge/gpui-mobile |
 | 4 | `vendor/gpui-base` — `gpui-base` 0.7.0 | https://github.com/longbridge/gpui-kit (`crates/base`) |
 | 5 | `vendor/gpui-fps` — `gpui-fps` 0.7.0 | https://github.com/longbridge/gpui-kit (`crates/fps`) |
 
@@ -92,6 +92,25 @@ and `gpui-component` 0.7.0 still come from crates.io unchanged.
 - **Fix:** on Android use `Droid Sans Mono`, which every Android ships and
   gpui-mobile loads from `/system/fonts`.
 - **Upstream PR?** Yes, one `cfg`.
+
+## 6. gpui-mobile: expose GPUI's accessibility tree to TalkBack
+
+- **Files:** `Cargo.toml`, `src/android/accessibility.rs` (new),
+  `src/android/window.rs`, `src/android/jni.rs`, `src/android/mod.rs`
+- **Problem:** GPUI 0.3.7 builds an AccessKit tree and passes it to
+  `PlatformWindow::a11y_init` / `a11y_tree_update`; the Android window left
+  both as no-ops, so TalkBack saw one opaque surface.
+- **Fix:** hand the tree to `accesskit_android` 0.7.5's `InjectingAdapter`
+  (the newest release on `accesskit` 0.24), which installs an
+  `AccessibilityDelegate` on the existing host `View`; no Java changes.
+  Updates are skipped while `AccessibilityManager.isEnabled()` is false:
+  0.7.5 raises events unconditionally and Android throws on the UI thread
+  once the screen reader disconnects (found on redroid, fixed upstream in
+  0.9). Verified with TalkBack on a OnePlus CPH2581 (Android 16): touch
+  exploration, double-tap to toggle, and turning TalkBack off.
+  [Bounds](docs/demos/android-a11y-bounds.png),
+  [recording](docs/demos/android-a11y-talkback.gif).
+- **Upstream PR?** Yes, one self-contained module.
 
 ## Not patched, handled in the host app instead
 
