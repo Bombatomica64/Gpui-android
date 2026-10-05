@@ -1,29 +1,4 @@
-From e626086e456f2a84096a6f5a8154c4b96a638c1a Mon Sep 17 00:00:00 2001
-From: lorenzomicheli <lorenzo.micheli@instal.com>
-Date: Mon, 5 Oct 2026 08:20:18 +0000
-Subject: [PATCH] android: expose GPUI's accessibility tree to TalkBack
-
-GPUI 0.3.7 builds an AccessKit tree and hands it to
-PlatformWindow::a11y_init / a11y_tree_update, which the Android window
-left as no-ops. Wire them to accesskit_android's InjectingAdapter, which
-installs an AccessibilityDelegate on the existing host View, so hosts need
-no Java changes.
-
-accesskit_android 0.7.5 is the newest release on accesskit 0.24 (the
-version gpui-pre 0.3.7 uses). It raises accessibility events without
-checking AccessibilityManager.isEnabled(), and Android throws on the UI
-thread when no service is listening, so updates are skipped while
-accessibility is off (0.9 has this check but needs accesskit 0.25).
-
-Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
----
- Cargo.toml                   |   3 +
- src/android/accessibility.rs | 191 +++++++++++++++++++++++++++++++++++
- src/android/jni.rs           |   2 +
- src/android/mod.rs           |   1 +
- src/android/window.rs        |   8 ++
- 5 files changed, 205 insertions(+)
- create mode 100644 src/android/accessibility.rs
+gpui-mobile: expose GPUI's accessibility tree to TalkBack (longbridge/gpui-mobile#25, squashed)
 
 diff --git a/Cargo.toml b/Cargo.toml
 index 0cdadbe..0652422 100644
@@ -41,10 +16,10 @@ index 0cdadbe..0652422 100644
  uuid       = { version = "1", features = ["v5"] }
 diff --git a/src/android/accessibility.rs b/src/android/accessibility.rs
 new file mode 100644
-index 0000000..dbbd00f
+index 0000000..a8a695e
 --- /dev/null
 +++ b/src/android/accessibility.rs
-@@ -0,0 +1,191 @@
+@@ -0,0 +1,195 @@
 +//! Screen-reader support: hands GPUI's AccessKit tree to TalkBack.
 +//!
 +//! GPUI builds an AccessKit tree every frame once a screen reader is active and passes
@@ -59,11 +34,11 @@ index 0000000..dbbd00f
 +//! There is one GPUI window per Activity, so the state is global. A recreated Activity
 +//! has new views; [`super::jni::set_host_activity`] moves the adapter onto them.
 +//!
-+//! Android has no "screen reader stopped" callback for this adapter, so once TalkBack
-+//! has been used GPUI keeps building the tree until the process ends. Updates are
-+//! dropped while accessibility is off: this adapter version raises events without
-+//! checking, and Android throws on the UI thread when nobody is listening
-+//! (`accesskit_android` 0.9 checks, but needs `accesskit` 0.25).
++//! This adapter version has no "screen reader stopped" callback and raises events
++//! without checking whether anyone listens, which Android answers by throwing on the
++//! UI thread (`accesskit_android` 0.9 checks, but needs `accesskit` 0.25). So each
++//! update first asks `AccessibilityManager.isEnabled()`; once it is off, GPUI is told
++//! to stop building trees and a fresh adapter waits for the next screen reader.
 +
 +use std::sync::{Arc, Mutex};
 +
@@ -96,11 +71,6 @@ index 0000000..dbbd00f
 +    manager: GlobalRef,
 +}
 +
-+// SAFETY: `InjectingAdapter` holds a `JavaVM`, global/weak references and a
-+// `&'static` global class reference, all valid on any thread; its methods attach to
-+// the JVM and post UI work to the host `View` themselves.
-+unsafe impl Send for Adapter {}
-+
 +/// GPUI's callbacks, shared by every adapter a recreated Activity gets.
 +#[derive(Clone)]
 +struct Handlers(Arc<Mutex<A11yCallbacks>>);
@@ -118,7 +88,7 @@ index 0000000..dbbd00f
 +}
 +
 +/// `PlatformWindow::a11y_init`, on the GPUI thread.
-+pub(crate) fn init(callbacks: A11yCallbacks) {
++pub(super) fn init(callbacks: A11yCallbacks) {
 +    let mut bridge = BRIDGE.lock().expect("poisoned");
 +    bridge
 +        .insert(Bridge {
@@ -129,18 +99,26 @@ index 0000000..dbbd00f
 +}
 +
 +/// `PlatformWindow::a11y_tree_update`, on the GPUI thread that called [`init`].
-+pub(crate) fn update(tree: TreeUpdate) {
++pub(super) fn update(tree: TreeUpdate) {
 +    let mut bridge = BRIDGE.lock().expect("poisoned");
-+    let Some(adapter) = bridge.as_mut().and_then(|b| b.adapter.as_mut()) else {
++    let Some(bridge) = bridge.as_mut() else {
++        return;
++    };
++    let Some(adapter) = bridge.adapter.as_mut() else {
 +        return;
 +    };
 +    if adapter.is_accessibility_enabled() {
 +        adapter.inner.update_if_active(|| tree);
++        return;
 +    }
++    // The screen reader has gone. Stop GPUI building trees, and swap in an adapter
++    // that is not yet active, so the next screen reader activates GPUI again.
++    (bridge.callbacks.0.lock().expect("poisoned").deactivation)();
++    bridge.attach();
 +}
 +
 +/// A new Activity was registered; move the adapter onto its views.
-+pub(crate) fn activity_changed() {
++pub(super) fn activity_changed() {
 +    if let Some(bridge) = BRIDGE.lock().expect("poisoned").as_mut() {
 +        bridge.attach();
 +    }
@@ -167,9 +145,10 @@ index 0000000..dbbd00f
 +
 +impl Adapter {
 +    fn is_accessibility_enabled(&self) -> bool {
-+        let enabled = self.vm.get_env().and_then(|mut env| {
-+            env.call_method(&self.manager, "isEnabled", "()Z", &[])?.z()
-+        });
++        let enabled = self
++            .vm
++            .get_env()
++            .and_then(|mut env| env.call_method(&self.manager, "isEnabled", "()Z", &[])?.z());
 +        enabled.unwrap_or_else(|err| {
 +            log::warn!("accessibility: AccessibilityManager.isEnabled failed: {err}");
 +            false
@@ -237,7 +216,7 @@ index 0000000..dbbd00f
 +    .map_err(|e| e.to_string())?
 +}
 diff --git a/src/android/jni.rs b/src/android/jni.rs
-index 3ecfe2e..6965db9 100644
+index 3ecfe2e..879604e 100644
 --- a/src/android/jni.rs
 +++ b/src/android/jni.rs
 @@ -317,6 +317,8 @@ pub fn set_host_activity(env: &mut jni::Env<'_>, activity: &JObject<'_>) -> Resu
@@ -249,6 +228,25 @@ index 3ecfe2e..6965db9 100644
      Ok(())
  }
  
+@@ -488,6 +490,18 @@ fn process_input_events(app: &AndroidApp) {
+                                 }
+                             };
+ 
++                            // GPUI does not use hover on mobile. With a screen reader on,
++                            // touch exploration arrives as hover events, which the
++                            // accessibility delegate on the decor view has to see.
++                            if matches!(
++                                action,
++                                MotionAction::HoverEnter
++                                    | MotionAction::HoverMove
++                                    | MotionAction::HoverExit
++                            ) {
++                                return android_activity::InputStatus::Unhandled;
++                            }
++
+                             if hits_platform_view {
+                                 log::debug!(
+                                     "process_input_events: touch hits platform view, skipping GPUI dispatch",
 diff --git a/src/android/mod.rs b/src/android/mod.rs
 index 1811cc4..eefff4d 100644
 --- a/src/android/mod.rs
@@ -280,6 +278,3 @@ index 765dc1d..d481238 100644
      fn prompt(
          &self,
          _level: PromptLevel,
--- 
-2.43.0
-
