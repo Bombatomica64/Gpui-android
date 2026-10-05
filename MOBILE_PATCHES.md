@@ -106,8 +106,12 @@ and `gpui-component` 0.7.0 still come from crates.io unchanged.
   Updates are skipped while `AccessibilityManager.isEnabled()` is false:
   0.7.5 raises events unconditionally and Android throws on the UI thread
   once the screen reader disconnects (found on redroid, fixed upstream in
-  0.9). Verified with TalkBack on a OnePlus CPH2581 (Android 16): touch
-  exploration, double-tap to toggle, and turning TalkBack off.
+  0.9). Once accessibility is off, GPUI is told to stop building trees and
+  a fresh adapter waits, so turning TalkBack back on re-activates GPUI.
+  Hover events (touch exploration) are reported unhandled on the
+  NativeActivity path so they reach the delegate. Verified with TalkBack
+  on a OnePlus CPH2581 (Android 16): touch exploration, double-tap to
+  toggle, and turning TalkBack off and on again.
   [Bounds](docs/demos/android-a11y-bounds.png),
   [recording](docs/demos/android-a11y-talkback.gif).
 - **Upstream PR?** Yes, one self-contained module.
