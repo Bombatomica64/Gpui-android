@@ -25,6 +25,9 @@ pub struct ChoiceScreen {
     slider: Entity<SliderState>,
     range: Entity<SliderState>,
     vertical: Entity<SliderState>,
+    /// Its own state: two `Slider`s on one state share an element id, which GPUI's
+    /// accessibility tree rejects (a debug-build panic once a screen reader connects).
+    disabled_slider: Entity<SliderState>,
     slider_value: String,
     range_value: String,
     vertical_value: String,
@@ -57,6 +60,13 @@ impl ChoiceScreen {
                 .default_value(3.)
                 .step(1.)
         });
+        let disabled_slider = cx.new(|_| {
+            SliderState::new()
+                .min(0.)
+                .max(100.)
+                .default_value(40.)
+                .step(1.)
+        });
         let subscriptions = vec![
             cx.subscribe(&slider, |this, _, event: &SliderEvent, cx| {
                 this.on_slider("slider", event, cx)
@@ -77,6 +87,7 @@ impl ChoiceScreen {
             slider,
             range,
             vertical,
+            disabled_slider,
             slider_value: "40".into(),
             range_value: "200..700".into(),
             vertical_value: "3".into(),
@@ -206,7 +217,7 @@ impl Render for ChoiceScreen {
                             .child(div().h(px(140.)).child(Slider::new(&self.vertical).vertical()))
                             .child(ui::value_row("Vertical (0–10)", self.vertical_value.clone(), cx)),
                     )
-                    .child(Slider::new(&self.slider).disabled(true))
+                    .child(Slider::new(&self.disabled_slider).disabled(true))
                     .child(ui::hint(
                         "Drag thumbs horizontally; a vertical page scroll starting on a slider \
                          should still scroll the page.",
