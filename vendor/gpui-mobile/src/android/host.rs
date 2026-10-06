@@ -27,7 +27,7 @@
 //!    [`super::jni::set_host_activity`] from a JNI entry point, then [`start`] (a no-op
 //!    after the first call).
 //! 2. From `SurfaceHolder.Callback`: [`surface_created`] in both `surfaceCreated` and
-//!    `surfaceChanged`, [`surface_destroyed`] in `surfaceDestroyed`.
+//!    `surfaceChanged`, [`surface_destroyed_for`] in `surfaceDestroyed`.
 //! 3. From `onResume` / `onPause`: [`resumed`] / [`paused`].
 //! 4. From `onTouchEvent`, `dispatchKeyEvent` and the `InputConnection`:
 //!    [`motion_event`], [`key`], [`ime_event`].
@@ -298,7 +298,6 @@ fn on_surface_created(
     scale: f32,
     app: &mut HostApp,
 ) {
-
     let incoming = window.ptr().as_ptr();
     if CURRENT_SURFACE.load(Ordering::SeqCst) == incoming {
         // `surfaceChanged` for a surface we are already rendering into: the size may
