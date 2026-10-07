@@ -79,7 +79,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | Carousel | Yes | PARTIAL | Navigation | Swiping changes slides, but one fling skips several slides (each momentum delta counts as a step), and the prev/next buttons render outside the card, clipped at the screen edges. |
 | Sidebar | Yes | WORKING | Navigation | Selection and collapse to icons; the header text overflows when collapsed. |
 | Command | Yes | WORKING | Command | Inline and in a dialog: filter with keyboard, confirm closes the dialog. |
-| Dock (DockArea / Panel) | Yes | PARTIAL | Dock | Tab switching, panel taps and the panel menu work; splitter resize and tab drag/split do nothing (GPUI drag-and-drop is mouse-only on touch). |
+| Dock (DockArea / Panel) | Yes | WORKING | Dock | Tab switching, panel taps and the panel menu work; splitter resize and dragging a tab into another panel work by touch with the GPUI fork's touch-drag fix. |
 
 ## Overlays
 
@@ -101,7 +101,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | Component | Included in APK | Mobile status | Demo screen | Notes |
 |---|---|---|---|---|
 | Table | Yes | PARTIAL | Tables | Renders, but the last column is clipped at 411 pt (no shrinking or horizontal scroll). |
-| DataTable | Yes | WORKING | Tables | 1,000 virtualized rows: row/column selection, sort chevron, pinned column with horizontal scroll, fling, `scroll_to_row`. Column resize/reorder are drag gestures and do not work on touch. A tap also emitted `RightClickedRow(None)`. |
+| DataTable | Yes | WORKING | Tables | 1,000 virtualized rows: row/column selection, sort chevron, pinned column with horizontal scroll, fling, `scroll_to_row`. Column resize/reorder still do not work on touch, even with the GPUI touch-drag fix (direct or after a long press); not yet investigated. A tap also emitted `RightClickedRow(None)`. |
 | List | Yes | WORKING | Lists & Trees | 1,000 virtualized rows, fling, tap-to-stop, select/confirm, built-in search with keyboard, empty state. |
 | Tree | Yes | WORKING | Lists & Trees | Expand/collapse, select, scroll. |
 | VirtualList | Yes | WORKING | Lists & Trees | 1,000 variable-height rows, fling. |
@@ -133,7 +133,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 |---|---|---|---|---|
 | Separator | Yes | WORKING | Layout | Horizontal, vertical, dashed, labelled. |
 | Scrollbar / ScrollableElement | Yes | WORKING | Layout | Thin mobile scrollbars; nested vertical scroller and horizontal strips. Vertical-only containers need `restrict_scroll_to_axis()` on touch (see README). |
-| Resizable panels | Yes | BROKEN | Layout | Renders, but dividers cannot be dragged by touch (GPUI drag-and-drop is mouse-only), so panels cannot be resized on a phone. |
+| Resizable panels | Yes | WORKING | Layout | Dividers drag by touch with the GPUI fork's touch-drag fix. A divider whose drag runs along the page's scroll axis needs a long press first (a plain swipe scrolls the page). |
 | h_flex / v_flex | Yes | WORKING | Layout | Truncation and fixed/flexible children at phone width. |
 | Root (overlay host) | Yes | WORKING | Dialogs & Sheets | v0.7.0 Root hosts dialogs, sheets and notifications with no manual layers. |
 | TitleBar | No | NOT_APPLICABLE | — | Desktop window chrome (traffic lights, caption buttons, window dragging). Android owns the status bar. |
