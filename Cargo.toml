@@ -51,4 +51,5 @@ demo-pr3329 = []
 
 [patch.crates-io]
 gpui-base = { path = "vendor/gpui-base" }
+gpui-component = { path = "vendor/gpui-component" }
 gpui-fps = { path = "vendor/gpui-fps" }
