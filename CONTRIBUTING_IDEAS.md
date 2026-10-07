@@ -78,7 +78,7 @@ Ordered roughly by how much they'd move the verdict above.
    0.7.0 and add a minimal Android quick start.
 7. **Platform services.** Clipboard, share sheet, system dark mode, system
    fonts, back navigation and safe-area insets as first-class APIs.
-8. **Upstream the local patches.** Each entry in
+8. **Upstream the fork fixes.** Each entry in
    [MOBILE_PATCHES.md](MOBILE_PATCHES.md) is a candidate PR.
 9. **Kit components for small screens.** Fix layout overflows and add
    touch-sized variants of desktop-centric controls.
