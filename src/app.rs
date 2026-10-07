@@ -58,20 +58,13 @@ impl LabApp {
         });
         let focus = cx.focus_handle();
         focus.focus(window, cx);
-        // Requests from the Java thread (IME dismissal, intent-requested screens) are
+        // Requests from the Java thread (intent-requested screens) are
         // picked up here, on the GPUI thread.
         cx.spawn_in(window, async move |this, cx| {
             loop {
                 cx.background_executor()
                     .timer(std::time::Duration::from_millis(150))
                     .await;
-                if crate::diagnostics::take_blur_request() {
-                    let _ = cx.update(|window, cx| window.blur(cx));
-                }
-                #[cfg(target_os = "android")]
-                if let Some(night) = crate::diagnostics::take_night_mode_change() {
-                    crate::host::apply_night_mode(night);
-                }
                 if let Some(screen) = crate::diagnostics::take_requested_screen() {
                     let result =
                         this.update_in(cx, |this, window, cx| this.open(&screen, window, cx));
