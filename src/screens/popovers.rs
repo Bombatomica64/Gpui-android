@@ -281,8 +281,7 @@ impl Render for PopoversScreen {
                             }),
                     )
                     .child(ui::hint(
-                        "Kit opens context menus on the right mouse button only; a touch long \
-                         press has no mapping to it.",
+                        "Right-click or long-press opens the menu.",
                         cx,
                     )),
             )
