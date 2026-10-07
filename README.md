@@ -179,13 +179,21 @@ Each is detailed in the matrix; fixes carried by our forks are in MOBILE_PATCHES
   can continue as vertical page scrolling.
 - After a tap, the touched menu row keeps its hover highlight.
 
-**Fixed in our forks, not yet verified on a phone**
+**Fixed in our forks** (checked on a OnePlus CPH2581, Android 16)
 
-Finger drags on `on_drag` elements (Resizable, Dock, DataTable columns,
-List reorder), keyboard avoidance for focused inputs, horizontal pans
-scrolling vertical-only containers, IME dismissal injecting `escape`, and
-night mode / bundled emoji on the host-driven entry point. Each was a
-workaround in this app or listed as broken above; see MOBILE_PATCHES.md.
+- Finger drags on `on_drag` elements: Resizable dividers and Dock splitters
+  and tabs work ([Resizable](docs/demos/touch-drag-resizable.png),
+  [Dock](docs/demos/touch-drag-dock.png)). DataTable column resize/reorder
+  still do not.
+- A focused input scrolls above the keyboard; back hides the keyboard
+  without closing the dialog or screen, and tapping any input brings the
+  keyboard back ([dialog](docs/demos/ime-dismiss-dialog.png)).
+- A horizontal swipe no longer scrolls a vertical-only page.
+- Night mode follows the system at launch and when it changes; emoji render
+  on the host-driven entry point.
+
+Back with the keyboard hidden still arrives as `escape`, so an input that
+opts into `clean_on_escape()` clears its text instead of navigating back.
 
 **Other**
 
