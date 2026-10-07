@@ -1,14 +1,14 @@
 # GPUI Kit Mobile Lab (Android)
 
 An on-device test gallery for [GPUI Kit](https://github.com/longbridge/gpui-kit)
-**v0.7.0** on Android: a phone-sized version of Kit's story gallery. Every
+**v0.7.1** on Android: a phone-sized version of Kit's story gallery. Every
 user-facing component has a demo screen that exercises its states and events
 (each interactive screen shows the current value and an event log), plus lab
 tools for touch, scrolling, diagnostics, rendering stress and themes.
 
 - Component coverage and per-component Android status: **[COMPONENT_MATRIX.md](COMPONENT_MATRIX.md)**
   (the app renders its catalog from this file).
-- Changes made to upstream crates: **[MOBILE_PATCHES.md](MOBILE_PATCHES.md)**.
+- What our forks of gpui-mobile, GPUI Kit and GPUI carry: **[MOBILE_PATCHES.md](MOBILE_PATCHES.md)**.
 - Assessment and possible work for the GPUI / GPUI Kit teams:
   **[CONTRIBUTING_IDEAS.md](CONTRIBUTING_IDEAS.md)**.
 
@@ -19,12 +19,10 @@ version of every `gpui-pre-*` crate.
 
 | Dependency | Version / revision |
 |---|---|
-| GPUI Kit (`gpui-kit`) | 0.7.0 from crates.io (tag `v0.7.0`, `0c830f4d`) |
-| `gpui-component` | 0.7.0, vendored with patch 7 (`vendor/gpui-component`) |
-| `gpui-base` | 0.7.0, vendored with patch 4 (`vendor/gpui-base`) |
-| `gpui-fps` | 0.7.0, vendored with patch 5 (`vendor/gpui-fps`) |
-| GPUI (`gpui-pre`, `gpui-pre-wgpu`, …) | 0.3.7 (the snapshot GPUI Kit 0.7.0 pins) |
-| gpui-mobile (`gpui-pre-mobile`) | [longbridge/gpui-mobile](https://github.com/longbridge/gpui-mobile) `f379bc81a2c55e0634bfd6625263a235578986c3`, vendored with patches 1–3 (`vendor/gpui-mobile`) |
+| GPUI Kit (`gpui-kit`, `gpui-component`, `gpui-base`, `gpui-fps`) | 0.7.1 from [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) `mobile-lab` (tag `v0.7.1` + 3 commits) |
+| GPUI (`gpui-pre`) | 0.3.8 from [Bombatomica64/gpui-pre](https://github.com/Bombatomica64/gpui-pre) `mobile-lab` (crates.io 0.3.8 + 3 touch fixes), via `[patch.crates-io]` |
+| GPUI's other crates (`gpui-pre-wgpu`, …) | 0.3.8 from crates.io (the snapshot GPUI Kit 0.7.1 pins) |
+| gpui-mobile (`gpui-pre-mobile`) | [Bombatomica64/gpui-mobile](https://github.com/Bombatomica64/gpui-mobile) `main` (upstream `main` + 5 fixes) |
 | Renderer | `wgpu` 29.0.4 (Vulkan preferred, GLES fallback) |
 | Rust | 1.98.1 stable, edition 2024 |
 | Android | NDK 27.2.12479018, compileSdk 35, targetSdk 34, minSdk 26, AGP 9.1.0, Gradle 9.4.1, JDK 17 |
@@ -111,7 +109,7 @@ themes, switched at runtime).
 process-lived render thread, so the app keeps its state across surface
 destruction (Home/resume) and Activity recreation. The Activity forwards
 touch (`MotionEvent`), keys (back arrives in GPUI as `escape`), lifecycle,
-night mode and an IME `InputConnection` proxy adapted from gpui-mobile's
+configuration changes and an IME `InputConnection` proxy adapted from gpui-mobile's
 `GpuiInputActivity`. `adjustResize` shrinks GPUI's viewport above the
 keyboard; the app is locked to portrait.
 
@@ -142,17 +140,14 @@ Limits of that setup:
 
 ## Known Android issues
 
-Each is detailed in the matrix; fixes applied locally are in MOBILE_PATCHES.md.
+Each is detailed in the matrix; fixes carried by our forks are in MOBILE_PATCHES.md.
 
 **Broken on a touch-only phone**
 
 - `OtpInput` and `TimeField` (and the time row of a date+time `DatePicker`)
   never raise the soft keyboard: they have no text-input handler and do not
-  call `request_virtual_keyboard` (which gpui-mobile does not implement
-  either). Editing needs a hardware keyboard.
-- Everything built on GPUI drag-and-drop (`on_drag`) ignores finger drags:
-  Resizable dividers, Dock splitters and tab dragging, DataTable column
-  resize/reorder. (Slider had the same problem; patch 4 fixes it.)
+  call `request_virtual_keyboard` (which the gpui-mobile fork now
+  implements). Editing needs a hardware keyboard.
 
 **Partially working**
 
@@ -184,21 +179,16 @@ Each is detailed in the matrix; fixes applied locally are in MOBILE_PATCHES.md.
   can continue as vertical page scrolling.
 - After a tap, the touched menu row keeps its hover highlight.
 
-**Worked around in this app (candidates for gpui-mobile / Kit)**
+**Fixed in our forks, not yet verified on a phone**
 
-- The IME's back-to-dismiss makes gpui-mobile inject an `escape` keystroke,
-  which apps also treat as navigation. The host blurs the input instead.
-- Neither GPUI nor Kit scrolls a focused input above the keyboard. The shell
-  does it (`LabApp::reveal_focused_input`); if a long-press both focuses a
-  field and triggers that scroll, Kit's edit menu is dismissed — long-press
-  again.
-- GPUI converts a horizontal pan into vertical scrolling of a vertical-only
-  container unless `restrict_scroll_to_axis()` is set; the lab's page
-  containers set it. Kit's own scroll containers do not.
-- On the host-driven entry point: night mode is not reported to GPUI (the
-  host forwards `uiMode`), and gpui-mobile's bundled-emoji fallback cannot
-  read APK assets (the host loads `NotoColorEmoji.ttf` itself; without it,
-  emoji do not render on Android 13+).
+Finger drags on `on_drag` elements (Resizable, Dock, DataTable columns,
+List reorder), keyboard avoidance for focused inputs, horizontal pans
+scrolling vertical-only containers, IME dismissal injecting `escape`, and
+night mode / bundled emoji on the host-driven entry point. Each was a
+workaround in this app or listed as broken above; see MOBILE_PATCHES.md.
+
+**Other**
+
 - `window.request_animation_frame()` panics when called outside rendering
   (for example in a click handler); call it from `render`.
 
@@ -206,20 +196,18 @@ Each is detailed in the matrix; fixes applied locally are in MOBILE_PATCHES.md.
 
 ```
 build.sh                  build script (cargo ndk + Gradle)
-Cargo.toml                the lab crate (cdylib) and [patch.crates-io]
-src/lib.rs                GPUI launch, fonts, window
+Cargo.toml                the lab crate (cdylib); forks pinned by rev, [patch.crates-io] for gpui-pre
+src/lib.rs                GPUI launch, window
 src/host.rs               JNI entry points for LabActivity
-src/app.rs                catalog, navigation, back, keyboard avoidance
+src/app.rs                catalog, navigation, back
 src/matrix.rs             parses COMPONENT_MATRIX.md into the catalog
 src/screens/              one module per demo screen
 android/                  Gradle project (LabActivity, manifest, assets)
-vendor/                   gpui-mobile, gpui-base, gpui-component, gpui-fps (patched, see MOBILE_PATCHES.md)
-patches/                  the vendor patches as .patch files
 themes/                   Kit theme JSONs bundled into the app
 ```
 
 ## License
 
-AGPL-3.0 (see `LICENSE`). Vendored crates keep their own licenses: gpui-mobile
-is GPL-3.0-or-later / AGPL-3.0-or-later / Apache-2.0; gpui-base,
+AGPL-3.0 (see `LICENSE`). Dependencies keep their own licenses: gpui-mobile
+is GPL-3.0-or-later / AGPL-3.0-or-later / Apache-2.0; GPUI, gpui-base,
 gpui-component and gpui-fps are Apache-2.0. `NotoColorEmoji.ttf` is under the SIL Open Font License.

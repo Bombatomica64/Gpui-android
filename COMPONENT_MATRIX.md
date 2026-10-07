@@ -1,4 +1,4 @@
-# GPUI Kit v0.7.0 — Android component matrix
+# GPUI Kit v0.7.1 — Android component matrix
 
 Every user-facing component exported by `gpui-kit` 0.7.0 (`gpui-component`,
 `gpui-base`, `gpui-fps`), and where the Mobile Lab APK exercises it. The app
@@ -12,7 +12,7 @@ Status meanings:
 - **BROKEN** — cannot be used on a touch-only phone (it may still render).
 - **NOT_APPLICABLE** — no meaning inside an Android app, or disabled on mobile by design.
 
-"(patched)" means the status holds with the local patches in
+"(patched)" means the status holds with the fixes our forks carry, listed in
 [MOBILE_PATCHES.md](MOBILE_PATCHES.md). How statuses were determined, and the
 limits of the test device, are in [README.md](README.md#how-statuses-were-verified).
 
@@ -36,7 +36,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | Checkbox | Yes | WORKING | Choice Controls | Wrapped labels are tappable; disabled ignores taps. |
 | Radio / RadioGroup | Yes | PARTIAL | Choice Controls | Selection works, but a `Radio` marked `.disabled(true)` inside a `RadioGroup` can still be selected (not Android-specific; longbridge/gpui-kit#3324, fix in #3331). |
 | Switch | Yes | WORKING | Choice Controls | Default and small sizes; disabled ignores taps. |
-| Slider | Yes | WORKING | Choice Controls | (patched) Tap-to-set works upstream; dragging the thumb needs patch 4, because Slider only handled mouse drags. Horizontal, vertical and range. |
+| Slider | Yes | WORKING | Choice Controls | (patched) Tap-to-set works upstream; dragging the thumb needed a fix (Slider only handled mouse drags), upstream since v0.7.1 (#3313). Horizontal, vertical and range. |
 | Rating | Yes | WORKING | Choice Controls | Tap sets the value; disabled is read-only. |
 | Stepper | Yes | WORKING | Choice Controls | Horizontal and vertical. |
 | Form (v_form / h_form / field) | Yes | WORKING | Settings & Form | Labels, required marker, description and footer. |
@@ -48,7 +48,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 
 | Component | Included in APK | Mobile status | Demo screen | Notes |
 |---|---|---|---|---|
-| Input | Yes | WORKING | Text Input | Typing (LatinIME composition and commit), backspace, CJK/Hangul/emoji, long-press word selection with handles, Cut/Copy/Paste/Select All menu, system clipboard (patch 2). Needs the host fixes described in the README (keyboard avoidance, IME dismissal). |
+| Input | Yes | WORKING | Text Input | Typing (LatinIME composition and commit), backspace, CJK/Hangul/emoji, long-press word selection with handles, Cut/Copy/Paste/Select All menu, system clipboard (gpui-mobile fork, #24). Keyboard avoidance and IME dismissal come from the forks (see MOBILE_PATCHES.md), not yet re-verified on a phone. |
 | Input (password / masked) | Yes | WORKING | Text Input | Bullets and the reveal toggle work. |
 | Input (mask pattern) | Yes | WORKING | Text Input | Phone and number masks format while typing; a regex pattern filters characters. Opens the text keyboard, never the numeric one (gpui-mobile always requests the default keyboard type). |
 | InputGroup | Yes | WORKING | Text Input | Addons and the addon button work. |
@@ -67,7 +67,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 |---|---|---|---|---|
 | Select | Yes | WORKING | Select & Combobox | Confirm, searchable list with keyboard (list re-fits above it), fling. A popup anchors to the last-rendered element of a shared state, so each Select needs its own state. |
 | Combobox | Yes | WORKING | Select & Combobox | Single (searchable) and multiple (Change per toggle, Confirm on close). |
-| ColorPicker | Yes | WORKING | Select & Combobox | Palette swatches and hex value work. The HSLA tab's sliders use Slider (patch 4) but were not tested individually. |
+| ColorPicker | Yes | WORKING | Select & Combobox | Palette swatches and hex value work. The HSLA tab's sliders use Slider but were not tested individually. |
 
 ## Navigation
 
@@ -93,7 +93,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | HoverCard | Yes | WORKING | Popovers & Menus | Tap-to-open on mobile, outside tap closes. |
 | Tooltip | Yes | NOT_APPLICABLE | Popovers & Menus | Kit disables its tooltip overlay on iOS/Android by design; a raw GPUI `.tooltip()` did not appear on long-press either. |
 | PopupMenu (dropdown menu) | Yes | PARTIAL | Popovers & Menus | Items, checks, links and a 40-item scrolling menu work; submenus open to the left and are clipped at the screen edge. |
-| Context menu (ContextMenuExt) | Yes | WORKING | Popovers & Menus | (patched) Long-press opens the menu at the finger and items fire; upstream 0.7.0 opens it only on the right mouse button, so this needs patch 7 (longbridge/gpui-kit#3392, fix in #3393). |
+| Context menu (ContextMenuExt) | Yes | WORKING | Popovers & Menus | (patched) Long-press opens the menu at the finger and items fire; upstream opens it only on the right mouse button, so this needs the Kit fork's long-press fix (longbridge/gpui-kit#3392, fix in #3393). |
 | NativeMenu | Yes | WORKING | Popovers & Menus | GPUI-drawn fallback shows at the tap position; actions dispatch along the focus path. |
 
 ## Data Display
@@ -179,7 +179,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | Component | Included in APK | Mobile status | Demo screen | Notes |
 |---|---|---|---|---|
 | Theme / ThemeRegistry | Yes | WORKING | Themes | Runtime System/Light/Dark and bundled Kit themes. System follows Android dark mode once the host forwards `uiMode` (see README). |
-| FPS monitor (gpui-fps) | Yes | WORKING | Diagnostics | (patched) Opening the HUD panicked (`monospace` font unresolvable on Android) until patch 5. FPS/frame time and CPU/memory rows populate. |
+| FPS monitor (gpui-fps) | Yes | WORKING | Diagnostics | (patched) Opening the HUD panicked (`monospace` font unresolvable on Android) until a fix that is upstream since v0.7.1 (#3313). FPS/frame time and CPU/memory rows populate. |
 | Touch input (tap / long press / fling) | Yes | WORKING | Touch Lab | Tap, double-tap (`click_count` 2), claimed long-press (Started/Ended), touch drag, fling, tap-to-stop-fling without activating the row. |
 | Scrolling stress | Yes | WORKING | Scroll Stress | 100 plain rows, 10,000 virtual rows, nested axes and long text; one axis per gesture once containers restrict their axis. |
 | Rendering stress | Yes | WORKING | Stress Test | Start/Stop/Reset; per-frame `render()` cost is reported alongside frame intervals. |

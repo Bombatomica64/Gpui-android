@@ -1,167 +1,136 @@
-# Local patches to upstream crates
+# What the forks carry on top of upstream
 
-The lab uses one GPUI snapshot (`gpui-pre` 0.3.7) for everything. Four
-upstream crates are vendored under `vendor/` and changed as little as possible.
-Each vendored crate was first committed unmodified, then each patch as its own
-commit, so `git log -- vendor` shows exactly what changed. The same patches are
-exported in [`patches/`](patches/) (paths relative to `vendor/`).
+The lab builds against one GPUI snapshot (`gpui-pre` 0.3.8) and three forks,
+each pinned by `rev` in `Cargo.toml`. Every fix lives on its own branch,
+based on upstream, so it can be proposed upstream on its own; a combined
+branch is what the lab pins.
 
-| # | Crate (vendored copy) | Upstream |
+| Fork | Upstream | Branch the lab pins |
 |---|---|---|
-| 1–3, 6 | `vendor/gpui-mobile` — `gpui-pre-mobile` 0.1.0 at `f379bc8` | https://github.com/longbridge/gpui-mobile |
-| 4 | `vendor/gpui-base` — `gpui-base` 0.7.0 | https://github.com/longbridge/gpui-kit (`crates/base`) |
-| 5 | `vendor/gpui-fps` — `gpui-fps` 0.7.0 | https://github.com/longbridge/gpui-kit (`crates/fps`) |
-| 7 | `vendor/gpui-component` — `gpui-component` 0.7.0 | https://github.com/longbridge/gpui-kit (`crates/component`) |
+| [Bombatomica64/gpui-mobile](https://github.com/Bombatomica64/gpui-mobile) | [longbridge/gpui-mobile](https://github.com/longbridge/gpui-mobile) `main` | `main` (upstream `main` + the branches below, merged) |
+| [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) | [longbridge/gpui-kit](https://github.com/longbridge/gpui-kit) tag `v0.7.1` | `mobile-lab` (`v0.7.1` + the commits below) |
+| [Bombatomica64/gpui-pre](https://github.com/Bombatomica64/gpui-pre) | `gpui-pre` 0.3.8 from crates.io (a snapshot of [zed-industries/zed](https://github.com/zed-industries/zed) `crates/gpui`) | `mobile-lab` (branch `0.3.8` + the branches below) |
 
-`gpui-mobile` is a path dependency; `gpui-base`, `gpui-component` and
-`gpui-fps` replace the crates.io releases through `[patch.crates-io]` in
-`Cargo.toml`, so `gpui-kit` 0.7.0 still comes from crates.io unchanged.
+`gpui-pre` replaces the crates.io release through `[patch.crates-io]`;
+`gpui-kit`, `gpui-fps` and `gpui-pre-mobile` are git dependencies.
 
-## 1. gpui-mobile: build against gpui-pre 0.3.7
+Fixes from earlier versions of this file that are now upstream: the
+gpui-pre 0.3.7 bump (gpui-mobile #21), Slider touch drags and the gpui-fps
+Android font (gpui-kit #3313, in v0.7.1).
 
-- **Files:** `Cargo.toml`, `src/android/window.rs`, `src/ios/window.rs`
-- **Problem:** GPUI Kit 0.7.0 pins `gpui-pre =0.3.7`; gpui-mobile `main`
-  pins `=0.3.6`. Cargo would build two incompatible GPUIs (`App`/`Window`
-  types from different crates). In 0.3.7, `gpui-pre-wgpu`'s
-  `WgpuRenderer::gpu_specs()` returns `Option<GpuSpecs>`.
-- **Fix:** bump `gpui-pre` and `gpui-pre-wgpu` to `=0.3.7`; `gpu_specs` uses
-  `and_then` instead of `map`. `cargo tree` then shows every `gpui-pre-*`
-  crate at 0.3.7 and a single `wgpu` 29.0.4.
-- **Upstream PR?** Yes — this is the routine snapshot bump the fork already
-  does per GPUI release (#18 bumped to 0.3.6).
+## gpui-mobile
 
-## 2. gpui-mobile: back the Android platform clipboard with ClipboardManager
+### Bump gpui-pre to 0.3.8 — branch `bump-gpui-pre-0.3.8`
 
-- **Files:** `src/android/platform.rs`
-- **Problem:** `AndroidClipboard` (what GPUI's `write_to_clipboard` /
-  `read_from_clipboard` use, and therefore Kit's Copy/Cut/Paste and
-  `Clipboard` component) was an in-process string. Copying in the app never
-  reached Android's clipboard, and text copied in other apps could not be
-  pasted.
-- **Fix:** with the crate's existing `clipboard` feature, read/write through
-  the existing `packages::clipboard` JNI helper (`dev.gpui.mobile.GpuiClipboard`
-  → `ClipboardManager`); fall back to the local copy (with a logged warning)
-  when the call fails. Verified: Kit's Copy shows Android 13's clipboard
-  overlay, and the copied text reads back.
-- **Upstream PR?** Yes. Small, feature-gated, reuses code already in the crate.
+GPUI Kit 0.7.1 pins `gpui-pre =0.3.8`; gpui-mobile pinned `=0.3.7`, so the
+two could not be combined. `RequestFrameOptions` gained `signal_at` and
+`signal_source`; the Android window fills them with their defaults, as the
+iOS frame callback already did. The example moves to Kit v0.7.1.
 
-## 3. gpui-mobile host: only tear down the surface a destroy names
+### Use the system clipboard — branch `fix/android`, [#24](https://github.com/longbridge/gpui-mobile/pull/24)
 
-- **Files:** `src/android/host.rs`
-- **Problem:** on the host-driven entry point (`android::host`), when an
-  Activity is recreated in the same process (e.g. `FLAG_ACTIVITY_CLEAR_TASK`),
-  the *new* Activity's `surfaceCreated/Changed` can arrive before the *old*
-  Activity's `surfaceDestroyed`. The render thread attached the new surface,
-  then processed the unqualified destroy and unconfigured the new surface —
-  a black screen with a working app underneath.
-- **Fix:** add `surface_destroyed_for(&NativeWindow)`; the render thread only
-  tears down the surface that is actually attached and ignores late destroys
-  of older surfaces. The blocking wait now uses a request/ack counter instead
-  of a flag that a newer surface could clear. `surface_destroyed()` keeps its
-  signature and old behavior for existing hosts. Verified: 5 consecutive
-  in-process recreations, all late destroys ignored, rendering and touch
-  intact, GPUI state preserved.
-- **Upstream PR?** Yes. It fixes a real race in the recreation path that
-  PR #10 introduced, and is backward compatible.
+`AndroidClipboard` was an in-process string, so copy never reached
+Android's clipboard and text copied in other apps could not be pasted. With
+the `clipboard` feature it now goes through `ClipboardManager`, falling back
+to the local copy when the call fails.
 
-## 4. gpui-base: let Slider claim touch drags on its track
+### Only tear down the surface a destroy names — branch `fix/android`, [#24](https://github.com/longbridge/gpui-mobile/pull/24)
 
-- **Files:** `src/slider.rs`
-- **Problem:** GPUI 0.3.7 turns a finger drag into either a `TouchDragEvent`
-  (only if an element claims it with `prevent_default` on `Started`) or into
-  scrolling. `Slider` only used GPUI's mouse `on_drag`/`on_drag_move`, so on
-  a touch screen the thumb could not be dragged (tapping the track worked).
-- **Fix:** `SliderTrack` adds an absolutely positioned layer that claims
-  touch drags starting on the track and maps `Started`/`Moved` to
-  `update_value_by_position` and `Ended`/`Cancelled` to `handle_release` —
-  the same pattern Kit's own scrollbar thumb uses. Range sliders pick the
-  nearer thumb. Verified on horizontal, vertical and range sliders (and
-  therefore ColorPicker's HSLA sliders, which reuse Slider).
-- **Upstream PR?** Yes. Mouse behavior is unchanged. The same gap affects
-  every drag built on GPUI `on_drag` (Resizable, Dock, DataTable column
-  resize/move, List reorder); those were not patched and are reported in the
-  matrix. A general fix belongs in GPUI's drag-and-drop.
+On the host-driven entry point, a recreated Activity's new surface can
+arrive before the old Activity's `surfaceDestroyed`; the render thread then
+tore down the new surface (black screen). `surface_destroyed_for` only tears
+down the surface that is attached.
 
-## 5. gpui-fps: use Droid Sans Mono on Android
+### Expose GPUI's accessibility tree to TalkBack — branch `android-accessibility`, [#25](https://github.com/longbridge/gpui-mobile/pull/25)
 
-- **Files:** `src/monitor.rs`
-- **Problem:** the HUD asks for the generic `monospace` family on every
-  non-macOS/Windows/iOS target. Android's cosmic-text backend has no such
-  alias, and neither GPUI's desktop fallbacks, so GPUI panics
-  (`failed to resolve font 'monospace' or any of the fallbacks`) the moment
-  the HUD renders. The crate already special-cases iOS for the same reason.
-- **Fix:** on Android use `Droid Sans Mono`, which every Android ships and
-  gpui-mobile loads from `/system/fonts`.
-- **Upstream PR?** Yes, one `cfg`.
+The Android window ignored GPUI's AccessKit tree, so TalkBack saw one opaque
+surface. The tree goes to `accesskit_android`'s `InjectingAdapter`.
+[Bounds](docs/demos/android-a11y-bounds.png),
+[recording](docs/demos/android-a11y-talkback.gif).
 
-## 6. gpui-mobile: expose GPUI's accessibility tree to TalkBack
+### Keep focus when the user hides the keyboard — branch `android-ime-dismiss`
 
-- **Files:** `Cargo.toml`, `src/android/accessibility.rs` (new),
-  `src/android/window.rs`, `src/android/jni.rs`, `src/android/mod.rs`
-- **Problem:** GPUI 0.3.7 builds an AccessKit tree and passes it to
-  `PlatformWindow::a11y_init` / `a11y_tree_update`; the Android window left
-  both as no-ops, so TalkBack saw one opaque surface.
-- **Fix:** hand the tree to `accesskit_android` 0.7.5's `InjectingAdapter`
-  (the newest release on `accesskit` 0.24), which installs an
-  `AccessibilityDelegate` on the existing host `View`; no Java changes.
-  Updates are skipped while `AccessibilityManager.isEnabled()` is false:
-  0.7.5 raises events unconditionally and Android throws on the UI thread
-  once the screen reader disconnects (found on redroid, fixed upstream in
-  0.9). Once accessibility is off, GPUI is told to stop building trees and
-  a fresh adapter waits, so turning TalkBack back on re-activates GPUI.
-  Hover events (touch exploration) are reported unhandled on the
-  NativeActivity path so they reach the delegate. Verified with TalkBack
-  on a OnePlus CPH2581 (Android 16): touch exploration, double-tap to
-  toggle, and turning TalkBack off and on again.
-  [Bounds](docs/demos/android-a11y-bounds.png),
-  [recording](docs/demos/android-a11y-talkback.gif).
-- **Upstream PR?** Yes, one self-contained module.
+Hiding the IME with back or its Done action injected an `escape` keystroke,
+which apps also use for navigation: hiding the keyboard in a dialog closed
+the dialog. The keyboard is now hidden and focus left alone, as with an
+EditText. `show_soft_keyboard` / `hide_soft_keyboard` are implemented, so
+`Window::request_virtual_keyboard` works (Kit's Input uses it below).
 
-## 7. gpui-component: open a context menu with a long press
+### Give the host-driven path the Activity's AssetManager — branch `android-host-appearance-emoji`
 
-- **Files:** `src/menu/context_menu.rs`
-- **Problem:** `ContextMenu` only listened for a right mouse button press. A
-  finger has no right button, so on a touch-only phone a context menu could
-  not be opened at all; GPUI's `LongPressEvent` went unused.
-- **Fix:** the right-click body moves into `open_menu`, and a
-  `LongPressEvent` listener calls it with the press position on `Started`
-  and claims the gesture with `prevent_default`. The listener is registered
-  before the trigger's children paint, so an `Input` inside the trigger
-  keeps its own long-press selection. Verified on a OnePlus CPH2581
-  (Android 16): long-press opens the menu and items fire; long-press in an
-  `Input` still selects with handles and the edit menu.
-  [Before](docs/demos/pr-longpress-before.gif),
-  [after](docs/demos/pr-longpress-after.gif).
-- **Upstream PR?** Yes:
-  [gpui-kit#3393](https://github.com/longbridge/gpui-kit/pull/3393)
-  (issue [#3392](https://github.com/longbridge/gpui-kit/issues/3392)). A
-  selectable `TextView` inside a trigger gets the menu rather than a text
-  selection, as with a right-click on desktop.
+Without `android-activity` there was no AssetManager, so the window never
+followed night mode (and `Platform::window_appearance` always said Dark),
+and the bundled CBDT emoji font could not be read (Android 13+'s COLRv1
+emoji font cannot be drawn by swash). `set_host_activity` now keeps the
+Activity's AssetManager; the host path syncs night mode on first open,
+re-attach and resume, and through the new `host::configuration_changed()`
+for Activities that handle `uiMode` themselves.
 
-## Not patched, handled in the host app instead
+## GPUI Kit
 
-These are real platform gaps, but the fix belongs in the embedding host (the
-lab's `LabActivity` and `src/host.rs`, `src/app.rs`), so no upstream code was
-changed. Each is a candidate for gpui-mobile's example host or documentation.
+### Open a context menu with a long press — [#3393](https://github.com/longbridge/gpui-kit/pull/3393) (issue [#3392](https://github.com/longbridge/gpui-kit/issues/3392))
 
-- **IME dismissal injects `escape`.** When the IME is hidden with back (or
-  the Done key), gpui-mobile's IME bridge (event kind 4) synthesizes an
-  `escape` keystroke. An app that maps escape/back to navigation then also
-  navigates (e.g. hiding the keyboard in a dialog also closed the dialog).
-  The lab's host blurs the focused input instead.
-- **No appearance source on the host path.** Night mode is only queried on
-  the NativeActivity path, so `window.appearance()` never changes. The host
-  forwards `uiMode` from `onCreate`/`onConfigurationChanged` to
-  `AndroidWindow::set_appearance` on the render thread.
-- **Bundled emoji font on the host path.** Android 13+'s system emoji font is
-  COLRv1, which swash cannot draw; gpui-mobile's CBDT fallback reads APK
-  assets through `AndroidApp`, which the host path does not have. The host
-  reads `assets/fonts/NotoColorEmoji.ttf` via `AAssetManager_fromJava` and
-  registers it with `cx.text_system().add_fonts`.
-- **Keyboard avoidance.** `adjustResize` shrinks GPUI's viewport, but neither
-  GPUI nor Kit scrolls a focused input back into view (Kit's mobile guide
-  leaves keyboard avoidance to the host). The lab shell scrolls the focused
-  input above the keyboard once per change of focus or viewport height.
-- **Axis restriction.** GPUI turns a pure horizontal pan into vertical
-  scrolling of a vertical-only container unless `restrict_scroll_to_axis()`
-  is set; the lab sets it on its page containers.
+`ContextMenu` only opened on the right mouse button, which a finger does not
+have. A `LongPressEvent` now opens it at the press position; an `Input`
+inside the trigger keeps its own long-press selection.
+[Before](docs/demos/pr-longpress-before.gif),
+[after](docs/demos/pr-longpress-after.gif).
+On `mobile-lab` this is the 0.7.x version of the change; the PR is against
+`main`, whose context menu has since been reworked.
+
+### Ask for the virtual keyboard when a focused input is tapped — branch `input-tap-requests-keyboard`
+
+After the user hides the keyboard, the input keeps focus, and a later tap
+does not change focus, so nothing asked for the keyboard again. A touch
+press on a focused input calls `Window::request_virtual_keyboard`.
+
+### Ask scroll containers to reveal a focused input — branch `input-reveal-on-focus`
+
+When the IME opens, `adjustResize` shrinks the viewport, but nothing scrolled
+the focused input back into view. A focused input calls
+`Window::request_autoscroll` for its text area (the caret line in a
+textarea) when it gains focus or the viewport size changes. Needs the GPUI
+autoscroll fix below to work in plain scroll containers.
+
+## GPUI (gpui-pre 0.3.8)
+
+Each was checked against Zed `main`: none of the three is fixed there. The
+touch-drag patch applies to Zed `main` as is; the files the other two touch
+are unchanged there.
+
+### Let touch drag elements that only handle mouse drags — branch `touch-drag`
+
+A finger drag only reached an element as a `TouchDragEvent` it claimed
+itself, otherwise it scrolled; everything built on `on_drag` (Resizable,
+Dock splitters and tabs, DataTable column resize/move, List reorder) was
+dead on touch. An `on_drag` element now marks a touch drag starting on it;
+once the touch leaves the slop across the axes its scroll containers can
+scroll (or after an unclaimed long press) it becomes a drag, replayed
+through the mouse drag path, so `on_drag_move`, `on_drop` and drag-over
+styles work unchanged. Handles drag directly; rows of a scrolling list
+scroll, and drag after a long press or a sideways move. Mouse input is
+unchanged.
+
+### Reveal a descendant's autoscroll request in scrollable divs — branch `autoscroll`
+
+`Window::request_autoscroll` was only honored by `List`. A scrollable div
+now takes its descendants' request and scrolls by the smallest amount that
+reveals it (applied on the next frame), passing what it cannot reveal to
+outer scroll containers.
+
+### Don't remap touch pans onto a container's other axis — branch `touch-axis`
+
+A vertical-only container turned a horizontal pan into vertical scrolling
+unless it set `restrict_scroll_to_axis()` — a mouse-wheel convenience that
+is wrong for a finger. Scrolls dispatched from a touch gesture (including
+fling momentum) are no longer remapped; wheel input is unchanged.
+
+## Still handled in the host app
+
+These belong to the embedding Activity, not to the framework:
+
+- The `SurfaceView`, lifecycle, touch/key forwarding and the IME
+  `InputConnection` proxy (`LabActivity`, `src/host.rs`), as gpui-mobile's
+  host entry point expects.
+- Back navigation: back arrives as `escape`, which the shell binds to
+  closing the open screen.

@@ -69,7 +69,6 @@ impl Render for LayoutScreen {
                             .w_full()
                             .flex()
                             .overflow_x_scroll()
-                            .restrict_scroll_to_axis()
                             .track_scroll(&self.horizontal)
                             .child(
                                 h_flex().flex_none().gap_2().py_2().children((1..=30).map(|i| {

@@ -70,21 +70,15 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
         });
 
         nativeOnCreate(this, Build.VERSION.SDK_INT);
-        forwardNightMode(getResources().getConfiguration());
         forwardScreenExtra(getIntent());
     }
 
     // uiMode is in configChanges, so dark-mode toggles arrive here instead of
-    // recreating the Activity; the host path has no other source for GPUI's appearance.
+    // recreating the Activity.
     @Override
     public void onConfigurationChanged(android.content.res.Configuration config) {
         super.onConfigurationChanged(config);
-        forwardNightMode(config);
-    }
-
-    private static void forwardNightMode(android.content.res.Configuration config) {
-        int night = config.uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
-        nativeNightMode(night == android.content.res.Configuration.UI_MODE_NIGHT_YES);
+        nativeConfigurationChanged();
     }
 
     // Testing aid: `adb shell am start -n dev.gpui.mobile.lab/.LabActivity --es screen "Charts"`
@@ -274,11 +268,9 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
         }
 
         @Override public boolean onKeyPreIme(int code, KeyEvent event) {
-            // Back while the IME is up only hides the keyboard. gpui-mobile's IME
-            // "done" event (kind 4) would inject an `escape` keystroke into GPUI, which
-            // the app would also treat as navigation back; blur the field instead.
+            // Back while the IME is up only hides the keyboard; the input keeps focus.
             if (code == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
-                nativeKeyboardDismissed();
+                nativeIme(session, 4, "", 0, 0);
             }
             return super.onKeyPreIme(code, event);
         }
@@ -365,7 +357,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
                     if (connectionSession != session) return false;
                     if (action == EditorInfo.IME_ACTION_DONE) {
                         finishComposingText();
-                        nativeKeyboardDismissed();
+                        nativeIme(session, 4, "", 0, 0);
                         return true;
                     }
                     return commitText("\n", 1);
@@ -378,8 +370,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
 
     private static native void nativeOnCreate(Activity activity, int apiLevel);
     private static native void nativeOpenScreen(String screen);
-    private static native void nativeKeyboardDismissed();
-    private static native void nativeNightMode(boolean night);
+    private static native void nativeConfigurationChanged();
     private static native void nativeSurfaceChanged(android.view.Surface surface, float scale);
     private static native void nativeSurfaceDestroyed(android.view.Surface surface);
     private static native void nativeResumed();
