@@ -2296,7 +2296,7 @@ dependencies = [
 [[package]]
 name = "gpui-base"
 version = "0.7.1"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=ed25cc62833a7743fff8a607e44e1660e8edf167#ed25cc62833a7743fff8a607e44e1660e8edf167"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=a5315a7eef624d94aec7ff7ad5ae3edf6b3b9757#a5315a7eef624d94aec7ff7ad5ae3edf6b3b9757"
 dependencies = [
  "aho-corasick",
  "anyhow",
@@ -2336,7 +2336,7 @@ dependencies = [
 [[package]]
 name = "gpui-component"
 version = "0.7.1"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=ed25cc62833a7743fff8a607e44e1660e8edf167#ed25cc62833a7743fff8a607e44e1660e8edf167"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=a5315a7eef624d94aec7ff7ad5ae3edf6b3b9757#a5315a7eef624d94aec7ff7ad5ae3edf6b3b9757"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2379,7 +2379,7 @@ dependencies = [
 [[package]]
 name = "gpui-component-macros"
 version = "0.7.1"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=ed25cc62833a7743fff8a607e44e1660e8edf167#ed25cc62833a7743fff8a607e44e1660e8edf167"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=a5315a7eef624d94aec7ff7ad5ae3edf6b3b9757#a5315a7eef624d94aec7ff7ad5ae3edf6b3b9757"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -2390,7 +2390,7 @@ dependencies = [
 [[package]]
 name = "gpui-fps"
 version = "0.7.1"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=ed25cc62833a7743fff8a607e44e1660e8edf167#ed25cc62833a7743fff8a607e44e1660e8edf167"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=a5315a7eef624d94aec7ff7ad5ae3edf6b3b9757#a5315a7eef624d94aec7ff7ad5ae3edf6b3b9757"
 dependencies = [
  "core-graphics 0.24.0",
  "gpui-pre",
@@ -2407,7 +2407,7 @@ dependencies = [
 [[package]]
 name = "gpui-kit"
 version = "0.7.1"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=ed25cc62833a7743fff8a607e44e1660e8edf167#ed25cc62833a7743fff8a607e44e1660e8edf167"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=a5315a7eef624d94aec7ff7ad5ae3edf6b3b9757#a5315a7eef624d94aec7ff7ad5ae3edf6b3b9757"
 dependencies = [
  "gpui-base",
  "gpui-component",
@@ -2420,7 +2420,7 @@ dependencies = [
 [[package]]
 name = "gpui-kit-assets"
 version = "0.7.1"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=ed25cc62833a7743fff8a607e44e1660e8edf167#ed25cc62833a7743fff8a607e44e1660e8edf167"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=a5315a7eef624d94aec7ff7ad5ae3edf6b3b9757#a5315a7eef624d94aec7ff7ad5ae3edf6b3b9757"
 dependencies = [
  "anyhow",
  "gpui-pre",
@@ -2453,8 +2453,7 @@ dependencies = [
 [[package]]
 name = "gpui-pre"
 version = "0.3.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7f0bc3ebba070f8981b3f8e905a12f47d27794a30d029e59cdb9edf7a4b3360"
+source = "git+https://github.com/Bombatomica64/gpui-pre?rev=7d7b9a828c864a28a9d005b2b83205763d5473cf#7d7b9a828c864a28a9d005b2b83205763d5473cf"
 dependencies = [
  "accesskit",
  "anyhow",
