@@ -19,7 +19,8 @@ version of every `gpui-pre-*` crate.
 
 | Dependency | Version / revision |
 |---|---|
-| GPUI Kit (`gpui-kit`, `gpui-component`) | 0.7.0 from crates.io (tag `v0.7.0`, `0c830f4d`) |
+| GPUI Kit (`gpui-kit`) | 0.7.0 from crates.io (tag `v0.7.0`, `0c830f4d`) |
+| `gpui-component` | 0.7.0, vendored with patch 7 (`vendor/gpui-component`) |
 | `gpui-base` | 0.7.0, vendored with patch 4 (`vendor/gpui-base`) |
 | `gpui-fps` | 0.7.0, vendored with patch 5 (`vendor/gpui-fps`) |
 | GPUI (`gpui-pre`, `gpui-pre-wgpu`, …) | 0.3.7 (the snapshot GPUI Kit 0.7.0 pins) |
@@ -149,8 +150,6 @@ Each is detailed in the matrix; fixes applied locally are in MOBILE_PATCHES.md.
   never raise the soft keyboard: they have no text-input handler and do not
   call `request_virtual_keyboard` (which gpui-mobile does not implement
   either). Editing needs a hardware keyboard.
-- Context menus (`ContextMenuExt`) open only on the right mouse button;
-  long-press does nothing.
 - Everything built on GPUI drag-and-drop (`on_drag`) ignores finger drags:
   Resizable dividers, Dock splitters and tab dragging, DataTable column
   resize/reorder. (Slider had the same problem; patch 4 fixes it.)
@@ -214,7 +213,7 @@ src/app.rs                catalog, navigation, back, keyboard avoidance
 src/matrix.rs             parses COMPONENT_MATRIX.md into the catalog
 src/screens/              one module per demo screen
 android/                  Gradle project (LabActivity, manifest, assets)
-vendor/                   gpui-mobile, gpui-base, gpui-fps (patched, see MOBILE_PATCHES.md)
+vendor/                   gpui-mobile, gpui-base, gpui-component, gpui-fps (patched, see MOBILE_PATCHES.md)
 patches/                  the vendor patches as .patch files
 themes/                   Kit theme JSONs bundled into the app
 ```
@@ -222,5 +221,5 @@ themes/                   Kit theme JSONs bundled into the app
 ## License
 
 AGPL-3.0 (see `LICENSE`). Vendored crates keep their own licenses: gpui-mobile
-is GPL-3.0-or-later / AGPL-3.0-or-later / Apache-2.0; gpui-base and gpui-fps
-are Apache-2.0. `NotoColorEmoji.ttf` is under the SIL Open Font License.
+is GPL-3.0-or-later / AGPL-3.0-or-later / Apache-2.0; gpui-base,
+gpui-component and gpui-fps are Apache-2.0. `NotoColorEmoji.ttf` is under the SIL Open Font License.

@@ -93,7 +93,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | HoverCard | Yes | WORKING | Popovers & Menus | Tap-to-open on mobile, outside tap closes. |
 | Tooltip | Yes | NOT_APPLICABLE | Popovers & Menus | Kit disables its tooltip overlay on iOS/Android by design; a raw GPUI `.tooltip()` did not appear on long-press either. |
 | PopupMenu (dropdown menu) | Yes | PARTIAL | Popovers & Menus | Items, checks, links and a 40-item scrolling menu work; submenus open to the left and are clipped at the screen edge. |
-| Context menu (ContextMenuExt) | Yes | BROKEN | Popovers & Menus | Opens only on the right mouse button; a touch long-press has no mapping, so it cannot be opened on a phone. |
+| Context menu (ContextMenuExt) | Yes | WORKING | Popovers & Menus | (patched) Long-press opens the menu at the finger and items fire; upstream 0.7.0 opens it only on the right mouse button, so this needs patch 7 (longbridge/gpui-kit#3392, fix in #3393). |
 | NativeMenu | Yes | WORKING | Popovers & Menus | GPUI-drawn fallback shows at the tap position; actions dispatch along the focus path. |
 
 ## Data Display

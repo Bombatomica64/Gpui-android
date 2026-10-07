@@ -1,6 +1,6 @@
 # Local patches to upstream crates
 
-The lab uses one GPUI snapshot (`gpui-pre` 0.3.7) for everything. Three
+The lab uses one GPUI snapshot (`gpui-pre` 0.3.7) for everything. Four
 upstream crates are vendored under `vendor/` and changed as little as possible.
 Each vendored crate was first committed unmodified, then each patch as its own
 commit, so `git log -- vendor` shows exactly what changed. The same patches are
@@ -11,10 +11,11 @@ exported in [`patches/`](patches/) (paths relative to `vendor/`).
 | 1–3, 6 | `vendor/gpui-mobile` — `gpui-pre-mobile` 0.1.0 at `f379bc8` | https://github.com/longbridge/gpui-mobile |
 | 4 | `vendor/gpui-base` — `gpui-base` 0.7.0 | https://github.com/longbridge/gpui-kit (`crates/base`) |
 | 5 | `vendor/gpui-fps` — `gpui-fps` 0.7.0 | https://github.com/longbridge/gpui-kit (`crates/fps`) |
+| 7 | `vendor/gpui-component` — `gpui-component` 0.7.0 | https://github.com/longbridge/gpui-kit (`crates/component`) |
 
-`gpui-mobile` is a path dependency; `gpui-base` and `gpui-fps` replace the
-crates.io releases through `[patch.crates-io]` in `Cargo.toml`, so `gpui-kit`
-and `gpui-component` 0.7.0 still come from crates.io unchanged.
+`gpui-mobile` is a path dependency; `gpui-base`, `gpui-component` and
+`gpui-fps` replace the crates.io releases through `[patch.crates-io]` in
+`Cargo.toml`, so `gpui-kit` 0.7.0 still comes from crates.io unchanged.
 
 ## 1. gpui-mobile: build against gpui-pre 0.3.7
 
@@ -115,6 +116,27 @@ and `gpui-component` 0.7.0 still come from crates.io unchanged.
   [Bounds](docs/demos/android-a11y-bounds.png),
   [recording](docs/demos/android-a11y-talkback.gif).
 - **Upstream PR?** Yes, one self-contained module.
+
+## 7. gpui-component: open a context menu with a long press
+
+- **Files:** `src/menu/context_menu.rs`
+- **Problem:** `ContextMenu` only listened for a right mouse button press. A
+  finger has no right button, so on a touch-only phone a context menu could
+  not be opened at all; GPUI's `LongPressEvent` went unused.
+- **Fix:** the right-click body moves into `open_menu`, and a
+  `LongPressEvent` listener calls it with the press position on `Started`
+  and claims the gesture with `prevent_default`. The listener is registered
+  before the trigger's children paint, so an `Input` inside the trigger
+  keeps its own long-press selection. Verified on a OnePlus CPH2581
+  (Android 16): long-press opens the menu and items fire; long-press in an
+  `Input` still selects with handles and the edit menu.
+  [Before](docs/demos/pr-longpress-before.gif),
+  [after](docs/demos/pr-longpress-after.gif).
+- **Upstream PR?** Yes:
+  [gpui-kit#3393](https://github.com/longbridge/gpui-kit/pull/3393)
+  (issue [#3392](https://github.com/longbridge/gpui-kit/issues/3392)). A
+  selectable `TextView` inside a trigger gets the menu rather than a text
+  selection, as with a right-click on desktop.
 
 ## Not patched, handled in the host app instead
 
