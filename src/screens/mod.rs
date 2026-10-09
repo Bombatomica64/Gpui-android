@@ -18,6 +18,7 @@ mod layout;
 mod lists;
 mod navigation;
 mod number_otp;
+mod platform_apis;
 mod popovers;
 mod questionnaire;
 mod rich_text;
@@ -83,6 +84,7 @@ pub static SCREENS: &[ScreenDef] = &[
     screen!("Touch Lab", touch::TouchScreen),
     screen!("Scroll Stress", scroll::ScrollScreen, true),
     screen!("Diagnostics", diagnostics::DiagnosticsScreen),
+    screen!("Platform APIs", platform_apis::PlatformApisScreen),
     screen!("Stress Test", stress::StressScreen),
     screen!("Themes", themes::ThemesScreen),
 ];
@@ -92,6 +94,7 @@ pub static TOOLS: &[&str] = &[
     "Touch Lab",
     "Scroll Stress",
     "Diagnostics",
+    "Platform APIs",
     "Stress Test",
     "Themes",
 ];
