@@ -1,5 +1,6 @@
 # Breaks the arm64 native library down by section, crate and crate family
-# (docs/binary-size.md). Runs on PRs that touch the Rust build; run it by hand
+# (docs/binary-size.md), from the symbol table (cargo-bloat does not find the
+# Android target under cargo-ndk). Runs on PRs that touch the Rust build; run it by hand
 # with profile overrides to measure a size experiment without editing Cargo.toml:
 #
 #   gh workflow run size.yml --ref <branch> -f opt_level=z -f lto=fat
@@ -68,8 +69,8 @@ jobs:
         with:
           key: size-${{ inputs.toolchain || 'stable' }}
 
-      - name: Install cargo-ndk and cargo-bloat
-        run: cargo install cargo-ndk cargo-bloat --locked
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --locked
 
       - name: Apply the overrides
         env:
@@ -111,18 +112,8 @@ jobs:
             echo "Profile overrides: \`$(env | grep '^CARGO_PROFILE_RELEASE_\|^RUSTFLAGS=' | sort | tr '\n' ' ')\` toolchain \`${{ inputs.toolchain || 'stable' }}\` args \`${{ inputs.cargo_args }}\`"
             echo
             cat size/report/report.md
-          } >> "$GITHUB_STEP_SUMMARY"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
           rm size/stripped.so.gz
-
-      - name: cargo-bloat
-        continue-on-error: true
-        env:
-          CARGO_ARGS: ${{ inputs.cargo_args }}
-        run: |
-          # shellcheck disable=SC2086
-          cargo ndk -t arm64-v8a --platform 26 bloat --release --lib --crates -n 80 $CARGO_ARGS > size/bloat-crates.txt
-          # shellcheck disable=SC2086
-          cargo ndk -t arm64-v8a --platform 26 bloat --release --lib -n 200 $CARGO_ARGS > size/bloat-functions.txt
 
       - uses: actions/upload-artifact@v4
         with:
