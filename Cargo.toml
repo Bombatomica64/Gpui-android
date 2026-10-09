@@ -48,6 +48,10 @@ debug = "line-tables-only"
 
 [profile.dev.package."*"]
 opt-level = 2
+# No DWARF for dependencies (panic messages keep their file:line): the debug
+# library is 100 MB instead of 288, links faster and the compiler peaks at
+# 0.6 GB instead of 1.2 (docs/hot-patching-plan.md, A3).
+debug = false
 
 [patch.crates-io]
 gpui-pre = { git = "https://github.com/Bombatomica64/gpui-pre", rev = "7d7b9a828c864a28a9d005b2b83205763d5473cf" }
