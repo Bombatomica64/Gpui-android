@@ -90,7 +90,8 @@ October 2026; "fork" means the fix is on one of the branches listed in
    - Fork: `on_drag` elements on touch, autoscroll in scrollable divs, and
      no axis remapping for touch pans (gpui-pre `touch-drag`, `autoscroll`,
      `touch-axis`). These belong in zed-industries/zed, which gpui-pre
-     snapshots.
+     snapshots. Branches on Zed `main` and draft PR texts:
+     [docs/upstream-zed](docs/upstream-zed/README.md).
 4. **Faster iteration loop.** Hot reload, a dev-mode `cdylib` swap, or a
    desktop-hosted phone-size preview. Not started. Build it as a
    standalone package first and propose it upstream once it works.
@@ -123,7 +124,8 @@ October 2026; "fork" means the fix is on one of the branches listed in
 8. **Upstream the fork fixes.** Seven branches in
    [MOBILE_PATCHES.md](MOBILE_PATCHES.md) are still fork-only: two in
    gpui-mobile, two in gpui-kit, three in gpui-pre. Propose them one at a
-   time.
+   time. The gpui-pre ones (and `text-input-purpose`) are ready for Zed in
+   [docs/upstream-zed](docs/upstream-zed/README.md).
 9. **Kit components for small screens.**
    - Upstream: Radio inside RadioGroup, Textarea rows, rich text color in
      filled bubbles, Shimmer in dark mode (gpui-kit #3328–#3331).
