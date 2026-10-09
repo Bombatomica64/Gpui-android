@@ -73,6 +73,9 @@ autocapitalization, and the purpose from the GPUI branch below) into
 field with an action is single-line; the host reports the action key as IME
 event 6, which the field receives as its enter key, and Done, Go, Search and
 Send then hide the keyboard. The purpose half needs the GPUI branch.
+[Password keyboard before/after](docs/demos/android-password-keyboard.png),
+[amount keyboard](docs/demos/android-amount-keyboard.png),
+[Search key, Enter](docs/demos/android-ime-actions.png).
 
 ### Clear the Java exceptions the accessibility bridge leaves pending — branch `android-a11y-clear-exceptions`
 
