@@ -4,7 +4,7 @@ use std::time::Instant;
 
 use gpui::{
     Bounds, ClickEvent, Context, InteractiveElement, IntoElement, LongPressEvent, MouseDownEvent,
-    MouseMoveEvent, MouseUpEvent, ParentElement, PinchEvent, Pixels, Point, Render,
+    MouseMoveEvent, MouseUpEvent, ParentElement, PinchEvent, Pixels, Point,
     StatefulInteractiveElement, Styled, TouchDragEvent, TouchPhase, Window, canvas, div, point, px,
 };
 use gpui_kit::component::{button::Button, h_flex, v_flex};
@@ -51,8 +51,10 @@ impl TouchScreen {
     }
 }
 
-impl Render for TouchScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(TouchScreen);
+
+impl TouchScreen {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let view = cx.entity().downgrade();
         let c = &self.counters;
         let rate = self.rapid_started.map(|start| {

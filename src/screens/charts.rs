@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use gpui::{
     AnyElement, App, Bounds, Context, ElementId, Hsla, IntoElement, ParentElement, Pixels, Point,
-    Render, SharedString, Styled, Task, Window, div, fill, point, px, size,
+    SharedString, Styled, Task, Window, div, fill, point, px, size,
 };
 use gpui_kit::component::{
     button::Button,
@@ -280,8 +280,10 @@ fn money(value: f64) -> SharedString {
     format!("${value:.0}k").into()
 }
 
-impl Render for ChartsScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(ChartsScreen);
+
+impl ChartsScreen {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let accent = cx.theme().primary;
         let deep = cx.theme().success;
         let danger = cx.theme().danger;
