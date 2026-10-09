@@ -7,7 +7,9 @@ Dev-only fast iteration for the lab, both from
   the lab crate on save, link a patch library and push it to the phone,
   where `src/hot.rs` applies it while the app keeps running.
 - A2, reload: push a new build of the library and restart the app on the
-  same screen, with no Gradle and no reinstall.
+  same screen, with no Gradle and no reinstall. After the first reload it
+  sends a zstd `--patch-from` delta (~1.4 MB), applied on the phone by
+  `unpatch/`, a small arm64 binary that `reload` builds and pushes.
 
 ```sh
 tools/hotpatch/target/debug/hotpatch fat     # base debug APK in dist/; install it
