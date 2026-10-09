@@ -54,7 +54,7 @@ debug = "line-tables-only"
 opt-level = 2
 
 [patch.crates-io]
-gpui-pre = { git = "https://github.com/Bombatomica64/gpui-pre", rev = "bc4b49bd280062c75b703536a9cec22585694fb3" }
+gpui-pre = { git = "https://github.com/Bombatomica64/gpui-pre", rev = "8c6d5a52b1fbd6f32eb7f23ea797f2606933c581" }
 
 [features]
 # Before/after demo builds for upstream PRs; each needs a Kit carrying that PR.
