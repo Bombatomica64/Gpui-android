@@ -371,6 +371,9 @@ impl Render for PlatformApisScreen {
                                 )
                             }, cx)
                         }),
+                        Self::button("payload", "Launch payload", cx, |this, cx| {
+                            this.run("take_launch_payload", notifications::take_launch_payload, cx)
+                        }),
                         Self::button("notify", "Notify", cx, |this, cx| {
                             this.run("notifications::show", || {
                                 notifications::initialize()?;

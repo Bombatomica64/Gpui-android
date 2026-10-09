@@ -90,7 +90,10 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     @Override
     protected void onNewIntent(android.content.Intent intent) {
         super.onNewIntent(intent);
+        // Later getIntent() calls (deep links, notification payloads) see this one.
+        setIntent(intent);
         forwardScreenExtra(intent);
+        if (intent.getData() != null) nativeDeepLink(intent.getData().toString());
     }
 
     private static void forwardScreenExtra(android.content.Intent intent) {
@@ -386,6 +389,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
 
     private static native void nativeOnCreate(Activity activity, int apiLevel);
     private static native void nativeOpenScreen(String screen);
+    private static native void nativeDeepLink(String url);
     private static native void nativeConfigurationChanged();
     private static native void nativeSurfaceChanged(long host, android.view.Surface surface, float scale);
     private static native void nativeSurfaceDestroyed(long host);
