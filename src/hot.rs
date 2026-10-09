@@ -96,14 +96,16 @@ impl Loaded {
         // SAFETY: the table comes from tools/hotpatch, built against this process's
         // aslr_reference; we are between frames, so no patched code is running.
         unsafe { subsecond::apply_patch(table) }?;
-        if let Some(bias) = patch_biases().into_iter().find(|b| !before.contains(b)) {
-            self.0.push((lib, bias));
+        match patch_biases().into_iter().find(|b| !before.contains(b)) {
+            Some(bias) => self.0.push((lib, bias)),
+            None => log::warn!("hot: {lib} not found among loaded objects"),
         }
         Ok(entries)
     }
 }
 
-/// Load biases of the patches Subsecond loaded (all named `/subsecond-patch`).
+/// Load biases of the patches Subsecond loaded (memfds named `subsecond-patch`;
+/// bionic reports them as `/memfd:subsecond-patch (deleted)`).
 fn patch_biases() -> Vec<u64> {
     unsafe extern "C" fn each(
         info: *mut libc::dl_phdr_info,
@@ -114,7 +116,9 @@ fn patch_biases() -> Vec<u64> {
         unsafe {
             let info = &*info;
             if !info.dlpi_name.is_null()
-                && std::ffi::CStr::from_ptr(info.dlpi_name).to_bytes() == b"/subsecond-patch"
+                && std::ffi::CStr::from_ptr(info.dlpi_name)
+                    .to_string_lossy()
+                    .contains("subsecond-patch")
             {
                 (*(out as *mut Vec<u64>)).push(info.dlpi_addr as u64);
             }
