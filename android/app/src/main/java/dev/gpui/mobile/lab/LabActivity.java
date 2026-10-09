@@ -1,6 +1,7 @@
 package dev.gpui.mobile.lab;
 
 import android.app.Activity;
+import android.content.pm.ApplicationInfo;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,6 +23,8 @@ import android.view.inputmethod.InputConnectionWrapper;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
+import java.io.File;
+
 /**
  * Host for the GPUI render thread (gpui_mobile::android::host).
  *
@@ -36,8 +39,24 @@ import android.widget.EditText;
 public class LabActivity extends Activity implements SurfaceHolder.Callback {
     private static final String TAG = "GPUI_MOBILE_LAB";
 
-    static {
-        System.loadLibrary("gpui_mobile_lab");
+    private static boolean libraryLoaded;
+
+    /**
+     * Debuggable builds run a library pushed by `tools/hotpatch reload` when there
+     * is one (files/dev/, copied read-only as Android 14 requires for loaded
+     * code), so a Rust change needs no reinstall; otherwise the packaged one.
+     */
+    private void loadLibrary() {
+        if (libraryLoaded) return;
+        libraryLoaded = true;
+        File dev = new File(getFilesDir(), "dev/libgpui_mobile_lab.so");
+        boolean debuggable = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+        if (debuggable && dev.isFile()) {
+            Log.i(TAG, "loading dev library " + dev);
+            System.load(dev.getAbsolutePath());
+        } else {
+            System.loadLibrary("gpui_mobile_lab");
+        }
     }
 
     /** Names this Activity's GPUI window. Kept across recreation; a fresh launch gets a new one. */
@@ -50,6 +69,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        loadLibrary();
         hostId = state != null ? state.getLong("gpuiHostId", nextHostId++) : nextHostId++;
         surface = new SurfaceView(this);
         surface.getHolder().addCallback(this);

@@ -217,6 +217,44 @@ changes, gpui/Kit/gpui-mobile changes, new dependencies.
 Exit criteria: Rust change to running new code in about 15 s, per the A0
 numbers.
 
+#### Status (2026-10-09): working; the transfer is the bottleneck
+
+`tools/hotpatch reload` is implemented and verified on the phone:
+
+- In debuggable builds, `LabActivity` loads `files/dev/libgpui_mobile_lab.so`
+  when it exists. The log shows `loading dev library …`. Otherwise it loads
+  the packaged library.
+- The tool:
+  1. builds the library, keeping the A1 hot-patch base in sync;
+  2. strips DWARF;
+  3. pushes it in 16 MB parts with zstd;
+  4. copies it read-only into the app's files with `run-as` (Android 14
+     requires loaded code to be read-only);
+  5. restarts the app on the screen that was open, taken from the app's
+     `open screen:` log line.
+
+Measured through the ssh tunnel, which was slow that day (~0.5 MB/s
+uncompressed, against ~6 MB/s in A0):
+
+| Step | Time |
+|---|---|
+| Incremental build + strip | 6.2–6.6 s |
+| Push of the 84 MB library, zstd (21 MB on the wire) | 39 s (59 s before zstd) |
+| `am force-stop` + start on the same screen | 1.3–1.4 s |
+
+Findings:
+
+- **adb compresses only when asked.** A 16 MB part took 30 s raw and 6–8 s
+  with `push -z zstd`. The library compresses 4× (84 → 21 MB).
+- **A delta is 15× smaller again.** `zstd --patch-from=<previous build>`
+  makes a 1.4 MB delta in 0.4 s. Next step: the running debug app
+  reconstructs the new library from the previous one and the delta before
+  restarting. The phone has no `zstd` binary, so the app needs a zstd crate.
+  That would make the push ~3 s on this link and well under a second over USB.
+- The library is 84 MB rather than 49 MB because the build keeps everything
+  A1 needs (`-Clink-dead-code`, no section GC). A reload-only build could
+  drop that, but then hot patching stops working until the next fat build.
+
 ### A3. Build speed
 
 Measure, then apply what helps:

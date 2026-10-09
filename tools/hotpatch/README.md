@@ -1,13 +1,18 @@
 # hotpatch
 
-Dev-only hot patching for the lab with [Subsecond](https://docs.rs/subsecond):
-recompile the lab crate on save, link a patch library and push it to the
-phone, where `src/hot.rs` applies it. Results and limits are in
-[docs/hot-patching-plan.md](../../docs/hot-patching-plan.md), section A1.
+Dev-only fast iteration for the lab, both from
+[docs/hot-patching-plan.md](../../docs/hot-patching-plan.md):
+
+- A1, hot patching with [Subsecond](https://docs.rs/subsecond): recompile
+  the lab crate on save, link a patch library and push it to the phone,
+  where `src/hot.rs` applies it while the app keeps running.
+- A2, reload: push a new build of the library and restart the app on the
+  same screen, with no Gradle and no reinstall.
 
 ```sh
 tools/hotpatch/target/debug/hotpatch fat     # base debug APK in dist/; install it
 tools/hotpatch/target/debug/hotpatch watch   # inside `phone session`, with the app running
+tools/hotpatch/target/debug/hotpatch reload  # inside `phone session`: rebuild, push, restart (A2)
 ```
 
 ## Credits
