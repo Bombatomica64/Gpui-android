@@ -247,10 +247,14 @@ Findings:
 - **adb compresses only when asked.** A 16 MB part took 30 s raw and 6–8 s
   with `push -z zstd`. The library compresses 4× (84 → 21 MB).
 - **A delta is 15× smaller again.** `zstd --patch-from=<previous build>`
-  makes a 1.4 MB delta in 0.4 s. Next step: the running debug app
-  reconstructs the new library from the previous one and the delta before
-  restarting. The phone has no `zstd` binary, so the app needs a zstd crate.
-  That would make the push ~3 s on this link and well under a second over USB.
+  makes a 1.4 MB delta in 0.4 s. `hotpatch reload` now sends only that:
+  the last pushed library stays in `/data/local/tmp/gpui-dev`, and a 0.6 MB
+  arm64 `unpatch` binary (`tools/hotpatch/unpatch`, the zstd crate) rebuilds
+  the new one there as the shell user, so the app needs no change and can
+  even be crashed. The first reload of a session pushes the full library.
+  If the phone's copy is missing or isn't the delta's base, zstd's checksum
+  fails and the reload falls back to the full push. Verified on the host
+  (byte-identical output; wrong base rejected); not yet measured on the phone.
 - The library is 84 MB rather than 49 MB because the build keeps everything
   A1 needs (`-Clink-dead-code`, no section GC). A reload-only build could
   drop that, but then hot patching stops working until the next fat build.

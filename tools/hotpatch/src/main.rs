@@ -197,15 +197,27 @@ fn reload(build_args: &[String]) -> anyhow::Result<ExitCode> {
 
     let log = adb(&["shell", &format!("logcat -d -s {LOG_TAG}:I | grep -E 'open screen: |close screen: ' | tail -1")])?;
     let screen = log.split("open screen: ").nth(1).map(|s| s.trim().to_string());
+    // The staged copy stays on the phone as the base of the next delta;
+    // `pushed` is the host's copy of it.
     let staged = format!("{DEVICE_DEV_DIR}/libgpui_mobile_lab.so");
-    adb(&["shell", &format!("rm -rf {DEVICE_DEV_DIR} && mkdir -p {DEVICE_DEV_DIR} && chmod 755 {DEVICE_DEV_DIR}")])?;
-    push_chunked(&lib, &staged)?;
+    let pushed = state_dir().join("device-lib.so");
+    let sent = match push_delta(&lib, &pushed, &staged) {
+        Ok(bytes) => format!("{:.1} MB delta", bytes as f64 / 1e6),
+        Err(err) => {
+            println!("hotpatch: full push ({err:#})");
+            _ = std::fs::remove_file(&pushed);
+            adb(&["shell", &format!("rm -rf {DEVICE_DEV_DIR} && mkdir -p {DEVICE_DEV_DIR} && chmod 755 {DEVICE_DEV_DIR}")])?;
+            push_chunked(&lib, &staged)?;
+            "full library".to_string()
+        }
+    };
+    std::fs::copy(&lib, &pushed)?;
     // Loaded code must be read-only for apps targeting Android 14.
     adb(&[
         "shell",
         &format!(
             "run-as {PACKAGE} sh -c 'mkdir -p files/dev && rm -f files/dev/libgpui_mobile_lab.so \
-             && cp {staged} files/dev/ && chmod 444 files/dev/libgpui_mobile_lab.so' && rm -rf {DEVICE_DEV_DIR}"
+             && cp {staged} files/dev/ && chmod 444 files/dev/libgpui_mobile_lab.so'"
         ),
     ])?;
     lap("push", &mut t);
@@ -223,13 +235,60 @@ fn reload(build_args: &[String]) -> anyhow::Result<ExitCode> {
     let total: Duration = times.iter().map(|(_, d)| *d).sum();
     let detail: Vec<String> = times.iter().map(|(n, d)| format!("{n} {} ms", d.as_millis())).collect();
     println!(
-        "hotpatch: reloaded {:.0} MB{} in {} ms ({})",
+        "hotpatch: reloaded {:.0} MB ({sent}){} in {} ms ({})",
         std::fs::metadata(&lib)?.len() as f64 / 1e6,
         screen.map(|s| format!(" into '{s}'")).unwrap_or_default(),
         total.as_millis(),
         detail.join(", ")
     );
     Ok(ExitCode::SUCCESS)
+}
+
+/// Sends only a zstd `--patch-from` delta against the library staged by the
+/// last reload (~1.4 MB instead of ~21 MB compressed), which `unpatch`
+/// applies on the phone. Errs, leaving the staged copy alone, when there is
+/// no base or it isn't the one the delta was made from (zstd's checksum).
+fn push_delta(lib: &Path, pushed: &Path, staged: &str) -> anyhow::Result<u64> {
+    ensure!(pushed.exists(), "no library staged on the phone yet");
+    let delta = state_dir().join("lib.delta.zst");
+    let status = Command::new("zstd")
+        .args(["-q", "-f", "-3", "--patch-from"])
+        .arg(pushed)
+        .arg(lib)
+        .arg("-o")
+        .arg(&delta)
+        .status()?;
+    ensure!(status.success(), "zstd --patch-from failed");
+    let bytes = std::fs::metadata(&delta)?.len();
+    let unpatch = unpatch_binary()?;
+    let result = (|| {
+        // --sync skips unpatch when the phone's copy is current.
+        adb(&["push", "--sync", unpatch.to_str().unwrap(), &format!("{DEVICE_DEV_DIR}/unpatch")])?;
+        adb(&["push", delta.to_str().unwrap(), &format!("{DEVICE_DEV_DIR}/lib.delta.zst")])?;
+        let d = DEVICE_DEV_DIR;
+        adb(&[
+            "shell",
+            &format!(
+                "test -f {staged} && chmod 755 {d}/unpatch && {d}/unpatch {staged} {d}/lib.delta.zst {d}/new.so \
+                 && mv {d}/new.so {staged}; status=$?; rm -f {d}/lib.delta.zst; exit $status"
+            ),
+        ])
+    })();
+    _ = std::fs::remove_file(&delta);
+    result?;
+    Ok(bytes)
+}
+
+/// The phone has no zstd binary: builds tools/hotpatch/unpatch for it.
+fn unpatch_binary() -> anyhow::Result<PathBuf> {
+    let dir = root().join("tools/hotpatch/unpatch");
+    let status = Command::new("cargo")
+        .args(["ndk", "-t", "arm64-v8a", "--platform", "26", "build", "-q"])
+        .current_dir(&dir)
+        .env_remove("RUSTC_WORKSPACE_WRAPPER")
+        .status()?;
+    ensure!(status.success(), "building unpatch failed");
+    Ok(dir.join("target/aarch64-linux-android/debug/unpatch"))
 }
 
 /// `adb push` in 16 MB parts: one call for a large library can outlast
