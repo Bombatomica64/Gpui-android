@@ -1,8 +1,8 @@
 //! Builds Subsecond patches of the lab crate and pushes them to the phone
 //! (docs/hot-patching-plan.md, A1). Debug arm64 only.
 //!
-//!   hotpatch fat [build.sh args]   debug APK whose library records how rustc
-//!                                  compiled and linked the lab crate
+//!   hotpatch fat [cargo args]      arm64 debug APK whose library records how
+//!                                  rustc compiled and linked the lab crate
 //!   hotpatch watch                 on each change under src/: recompile the lab
 //!                                  crate, link a patch, push it to the phone
 //!
@@ -40,6 +40,25 @@ struct Rustc {
     linker: String,
 }
 
+/// What `src/hot.rs` reads: the jump table from the app's own code, plus one
+/// from each earlier patch, which the app rebases to where it loaded that patch.
+#[derive(Serialize)]
+struct Patch {
+    table: subsecond_types::JumpTable,
+    earlier: Vec<EarlierMap>,
+}
+
+#[derive(Serialize)]
+struct EarlierMap {
+    lib: String,
+    map: Vec<(u64, u64)>,
+}
+
+struct Earlier {
+    lib: String,
+    hot: HashMap<String, u64>,
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = env::args().skip(1).collect();
     let result = if env::var_os("HOTPATCH_SHIM").is_some() {
@@ -52,7 +71,7 @@ fn main() -> ExitCode {
             Some("watch") => watch(),
             Some("save-base") => save_base(),
             _ => {
-                eprintln!("usage: hotpatch fat [build.sh args] | hotpatch watch");
+                eprintln!("usage: hotpatch fat [cargo args] | hotpatch watch");
                 return ExitCode::from(2);
             }
         }
@@ -100,14 +119,20 @@ fn fat(build_args: &[String]) -> anyhow::Result<ExitCode> {
         .append(true)
         .open(&lib)?
         .set_modified(SystemTime::now())?;
-    let status = Command::new(root().join("build.sh"))
-        .arg("android")
-        .arg("--debug")
+    // build.sh's steps, but Gradle only sees the stripped library (the
+    // unstripped one is ~290 MB, copied several times into Gradle's outputs).
+    let jni_libs = root().join("android/app/src/main/jniLibs");
+    _ = std::fs::remove_dir_all(&jni_libs);
+    let status = Command::new("cargo")
+        .args(["ndk", "-t", "arm64-v8a", "--platform", "26", "-o"])
+        .arg(&jni_libs)
+        .arg("build")
         .args(build_args)
+        .current_dir(root())
         .env("RUSTC_WORKSPACE_WRAPPER", env::current_exe()?)
         .env("HOTPATCH_MODE", "fat")
         .status()?;
-    ensure!(status.success(), "build.sh failed");
+    ensure!(status.success(), "cargo ndk failed");
     save_base()?;
 
     // The phone needs no DWARF (patches link against target/hotpatch/base.so,
@@ -226,7 +251,7 @@ fn watch() -> anyhow::Result<ExitCode> {
     let dir = state_dir();
     let rustc: Rustc = read_json(&dir.join("rustc.json")).context("run `hotpatch fat` first")?;
     let fat_link: Vec<String> = read_json(&dir.join("link-fat.json"))?;
-    let base_objects: HashMap<String, u64> =
+    let mut last_objects: HashMap<String, u64> =
         read_json::<Vec<(String, u64)>>(&dir.join("base-objects.json"))?
             .into_iter()
             .collect();
@@ -241,7 +266,8 @@ fn watch() -> anyhow::Result<ExitCode> {
 
     // HOTPATCH_OFFLINE=<hex aslr_reference>: build patches without a phone.
     let offline = env::var("HOTPATCH_OFFLINE").ok();
-    let aslr_reference = match &offline {
+    // HOTPATCH_ASLR=<hex>: the app's value, when its log line has rotated out.
+    let aslr_reference = match offline.clone().or_else(|| env::var("HOTPATCH_ASLR").ok()) {
         Some(hex) => u64::from_str_radix(hex.trim_start_matches("0x"), 16)?,
         None => device_aslr_reference()?,
     };
@@ -253,6 +279,7 @@ fn watch() -> anyhow::Result<ExitCode> {
     let src = root().join("src");
     let mut seen = newest_mtime(&src)?;
     let mut generation = 0;
+    let mut earlier = vec![];
     println!("hotpatch: watching {}", src.display());
     loop {
         std::thread::sleep(Duration::from_millis(50));
@@ -265,7 +292,8 @@ fn watch() -> anyhow::Result<ExitCode> {
         let result = patch_once(
             &rustc,
             &fat_link,
-            &base_objects,
+            &mut last_objects,
+            &mut earlier,
             &cache,
             aslr_reference,
             generation,
@@ -279,7 +307,8 @@ fn watch() -> anyhow::Result<ExitCode> {
 fn patch_once(
     rustc: &Rustc,
     fat_link: &[String],
-    base_objects: &HashMap<String, u64>,
+    last_objects: &mut HashMap<String, u64>,
+    earlier: &mut Vec<Earlier>,
     cache: &stub::BaseSymbols,
     aslr_reference: u64,
     generation: u32,
@@ -310,23 +339,19 @@ fn patch_once(
     // 2. Link the lab's fresh objects, plus stubs that jump into the running
     //    app for everything else, into a shared library.
     let thin_link: Vec<String> = read_json(&dir.join("link-thin.json"))?;
-    //    Objects identical to the base's are left out: the stubs send calls
-    //    into them to the running app, so their statics are kept too.
-    //    HOTPATCH_ALL=1 links every object instead, as `dx` does.
-    let all = env::var_os("HOTPATCH_ALL").is_some();
-    let mut objects = vec![];
-    for object in tip_objects(&thin_link) {
-        if all || base_objects.get(&cgu_name(&object)) != Some(&hash_file(&object)?) {
-            objects.push(object);
+    //    Every lab object goes in, as with `dx`: code left in the app would
+    //    call the app's old copies of changed functions directly.
+    let objects = tip_objects(&thin_link);
+    let mut changed = 0;
+    for object in &objects {
+        let hash = hash_file(object)?;
+        if last_objects.insert(cgu_name(object), hash) != Some(hash) {
+            changed += 1;
         }
     }
-    if objects.is_empty() {
+    if changed == 0 {
         println!("hotpatch: patch {generation}: no code change");
         return Ok(());
-    }
-    let changed = objects.len();
-    if !all {
-        objects = stub::with_data_providers(objects, &tip_objects(&thin_link))?;
     }
     let stub_path = dir.join("stub.o");
     std::fs::write(&stub_path, stub::undefined_symbol_stub(cache, &objects, aslr_reference)?)?;
@@ -345,6 +370,14 @@ fn patch_once(
     if !out.status.success() {
         bail!("link failed:\n{}", String::from_utf8_lossy(&out.stderr));
     }
+    // -Csave-temps keeps each compilation's objects under new names (~65 MB).
+    for path in std::fs::read_dir(objects[0].parent().unwrap())? {
+        let path = path?.path();
+        let name = path.file_name().unwrap().to_string_lossy();
+        if name.starts_with(&format!("{TIP}.")) && name.ends_with(".rcgu.o") && !objects.contains(&path) {
+            _ = std::fs::remove_file(&path);
+        }
+    }
     lap("link", &mut t);
 
     // 3. Map old function addresses to new ones; ship a library without DWARF.
@@ -359,8 +392,19 @@ fn patch_once(
         .arg(&stripped)
         .status()?;
     ensure!(status.success(), "llvm-strip failed");
+    // Views created by an earlier patch's code (a screen opened after a
+    // patch) call that patch's hot closures: map those to the new ones too.
+    let hot = stub::hot_closures(&patch)?;
+    let earlier_maps = earlier
+        .iter()
+        .map(|e| EarlierMap {
+            lib: e.lib.clone(),
+            map: e.hot.iter().filter_map(|(name, old)| Some((*old, *hot.get(name)?))).collect(),
+        })
+        .collect();
+    earlier.push(Earlier { lib: device_lib.clone(), hot });
     let table_path = dir.join("patch.json");
-    write_json(&table_path, &table)?;
+    write_json(&table_path, &Patch { table: table.clone(), earlier: earlier_maps })?;
     lap("table+strip", &mut t);
 
     // 4. Push library and table.
@@ -381,16 +425,20 @@ fn patch_once(
         lap("push", &mut t);
     }
 
+    let size = std::fs::metadata(&stripped)?.len();
+    _ = std::fs::remove_file(&patch);
+    _ = std::fs::remove_file(&stripped);
+
     let total: Duration = times.iter().map(|(_, d)| *d).sum();
     let detail: Vec<String> = times
         .iter()
         .map(|(n, d)| format!("{n} {} ms", d.as_millis()))
         .collect();
     println!(
-        "hotpatch: patch {generation}: {changed} changed + {} data objects, {} functions, {:.1} MB, {} ms ({})",
-        objects.len() - changed,
+        "hotpatch: patch {generation}: {changed}/{} objects changed, {} hot closures, {:.1} MB, {} ms ({})",
+        objects.len(),
         table.map.len(),
-        std::fs::metadata(&stripped)?.len() as f64 / 1e6,
+        size as f64 / 1e6,
         total.as_millis(),
         detail.join(", ")
     );

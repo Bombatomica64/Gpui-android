@@ -156,54 +156,7 @@ pub fn undefined_symbol_stub(
             }
         }
     }
-    // Subsecond finds the patch's load address through its `main`; when the
-    // object defining it is left out, a placeholder serves.
-    if !defined.contains(SENTINEL) {
-        let ret = 0xD65F03C0u32.to_le_bytes();
-        let offset = obj.append_section_data(text, &ret, 4);
-        obj.add_symbol(Symbol {
-            name: SENTINEL.as_bytes().to_vec(),
-            value: offset,
-            size: 4,
-            kind: SymbolKind::Text,
-            scope: SymbolScope::Dynamic,
-            weak: false,
-            section: SymbolSection::Section(text),
-            flags: object::SymbolFlags::None,
-        });
-    }
     Ok(obj.write()?)
-}
-
-/// Adds the objects that define data (or thread-locals) the selected objects
-/// use, until closed. Rust reaches the crate's own data PC-relatively, which
-/// can't target an absolute address in the running app, so the patch gets
-/// its own copy. Functions stay out: stubs reach them in the app.
-pub fn with_data_providers(
-    mut selected: Vec<PathBuf>,
-    all: &[PathBuf],
-) -> anyhow::Result<Vec<PathBuf>> {
-    let mut data_owner = HashMap::new();
-    let mut needs = HashMap::new();
-    for path in all {
-        let summary = summary(path)?;
-        for name in &summary.data {
-            data_owner.insert(name.clone(), path.clone());
-        }
-        needs.insert(path.clone(), summary);
-    }
-    let mut queue = selected.clone();
-    while let Some(path) = queue.pop() {
-        for name in &needs[&path].undefined {
-            if let Some(owner) = data_owner.get(name) {
-                if !selected.contains(owner) {
-                    selected.push(owner.clone());
-                    queue.push(owner.clone());
-                }
-            }
-        }
-    }
-    Ok(selected)
 }
 
 /// What an object defines and needs, cached by path, size and mtime: rustc
@@ -285,7 +238,26 @@ fn collect_object(
     Ok(())
 }
 
-/// Old (base) → new (patch) address for every symbol both define.
+/// Subsecond looks the jump table up only for `HotFunction::call_it`, the
+/// closures passed to `subsecond::call`.
+fn is_hot_closure(name: &str) -> bool {
+    name.contains("11HotFunction") && name.contains("7call_it")
+}
+
+/// The patch's hot closures by name.
+pub fn hot_closures(patch: &Path) -> anyhow::Result<HashMap<String, u64>> {
+    let bytes = std::fs::read(patch)?;
+    let obj = object::File::parse(&*bytes)?;
+    Ok(obj
+        .symbols()
+        .filter_map(|s| {
+            let name = s.name().ok()?;
+            (is_hot_closure(name) && !s.is_undefined()).then(|| (name.to_string(), s.address()))
+        })
+        .collect())
+}
+
+/// Old (base) → new (patch) address of every hot closure.
 pub fn jump_table(patch: &Path, base: &BaseSymbols) -> anyhow::Result<JumpTable> {
     let bytes = std::fs::read(patch)?;
     let obj = object::File::parse(&*bytes)?;
@@ -301,6 +273,9 @@ pub fn jump_table(patch: &Path, base: &BaseSymbols) -> anyhow::Result<JumpTable>
         }
         if name == SENTINEL {
             new_base_address = Some(sym.address());
+        }
+        if !is_hot_closure(name) {
+            continue;
         }
         if let Some(old) = base.symbols.get(name) {
             if !old.undefined {
