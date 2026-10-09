@@ -1,6 +1,6 @@
 use gpui::{
-    AppContext as _, ClipboardItem, Context, Entity, IntoElement, ParentElement, Render,
-    SharedString, Styled, Subscription, Window, div,
+    AppContext as _, Autocapitalize, ClipboardItem, Context, Entity, IntoElement, ParentElement,
+    Render, SharedString, Styled, Subscription, TextInputAction, Window, div,
 };
 use gpui_kit::component::{
     IconName, WindowExt as _,
@@ -8,8 +8,8 @@ use gpui_kit::component::{
     clipboard::Clipboard,
     h_flex,
     input::{
-        Input, InputEvent, InputGroup, InputGroupAddon, InputGroupButton, InputGroupText,
-        InputState, MaskPattern,
+        Input, InputContentType, InputEvent, InputGroup, InputGroupAddon, InputGroupButton,
+        InputGroupText, InputState, MaskPattern,
     },
     label::{HighlightsMatch, Label},
     v_flex,
@@ -65,6 +65,24 @@ impl TextInputScreen {
             }),
             make("disabled", window, cx, &|s| {
                 s.default_value("Disabled input")
+            }),
+            make("email", window, cx, &|s| s.placeholder("Email (email keyboard)")),
+            make("search", window, cx, &|s| {
+                s.input_action(TextInputAction::Search)
+                    .placeholder("Search (Search key)")
+            }),
+            make("message", window, cx, &|s| {
+                s.input_action(TextInputAction::Send)
+                    .placeholder("Message (Send key)")
+            }),
+            make("pin", window, cx, &|s| {
+                s.masked(true).mask_pattern("9999").placeholder("PIN (digit keyboard)")
+            }),
+            make("username", window, cx, &|s| {
+                s.autocorrect(false)
+                    .autocapitalize(Autocapitalize::None)
+                    .input_action(TextInputAction::Next)
+                    .placeholder("username (no autocorrect, Next key)")
             }),
             make("url", window, cx, &|s| {
                 s.default_value("https://gpui-kit.com/docs/mobile/")
@@ -268,6 +286,22 @@ impl Render for TextInputScreen {
                     .child(Input::new(self.field("amount mask")))
                     .child(Input::new(self.field("digits only")))
                     .child(Input::new(self.field("disabled")).disabled(true)),
+            )
+            .child(
+                ui::section("Keyboard type and enter key", cx)
+                    .child(ui::hint(
+                        "Each field asks the IME for its own keyboard; the enter key fires \
+                         an `enter` event in the log.",
+                        cx,
+                    ))
+                    .child(
+                        Input::new(self.field("email"))
+                            .content_type(InputContentType::EmailAddress),
+                    )
+                    .child(Input::new(self.field("search")))
+                    .child(Input::new(self.field("message")))
+                    .child(Input::new(self.field("pin")).mask_toggle())
+                    .child(Input::new(self.field("username"))),
             )
             .child(
                 ui::section("Prefix / suffix / Clipboard", cx)

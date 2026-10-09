@@ -48,9 +48,9 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 
 | Component | Included in APK | Mobile status | Demo screen | Notes |
 |---|---|---|---|---|
-| Input | Yes | WORKING | Text Input | Typing (LatinIME composition and commit), backspace, CJK/Hangul/emoji, long-press word selection with handles, Cut/Copy/Paste/Select All menu, system clipboard (gpui-mobile fork, #24). Keyboard avoidance and IME dismissal come from the forks (see MOBILE_PATCHES.md), not yet re-verified on a phone. |
-| Input (password / masked) | Yes | WORKING | Text Input | Bullets and the reveal toggle work. |
-| Input (mask pattern) | Yes | WORKING | Text Input | Phone and number masks format while typing; a regex pattern filters characters. Opens the text keyboard, never the numeric one (gpui-mobile always requests the default keyboard type). |
+| Input | Yes | WORKING | Text Input | Typing (LatinIME composition and commit), backspace, CJK/Hangul/emoji, long-press word selection with handles, Cut/Copy/Paste/Select All menu, system clipboard (gpui-mobile fork, #24). Single-line inputs show Done and fire `PressEnter` on it (also Search/Send/Next via `input_action`); Enter still inserts a newline in a textarea; back keeps a `clean_on_escape` input's text. TalkBack reads fields, the Clear button and edits (forks, see MOBILE_PATCHES.md). |
+| Input (password / masked) | Yes | WORKING | Text Input | Bullets and the reveal toggle work. The keyboard gets a password field: no suggestions, no learning (forks). TalkBack announces a password field and never its value. |
+| Input (mask pattern) | Yes | WORKING | Text Input | Phone and number masks format while typing; a regex pattern filters characters. Digit masks open the number pad, the amount mask the decimal pad (forks); a regex pattern keeps the text keyboard. |
 | InputGroup | Yes | WORKING | Text Input | Addons and the addon button work. |
 | Clipboard | Yes | WORKING | Text Input | `value_fn` + notification and static values copy to the system clipboard. |
 | Label | Yes | WORKING | Text Input | Highlights, secondary text and masking render. |
@@ -58,7 +58,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | Inline tokens (InputToken) | Yes | WORKING | Textarea & Editor | Tokens render with icons; backspace deletes a whole token. |
 | Editor | Yes | WORKING | Textarea & Editor | Line numbers, soft wrap, typing and internal scrolling. |
 | Highlighter (tree-sitter) | No | NOT_APPLICABLE | Textarea & Editor | Behind the `tree-sitter` feature, not enabled to keep the APK small; the Editor runs without syntax colors. |
-| NumberInput | Yes | PARTIAL | Number & OTP | +/− steps, clamping, app-handled steps and the decimal mask work; typing opens the full text keyboard instead of a numeric one. |
+| NumberInput | Yes | PARTIAL | Number & OTP | +/− steps, clamping, app-handled steps and the decimal mask work; typing opens the full text keyboard unless the state has a number mask or `input_purpose(Decimal)` (forks). |
 | OtpInput | Yes | BROKEN | Number & OTP | Renders and focuses, and completes with a hardware keyboard, but no soft keyboard appears on tap: OtpState has no text-input handler and never requests the virtual keyboard. |
 
 ## Selection
