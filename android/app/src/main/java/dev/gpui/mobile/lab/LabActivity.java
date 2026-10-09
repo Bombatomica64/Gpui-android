@@ -5,7 +5,6 @@ import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.Selection;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -187,24 +186,12 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
 
     // ── IME bridge (called from Rust on the render thread) ─────────────────
 
-    public void gpuiShowKeyboard(int keyboardType, long session) {
-        int type = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE;
-        switch (keyboardType) {
-            case 1: type = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS; break;
-            case 2: type = InputType.TYPE_CLASS_PHONE; break;
-            case 3: type = InputType.TYPE_CLASS_NUMBER; break;
-            case 4: type = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI; break;
-            case 5: type = InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL; break;
-        }
-        showKeyboard(type, EditorInfo.IME_FLAG_NO_EXTRACT_UI, session, false);
-    }
-
-    /** The focused field's EditorInfo, from GPUI's TextInputConfiguration. */
+    /**
+     * Show the keyboard for the focused field, with the EditorInfo gpui-mobile computes
+     * from GPUI's TextInputConfiguration. gpui-mobile falls back to the older
+     * gpuiShowKeyboard(int, long) only for hosts without this method.
+     */
     public void gpuiShowKeyboardWithInputType(int inputType, int imeOptions, long session) {
-        showKeyboard(inputType, imeOptions, session, true);
-    }
-
-    private void showKeyboard(int inputType, int imeOptions, long session, boolean reportsActions) {
         runOnUiThread(() -> {
             if (input == null) {
                 input = new InputProxy();
@@ -213,7 +200,6 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
                 addContentView(input, new ViewGroup.LayoutParams(1, 1));
             }
             input.reset(session);
-            input.reportsActions = reportsActions;
             input.setInputType(inputType);
             input.setImeOptions(imeOptions);
             input.requestFocus();
@@ -246,8 +232,6 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
         private long session;
         private int depth;
         private boolean marked;
-        /** Report the keyboard's action key as IME event 6 instead of a Done / newline. */
-        boolean reportsActions;
 
         InputProxy() {
             super(LabActivity.this);
@@ -285,9 +269,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
 
         /** The action of a single-line field reported as IME event 6, or UNSPECIFIED. */
         int editorAction() {
-            return reportsActions
-                    ? getImeOptions() & EditorInfo.IME_MASK_ACTION
-                    : EditorInfo.IME_ACTION_UNSPECIFIED;
+            return getImeOptions() & EditorInfo.IME_MASK_ACTION;
         }
 
         void reset(long nextSession) {
@@ -325,11 +307,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
 
         // Both the IME's action key and a hardware Enter on a single-line field end up here.
         @Override public void onEditorAction(int action) {
-            if (reportsActions) {
-                nativeIme(session, 6, "", action, 0);
-            } else {
-                super.onEditorAction(action);
-            }
+            nativeIme(session, 6, "", action, 0);
         }
 
         @Override public InputConnection onCreateInputConnection(EditorInfo info) {
@@ -419,17 +397,9 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
                 }
                 @Override public boolean performEditorAction(int action) {
                     if (connectionSession != session) return false;
-                    if (reportsActions) {
-                        finishComposingText();
-                        onEditorAction(action);
-                        return true;
-                    }
-                    if (action == EditorInfo.IME_ACTION_DONE) {
-                        finishComposingText();
-                        nativeIme(session, 4, "", 0, 0);
-                        return true;
-                    }
-                    return commitText("\n", 1);
+                    finishComposingText();
+                    onEditorAction(action);
+                    return true;
                 }
             };
         }
