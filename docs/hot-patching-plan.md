@@ -131,7 +131,15 @@ Measure, then apply what helps:
   - splitting the lab crate so a screen change recompiles little;
   - the Cranelift backend for the tip crate, if it supports aarch64-android.
 
-## Track B: production updates without a store release
+## Track B: production updates without a store release (deferred)
+
+**Status: deferred.** The goal is to make a Rust app work on mobile, not to
+build an update platform. On Play the only legal ways to change behaviour
+without a release are to ship data (server-driven UI, or state and logic that
+live on a server) or code in a VM such as WASM. Both are substantial
+infrastructure. Revisit when a real app needs it; the notes below record what
+was found.
+
 
 ### B1. Update infrastructure (`gpui-updates`)
 
@@ -188,13 +196,5 @@ content-driven screens, B3 for logic.
 2. A1 Subsecond spike: go/no-go.
 3. A2 dev client. Needed either way.
 4. A3 build speed, guided by A0.
-5. B1 update infrastructure, shipping data.
-6. B2/B3 spike, then decide.
-7. `cargo gpui` CLI, folding in A1, A2 and B1 as they land.
-
-## Questions for you
-
-- **Distribution:** Play only, or also sideload/enterprise? Native OTA is
-  possible outside Play.
-- **Scope of OTA:** is server-driven UI (B2) enough for the fixes you have in
-  mind, or do you need logic changes (B3, with its policy question)?
+5. `cargo gpui` CLI, folding in A1 and A2 as they land.
+6. Track B only when a real app needs it.
