@@ -59,6 +59,34 @@ Both were one branch, `android-host-appearance-emoji`, until an adversarial
 review: night mode came from whichever Activity registered last, and the
 public `asset_manager()` could return a dangling pointer.
 
+### Platform packages (Android) — branch `platform-api-lab`
+
+The lab pins `platform-api-lab`, which merges seven branches, each based on
+fork `main` (two are stacked). The Platform APIs screen exercises them; the
+defects are #44–#50.
+
+- `android-activity-requests` (#44): pickers, permission requests and the
+  biometric prompt no longer wait forever on a static latch when their helper
+  Activity goes away. Calls that wait for the user fail on GPUI's or the UI
+  thread instead of freezing it; call them from a background thread.
+- `android-picker-files` (#45, on top of the previous): pickers return files
+  copied into the cache with their display name; camera capture works (the
+  host declares a FileProvider); photo picker on API 33+; size limits apply.
+- `android-permission-errors` (#46): a missing calendar or location
+  permission is an error, not an empty result.
+- `android-string-arrays` (#47, on top of the previous): calendar and
+  contacts cross JNI as `String[]`, so `|` and newlines survive.
+- `android-callbacks` (#48): `deeplink::handle_link` for a host's
+  `onNewIntent`; handlers run outside their lock; media-session callbacks
+  on the main Looper.
+- `android-notifications-links` (#49): `show` fails when notifications are
+  blocked; a tap opens the app with `take_launch_payload`; `<queries>`
+  documented for `can_launch_url`.
+- `android-async-prepare` (#50): audio streams prepare asynchronously.
+
+The Java helpers live in gpui-mobile's example project; `build.sh` copies the
+ones the lab uses from the pinned checkout.
+
 ## GPUI Kit
 
 ### Open a context menu with a long press — [#3393](https://github.com/longbridge/gpui-kit/pull/3393) (issue [#3392](https://github.com/longbridge/gpui-kit/issues/3392))
