@@ -1,0 +1,121 @@
+# Breaks the arm64 native library down by section, crate and crate family
+# (docs/binary-size.md), from the symbol table (cargo-bloat does not find the
+# Android target under cargo-ndk). Runs on PRs that touch the Rust build; run it by hand
+# with profile overrides to measure a size experiment without editing Cargo.toml:
+#
+#   gh workflow run size.yml --ref <branch> -f opt_level=z -f lto=fat
+name: Binary size
+
+on:
+  pull_request:
+    paths:
+      - Cargo.toml
+      - Cargo.lock
+      - "src/**"
+      - tools/size-report.py
+      - .github/workflows/size.yml
+  workflow_dispatch:
+    inputs:
+      label:
+        description: Name for this experiment in the summary
+        default: ""
+      opt_level:
+        description: "profile.release.opt-level override (3, s, z)"
+        default: ""
+      lto:
+        description: "profile.release.lto override (thin, fat, off)"
+        default: ""
+      codegen_units:
+        description: profile.release.codegen-units override
+        default: ""
+      toolchain:
+        description: Rust toolchain (nightly for -Zbuild-std)
+        default: stable
+      cargo_args:
+        description: Extra cargo build arguments, e.g. -Zbuild-std=std,panic_abort
+        default: ""
+      rustflags:
+        description: Extra RUSTFLAGS
+        default: ""
+
+concurrency:
+  group: size-${{ github.ref }}-${{ github.event.inputs.label }}
+  cancel-in-progress: true
+
+jobs:
+  size:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      NDK_VERSION: 27.2.12479018
+      # Keep symbols for the breakdown; the stripped size is measured separately.
+      CARGO_PROFILE_RELEASE_STRIP: "false"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the NDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" >/dev/null
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+          echo "LLVM_BIN=$ANDROID_HOME/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin" >> "$GITHUB_ENV"
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ inputs.toolchain || 'stable' }}
+          targets: aarch64-linux-android
+          components: ${{ inputs.toolchain == 'nightly' && 'rust-src' || '' }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: size-${{ inputs.toolchain || 'stable' }}
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --locked
+
+      - name: Apply the overrides
+        env:
+          OPT_LEVEL: ${{ inputs.opt_level }}
+          LTO: ${{ inputs.lto }}
+          CGU: ${{ inputs.codegen_units }}
+          EXTRA_RUSTFLAGS: ${{ inputs.rustflags }}
+        run: |
+          [[ -n "$OPT_LEVEL" ]] && echo "CARGO_PROFILE_RELEASE_OPT_LEVEL=$OPT_LEVEL" >> "$GITHUB_ENV"
+          [[ -n "$LTO" ]] && echo "CARGO_PROFILE_RELEASE_LTO=$LTO" >> "$GITHUB_ENV"
+          [[ -n "$CGU" ]] && echo "CARGO_PROFILE_RELEASE_CODEGEN_UNITS=$CGU" >> "$GITHUB_ENV"
+          [[ -n "$EXTRA_RUSTFLAGS" ]] && echo "RUSTFLAGS=$EXTRA_RUSTFLAGS" >> "$GITHUB_ENV"
+          true
+
+      - name: Build arm64-v8a, unstripped
+        env:
+          CARGO_ARGS: ${{ inputs.cargo_args }}
+        run: |
+          # shellcheck disable=SC2086
+          cargo ndk -t arm64-v8a --platform 26 build --release $CARGO_ARGS
+          mkdir -p size
+          cp target/aarch64-linux-android/release/libgpui_mobile_lab.so size/
+
+      - name: Report
+        run: |
+          so=size/libgpui_mobile_lab.so
+          "$LLVM_BIN/llvm-strip" -o size/stripped.so "$so"
+          gzip -9 -k -c size/stripped.so > size/stripped.so.gz
+          python3 tools/size-report.py "$so" "$LLVM_BIN" size/report > /dev/null
+          cargo tree --target aarch64-linux-android -e normal -d > size/duplicates.txt
+          {
+            echo "## arm64-v8a native library ${{ inputs.label }}"
+            echo
+            echo "| | MB |"
+            echo "|---|---:|"
+            echo "| stripped \`.so\` | $(stat -c %s size/stripped.so | awk '{printf "%.2f", $1/1e6}') |"
+            echo "| gzip -9 (≈ download) | $(stat -c %s size/stripped.so.gz | awk '{printf "%.2f", $1/1e6}') |"
+            echo
+            echo "Profile overrides: \`$(env | grep '^CARGO_PROFILE_RELEASE_\|^RUSTFLAGS=' | sort | tr '\n' ' ')\` toolchain \`${{ inputs.toolchain || 'stable' }}\` args \`${{ inputs.cargo_args }}\`"
+            echo
+            cat size/report/report.md
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          rm size/stripped.so.gz
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: size-report${{ inputs.label && format('-{0}', inputs.label) || '' }}
+          path: size/
