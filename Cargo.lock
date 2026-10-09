@@ -2702,7 +2702,7 @@ dependencies = [
 [[package]]
 name = "gpui-pre-mobile"
 version = "0.1.0"
-source = "git+https://github.com/Bombatomica64/gpui-mobile?rev=431d8cd075fb69fe2c62d382700d80a9163ca54d#431d8cd075fb69fe2c62d382700d80a9163ca54d"
+source = "git+https://github.com/Bombatomica64/gpui-mobile?rev=2e32b5878b431c22189e7dcb0aff72567ab7ea5f#2e32b5878b431c22189e7dcb0aff72567ab7ea5f"
 dependencies = [
  "accesskit_android",
  "android-activity",

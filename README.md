@@ -22,7 +22,7 @@ version of every `gpui-pre-*` crate.
 | GPUI Kit (`gpui-kit`, `gpui-component`, `gpui-base`, `gpui-fps`) | 0.7.1 from [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) `mobile-lab` (tag `v0.7.1` + 3 commits) |
 | GPUI (`gpui-pre`) | 0.3.8 from [Bombatomica64/gpui-pre](https://github.com/Bombatomica64/gpui-pre) `mobile-lab` (crates.io 0.3.8 + 3 touch fixes), via `[patch.crates-io]` |
 | GPUI's other crates (`gpui-pre-wgpu`, …) | 0.3.8 from crates.io (the snapshot GPUI Kit 0.7.1 pins) |
-| gpui-mobile (`gpui-pre-mobile`) | [Bombatomica64/gpui-mobile](https://github.com/Bombatomica64/gpui-mobile) `main` (upstream `main` + 5 fixes) |
+| gpui-mobile (`gpui-pre-mobile`) | [Bombatomica64/gpui-mobile](https://github.com/Bombatomica64/gpui-mobile) `main` (upstream `main` + 3 fixes) |
 | Renderer | `wgpu` 29.0.4 (Vulkan preferred, GLES fallback) |
 | Rust | 1.98.1 stable, edition 2024 |
 | Android | NDK 27.2.12479018, compileSdk 35, targetSdk 34, minSdk 26, AGP 9.1.0, Gradle 9.4.1, JDK 17 |
@@ -107,7 +107,9 @@ themes, switched at runtime).
 `Activity` with a `SurfaceView`, driving gpui-mobile's host entry point
 (`gpui_mobile::android::host`, see `src/host.rs`). GPUI runs on one
 process-lived render thread, so the app keeps its state across surface
-destruction (Home/resume) and Activity recreation. The Activity forwards
+destruction (Home/resume) and Activity recreation: the Activity keeps its
+`HostId` in its saved state, so a recreated instance gets its own window
+back, and a fresh launch opens a new one. The Activity forwards
 touch (`MotionEvent`), keys (back arrives in GPUI as `escape`), lifecycle,
 configuration changes and an IME `InputConnection` proxy adapted from gpui-mobile's
 `GpuiInputActivity`. `adjustResize` shrinks GPUI's viewport above the
