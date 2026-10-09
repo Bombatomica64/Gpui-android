@@ -20,6 +20,13 @@ static DEEP_LINKS: Mutex<Vec<String>> = Mutex::new(Vec::new());
 /// Media-session actions delivered to the handler, newest last.
 static MEDIA_ACTIONS: Mutex<Vec<String>> = Mutex::new(Vec::new());
 
+/// Size on disk and in pixels of a picked file, to check it is readable and scaled.
+fn describe(path: &str) -> String {
+    let bytes = std::fs::metadata(path).map(|m| m.len());
+    let pixels = image::image_dimensions(path);
+    format!("{bytes:?} bytes, {pixels:?} px")
+}
+
 const AUDIO_URL: &str = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
 
 pub struct PlatformApisScreen {
@@ -206,7 +213,10 @@ impl Render for PlatformApisScreen {
                 ui::section("Files and images", cx)
                     .child(Self::row([
                         Self::button("open-file", "Open file", cx, |this, cx| {
-                            this.run("open_file", || file_selector::open_file(&Default::default()), cx)
+                            this.run("open_file", || {
+                                file_selector::open_file(&Default::default())
+                                    .map(|file| file.map(|file| (describe(&file.path), file)))
+                            }, cx)
                         }),
                         Self::button("open-files", "Open files", cx, |this, cx| {
                             this.run("open_files", || file_selector::open_files(&Default::default()), cx)
@@ -225,7 +235,10 @@ impl Render for PlatformApisScreen {
                     ]))
                     .child(Self::row([
                         Self::button("pick-image", "Gallery image", cx, |this, cx| {
-                            this.run("pick_image(gallery)", || image_picker::pick_image(&Default::default()), cx)
+                            this.run("pick_image(gallery)", || {
+                                image_picker::pick_image(&Default::default())
+                                    .map(|file| file.map(|file| (describe(&file.path), file)))
+                            }, cx)
                         }),
                         Self::button("pick-resized", "Image ≤256 px", cx, |this, cx| {
                             this.run("pick_image(max 256)", || {
@@ -235,6 +248,7 @@ impl Render for PlatformApisScreen {
                                     image_quality: Some(50),
                                     ..Default::default()
                                 })
+                                .map(|file| file.map(|file| (describe(&file.path), file)))
                             }, cx)
                         }),
                         Self::button("take-photo", "Take photo", cx, |this, cx| {
@@ -243,6 +257,7 @@ impl Render for PlatformApisScreen {
                                     source: image_picker::ImageSource::Camera,
                                     ..Default::default()
                                 })
+                                .map(|file| file.map(|file| (describe(&file.path), file)))
                             }, cx)
                         }),
                         Self::button("pick-multi", "Several images", cx, |this, cx| {
