@@ -48,6 +48,26 @@ jobs:
       - name: Build
         run: ./build.sh android --release --abi all
 
+      - name: Size summary
+        run: |
+          apk=$(ls dist/*.apk)
+          {
+            echo "## APK size"
+            echo
+            echo "| | MB |"
+            echo "|---|---:|"
+            echo "| APK | $(stat -c %s "$apk" | awk '{printf "%.2f", $1/1e6}') |"
+            for so in android/app/src/main/jniLibs/*/*.so; do
+              echo "| \`$(basename "$(dirname "$so")")\` .so | $(stat -c %s "$so" | awk '{printf "%.2f", $1/1e6}') |"
+            done
+            echo
+            echo "Largest APK entries (bytes as stored in the APK):"
+            echo
+            echo '```'
+            unzip -lv "$apk" | sort -k3 -n -r | head -8
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - uses: actions/upload-artifact@v4
         with:
           name: gpui-mobile-lab-apk
