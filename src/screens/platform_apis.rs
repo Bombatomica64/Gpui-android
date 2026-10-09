@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use gpui::{Context, IntoElement, ParentElement, Render, SharedString, Styled, Task, Window};
+use gpui::{Context, IntoElement, ParentElement, Render, SharedString, Styled, Task, Window, div, px};
 use gpui_kit::component::{button::Button, h_flex, v_flex};
 use gpui_mobile::packages::{
     audio, calendar, contacts, deeplink, file_selector, image_picker, local_auth, location,
@@ -103,6 +103,32 @@ impl PlatformApisScreen {
         cx.notify();
     }
 
+    /// Calls that show no UI, one after another.
+    fn run_read_only_checks(&mut self, cx: &mut Context<Self>) {
+        self.run("get_calendars", calendar::get_calendars, cx);
+        self.run("get_contacts", || contacts::get_contacts().map(|list| list.len()), cx);
+        self.run("is_location_service_enabled", location::is_location_service_enabled, cx);
+        self.run("get_last_known_position", location::get_last_known_position, cx);
+        self.run("get_current_position", || location::get_current_position(&Default::default()), cx);
+        self.run("can_launch_url", || {
+            (
+                url_launcher::can_launch_url("https://example.com"),
+                url_launcher::can_launch_url("mailto:a@example.com"),
+                maps_launcher::is_available(),
+            )
+        }, cx);
+        self.run("local_auth info", || {
+            (
+                local_auth::is_device_supported(),
+                local_auth::can_authenticate(),
+                local_auth::get_available_biometrics(),
+            )
+        }, cx);
+        self.run("deeplink", || {
+            (deeplink::get_initial_link(), deeplink::get_latest_link(), DEEP_LINKS.lock().unwrap().clone())
+        }, cx);
+    }
+
     fn button(
         id: &'static str,
         label: &'static str,
@@ -165,7 +191,11 @@ impl Render for PlatformApisScreen {
                         format!("{} ms", self.worst_stall.as_millis()),
                         cx,
                     ))
-                    .child(self.log.render(cx))
+                    .child(Self::row([Self::button("read-only", "Run read-only checks", cx, |this, cx| {
+                        this.run_read_only_checks(cx)
+                    })]))
+                    // Fixed height, so the buttons below stay put as results come in.
+                    .child(div().h(px(230.)).overflow_hidden().child(self.log.render(cx)))
                     .child(ui::hint(
                         "Every result is also logged as `event:` in logcat (tag GPUI_MOBILE_LAB). \
                          A heartbeat on the GPUI thread logs any stall over 400 ms.",
