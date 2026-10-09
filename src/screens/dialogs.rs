@@ -231,10 +231,9 @@ impl DialogsScreen {
     }
 }
 
-crate::hot_render!(DialogsScreen);
-
-impl DialogsScreen {
-    fn render_view(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for DialogsScreen {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let has_dialog = window.has_active_dialog(cx);
         let has_sheet = window.has_active_sheet(cx);
         let button = |id: &'static str, label: &'static str| Button::new(id).outline().label(label);

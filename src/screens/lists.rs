@@ -1,8 +1,8 @@
 use std::rc::Rc;
 
 use gpui::{
-    AppContext as _, Context, Entity, IntoElement, ParentElement, Pixels, SharedString, Size,
-    Styled, Subscription, Task, Window, div, px, size,
+    AppContext as _, Context, Entity, IntoElement, ParentElement, Pixels, Render, SharedString,
+    Size, Styled, Subscription, Task, Window, div, px, size,
 };
 use gpui_kit::component::{
     Icon, IconName, IndexPath, VirtualListScrollHandle, h_flex,
@@ -195,10 +195,9 @@ impl ListsScreen {
     }
 }
 
-crate::hot_render!(ListsScreen);
-
-impl ListsScreen {
-    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for ListsScreen {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let body = match self.view {
             0 => v_flex()
                 .flex_1()

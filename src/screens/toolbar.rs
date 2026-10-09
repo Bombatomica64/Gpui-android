@@ -1,4 +1,4 @@
-use gpui::{Context, IntoElement, ParentElement, Styled, Window, div, px};
+use gpui::{Context, IntoElement, ParentElement, Render, Styled, Window, div, px};
 use gpui_kit::component::{
     IconName, Size,
     button::{Button, Toggle},
@@ -37,10 +37,9 @@ impl ToolbarScreen {
     }
 }
 
-crate::hot_render!(ToolbarScreen);
-
-impl ToolbarScreen {
-    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for ToolbarScreen {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let disabled = self.disabled;
         let toolbar = Toolbar::new("doc-toolbar")
             .with_size(self.size)

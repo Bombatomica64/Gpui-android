@@ -1,5 +1,5 @@
 use gpui::{
-    Context, InteractiveElement, IntoElement, ParentElement, ScrollHandle, SharedString,
+    Context, InteractiveElement, IntoElement, ParentElement, Render, ScrollHandle, SharedString,
     StatefulInteractiveElement, Styled, UniformListScrollHandle, Window, div, px, uniform_list,
 };
 use gpui_kit::component::{
@@ -39,10 +39,9 @@ fn long_text() -> SharedString {
     sentence.repeat(400).into()
 }
 
-crate::hot_render!(ScrollScreen);
-
-impl ScrollScreen {
-    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for ScrollScreen {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let offset = match self.tab {
             0 => self.plain.offset(),
             1 => self.virtual_list.0.borrow().base_handle.offset(),

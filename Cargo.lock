@@ -2405,6 +2405,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "gpui-hot"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "gpui-hot-macros",
+ "gpui-pre",
+ "libc",
+ "log",
+ "serde_json",
+ "subsecond",
+]
+
+[[package]]
+name = "gpui-hot-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
 name = "gpui-kit"
 version = "0.7.1"
 source = "git+https://github.com/Bombatomica64/gpui-kit?rev=11a7beb93292051a7fcc009f34bf93a00f167b4c#11a7beb93292051a7fcc009f34bf93a00f167b4c"
@@ -2440,17 +2462,15 @@ dependencies = [
  "anyhow",
  "chrono",
  "gpui-fps",
+ "gpui-hot",
  "gpui-kit",
  "gpui-pre",
  "gpui-pre-mobile",
  "jni 0.22.4",
- "libc",
  "log",
  "ndk",
  "ndk-sys",
  "regex",
- "serde_json",
- "subsecond",
 ]
 
 [[package]]

@@ -6,7 +6,6 @@ mod app;
 pub mod diagnostics;
 #[cfg(target_os = "android")]
 mod host;
-mod hot;
 mod matrix;
 mod screens;
 mod ui;
@@ -23,7 +22,7 @@ pub fn launch(cx: &mut App) {
     gpui_kit::init(cx);
     app::init(cx);
     screens::init(cx);
-    hot::init(cx);
+    gpui_hot::init(cx);
     cx.activate(true);
 }
 

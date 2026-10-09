@@ -197,6 +197,18 @@ What `cargo gpui dev` needs to productise this:
 4. Fall back to A2 (reload the `.so`) when a patch fails to link, or when a
    struct layout changes.
 
+Status (2026-10-09, code only; not yet run on the phone):
+
+1. Done: `tools/cargo-gpui` (below). The app writes its ASLR reference to
+   `files/dev/aslr` and acknowledges each patch in `files/dev/applied`.
+2. Done: `#[gpui_hot::hot]` on an ordinary `impl Render` (crate
+   `gpui-hot-macros`). The hot closure is still monomorphised in the app
+   crate: offline patches find all 31 of the lab's.
+3. Deltas for reloads (A2) and the A3 build changes; USB still unmeasured.
+4. Done: `cargo gpui dev` reloads when a patch fails to link or the app
+   reports it could not apply it, and on `r` + Enter. Layout changes are
+   not detected: press `r`.
+
 Recommendation: **go**. Hot patching keeps state and needs no Gradle, so it
 is worth productising. Ship A2 first: it covers every change Subsecond can't
 patch, and it is how the base gets onto the phone.
@@ -219,7 +231,8 @@ numbers.
 
 #### Status (2026-10-09): working; the transfer is the bottleneck
 
-`tools/hotpatch reload` is implemented and verified on the phone:
+`reload` (then `tools/hotpatch reload`, now `cargo gpui reload`) is
+implemented and verified on the phone:
 
 - In debuggable builds, `LabActivity` loads `files/dev/libgpui_mobile_lab.so`
   when it exists. The log shows `loading dev library …`. Otherwise it loads
@@ -247,9 +260,9 @@ Findings:
 - **adb compresses only when asked.** A 16 MB part took 30 s raw and 6–8 s
   with `push -z zstd`. The library compresses 4× (84 → 21 MB).
 - **A delta is 15× smaller again.** `zstd --patch-from=<previous build>`
-  makes a 1.4 MB delta in 0.4 s. `hotpatch reload` now sends only that:
+  makes a 1.4 MB delta in 0.4 s. `cargo gpui reload` now sends only that:
   the last pushed library stays in `/data/local/tmp/gpui-dev`, and a 0.6 MB
-  arm64 `unpatch` binary (`tools/hotpatch/unpatch`, the zstd crate) rebuilds
+  arm64 `unpatch` binary (`tools/cargo-gpui/unpatch`, the zstd crate) rebuilds
   the new one there as the shell user, so the app needs no change and can
   even be crashed. The first reload of a session pushes the full library.
   If the phone's copy is missing or isn't the delta's base, zstd's checksum
@@ -271,6 +284,44 @@ Measure, then apply what helps:
   - `debug = 0` for dependencies;
   - splitting the lab crate so a screen change recompiles little;
   - the Cranelift backend for the tip crate, if it supports aarch64-android.
+
+#### Results (2026-10-09)
+
+Measured on this server (`-j 6`, 7 GB cap): the base build that A1 patches
+and A2 reloads (`cargo gpui build`, with `-Csave-temps`, no LTO), after a
+one-line change in a screen. Each step is timed by the tool itself.
+
+| Step | Before | After |
+|---|---|---|
+| Lab crate rustc | 1.1 s | 1.1 s |
+| Link | 0.85 s | 0.65 s |
+| cargo + cargo-ndk | 0.6–1.1 s | 0.6–1.0 s |
+| Save base (was a 288 MB copy) | 0.6 s | 0.07 s |
+| Strip (was after cargo-ndk's copy) | 0.47 s | 0.39 s |
+| **Total** | **4.1–4.2 s** | **2.8–3.0 s** |
+| Library before strip | 288 MB | 100 MB |
+| Compiler peak memory | 1.2 GB | 0.58 GB |
+| Clean build | 4 min 54 s (A0) | 3 min 36 s |
+
+What changed:
+
+- `debug = false` for dependencies in `[profile.dev]`. Panic messages keep
+  their file:line, which comes from `Location`, not DWARF.
+- The tool hard-links the base instead of copying it, and strips into
+  jniLibs straight from cargo's output instead of letting cargo-ndk copy
+  the full library first.
+
+Tried, no gain or not available:
+
+- `opt-level = 0` for the lab crate: 2.8–3.0 s, the same.
+- Cranelift needs nightly; the lab builds on stable 1.98.
+- sccache helps only clean builds (CI already caches).
+- mold: not installed here, not tried. lld already uses all cores, and the
+  link is 0.65 s.
+
+Left: the lab crate's 1.1 s is one crate of 31 screens; splitting it would
+let a screen change recompile less, but every patch then has to link the
+split crates too. Not worth it at this size.
 
 ## Track B: production updates without a store release (deferred)
 
@@ -337,5 +388,7 @@ content-driven screens, B3 for logic.
 2. A1 Subsecond spike: go/no-go.
 3. A2 dev client. Needed either way.
 4. A3 build speed, guided by A0.
-5. `cargo gpui` CLI, folding in A1 and A2 as they land.
+5. `cargo gpui` CLI, folding in A1 and A2 as they land. Started:
+   `tools/cargo-gpui` (`dev`, `reload`, `watch`, `build`, `apk`,
+   `install`) and the `gpui-hot` crate.
 6. Track B only when a real app needs it.

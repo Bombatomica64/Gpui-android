@@ -42,7 +42,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     private static boolean libraryLoaded;
 
     /**
-     * Debuggable builds run a library pushed by `tools/hotpatch reload` when there
+     * Debuggable builds run a library pushed by `cargo gpui reload` when there
      * is one (files/dev/, copied read-only as Android 14 requires for loaded
      * code), so a Rust change needs no reinstall; otherwise the packaged one.
      */

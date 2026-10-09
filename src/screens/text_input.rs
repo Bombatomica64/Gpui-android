@@ -1,6 +1,6 @@
 use gpui::{
-    AppContext as _, ClipboardItem, Context, Entity, IntoElement, ParentElement, SharedString,
-    Styled, Subscription, Window, div,
+    AppContext as _, ClipboardItem, Context, Entity, IntoElement, ParentElement, Render,
+    SharedString, Styled, Subscription, Window, div,
 };
 use gpui_kit::component::{
     IconName, WindowExt as _,
@@ -134,10 +134,9 @@ fn truncate(value: &str) -> String {
     out
 }
 
-crate::hot_render!(TextInputScreen);
-
-impl TextInputScreen {
-    fn render_view(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for TextInputScreen {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let active = self.active_state();
         let (value, selection, cursor) = {
             let state = active.read(cx);

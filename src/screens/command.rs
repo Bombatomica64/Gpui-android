@@ -1,4 +1,6 @@
-use gpui::{AppContext as _, Context, Entity, IntoElement, ParentElement, Styled, Window, div, px};
+use gpui::{
+    AppContext as _, Context, Entity, IntoElement, ParentElement, Render, Styled, Window, div, px,
+};
 use gpui_kit::component::{
     IconName, IndexPath, WindowExt as _,
     button::Button,
@@ -103,10 +105,9 @@ impl CommandScreen {
     }
 }
 
-crate::hot_render!(CommandScreen);
-
-impl CommandScreen {
-    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for CommandScreen {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let view = cx.entity();
         v_flex()
             .gap_3()
