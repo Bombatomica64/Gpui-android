@@ -17,6 +17,8 @@ pub struct DiagnosticsScreen {
     animating: bool,
     frames: VecDeque<Instant>,
     refresh: Option<Task<()>>,
+    /// Outcome of the last share-sheet request.
+    share: Option<Result<(), String>>,
 }
 
 impl DiagnosticsScreen {
@@ -38,6 +40,7 @@ impl DiagnosticsScreen {
             animating: false,
             frames: VecDeque::new(),
             refresh: Some(refresh),
+            share: None,
         }
     }
 
@@ -164,6 +167,43 @@ impl Render for DiagnosticsScreen {
                     .child(ui::hint(
                         "Values refresh every 0.5 s. Open the keyboard from Text Input and come back \
                          to compare the host keyboard height with GPUI's viewport.",
+                        cx,
+                    )),
+            )
+            .child(
+                ui::section("Platform services", cx)
+                    .child(ui::value_row(
+                        "System appearance (platform)",
+                        format!("{:?}", cx.window_appearance()),
+                        cx,
+                    ))
+                    .child(ui::value_row("Emoji", "😀 🎉 👍🏽 🇮🇹 ❤️", cx))
+                    .child(ui::value_row(
+                        "Last share",
+                        match &self.share {
+                            None => "none".into(),
+                            Some(Ok(())) => "share sheet opened".into(),
+                            Some(Err(err)) => format!("failed: {err}"),
+                        },
+                        cx,
+                    ))
+                    .child(
+                        h_flex().child(Button::new("share").small().outline().label("Share text…").on_click(
+                            cx.listener(|this, _, _, cx| {
+                                let result = gpui_mobile::packages::share::share_text(
+                                    "Shared from GPUI Mobile Lab 🚀",
+                                    Some("GPUI Mobile Lab"),
+                                );
+                                log::info!("event: share_text -> {result:?}");
+                                this.share = Some(result);
+                                cx.notify();
+                            }),
+                        )),
+                    )
+                    .child(ui::hint(
+                        "Share opens Android's chooser through gpui-mobile's `share` package \
+                         (Intent.ACTION_SEND via the host Activity). The platform appearance is \
+                         Platform::window_appearance; the window's own is in Runtime above.",
                         cx,
                     )),
             )

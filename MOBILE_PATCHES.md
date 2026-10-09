@@ -50,6 +50,13 @@ it opens, re-attaches and resumes, and through the new
 `host::configuration_changed()` for Activities that handle `uiMode`
 themselves.
 
+For upstream, this is split into two branches off upstream `main`, which
+together equal the commit above: `android-host-night-mode` (night mode,
+`window_appearance`, `configuration_changed()`;
+[#30](https://github.com/longbridge/gpui-mobile/pull/30)) and
+`android-host-emoji-font` (the AssetManager and the emoji font;
+[#29](https://github.com/longbridge/gpui-mobile/pull/29)).
+
 ## GPUI Kit
 
 ### Open a context menu with a long press — [#3393](https://github.com/longbridge/gpui-kit/pull/3393) (issue [#3392](https://github.com/longbridge/gpui-kit/issues/3392))

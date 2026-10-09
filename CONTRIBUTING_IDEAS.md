@@ -107,10 +107,18 @@ October 2026; "fork" means the fix is on one of the branches listed in
    - Not started: a minimal Android quick start.
 7. **Platform services.**
    - Upstream: system clipboard (gpui-mobile #24), back navigation (#26).
-   - Fork: dark mode follows the system on resume and configuration change,
-     and emoji render on the host-driven path (gpui-mobile
-     `android-host-appearance-emoji`).
-   - In progress: share sheet and safe-area insets.
+   - Fork: dark mode follows the system on resume and configuration change
+     (gpui-mobile `android-host-night-mode`), and emoji render on the
+     host-driven path (`android-host-emoji-font`). Upstream as gpui-mobile
+     #30 and #29, in review.
+   - Share sheet: already upstream as `packages::share::share_text`, and it
+     works on the host-driven path; the Diagnostics screen has a demo
+     button.
+   - Not started: flags and `❤️` (VS16) still don't render with the
+     bundled emoji font; flags come from the system's COLRv1
+     `NotoColorEmojiFlags.ttf`.
+   - Not started: safe-area insets. The plan is in
+     [docs/safe-area-insets.md](docs/safe-area-insets.md).
    - Not started: system fonts.
 8. **Upstream the fork fixes.** Seven branches in
    [MOBILE_PATCHES.md](MOBILE_PATCHES.md) are still fork-only: two in
