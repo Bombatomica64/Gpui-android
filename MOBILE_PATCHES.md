@@ -39,23 +39,25 @@ in a dialog closed the dialog. Done now hides the keyboard and keeps focus,
 like back. `show_soft_keyboard` / `hide_soft_keyboard` are implemented, so
 `Window::request_virtual_keyboard` works (Kit's Input uses it below).
 
-### Give the host-driven path the Activity's AssetManager — branch `android-host-appearance-emoji`
+### Follow the system night mode on the host path — branch `android-host-night-mode`, [#30](https://github.com/longbridge/gpui-mobile/pull/30)
 
-Without `android-activity` there was no AssetManager, so the window never
-followed night mode (and `Platform::window_appearance` always said Dark),
-and the bundled CBDT emoji font could not be read (Android 13+'s COLRv1
-emoji font cannot be drawn by swash). `set_host_activity` now keeps the
-Activity's AssetManager; the host path syncs each window's night mode when
-it opens, re-attaches and resumes, and through the new
-`host::configuration_changed()` for Activities that handle `uiMode`
-themselves.
+Without `android-activity`, night mode was never read, so the window stayed
+Light (and `Platform::window_appearance` always said Dark). It is now read
+from the application context's configuration, which the first
+`set_host_activity` keeps, and applied to each window when it opens,
+re-attaches and resumes. An Activity that handles `uiMode` itself must call
+the new `host::configuration_changed()`, which updates every host's window.
 
-For upstream, this is split into two branches off upstream `main`, which
-together equal the commit above: `android-host-night-mode` (night mode,
-`window_appearance`, `configuration_changed()`;
-[#30](https://github.com/longbridge/gpui-mobile/pull/30)) and
-`android-host-emoji-font` (the AssetManager and the emoji font;
-[#29](https://github.com/longbridge/gpui-mobile/pull/29)).
+### Load the bundled emoji font on the host path — branch `android-host-emoji-font`, [#29](https://github.com/longbridge/gpui-mobile/pull/29)
+
+Android 13+'s COLRv1 emoji font cannot be drawn by swash, and the bundled
+CBDT fallback was only read through `android-activity`'s AssetManager, so
+emoji were empty boxes. The first `set_host_activity` keeps the
+application's AssetManager for the life of the process.
+
+Both were one branch, `android-host-appearance-emoji`, until an adversarial
+review: night mode came from whichever Activity registered last, and the
+public `asset_manager()` could return a dangling pointer.
 
 ## GPUI Kit
 
