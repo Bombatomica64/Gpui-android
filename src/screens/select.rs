@@ -193,10 +193,9 @@ impl SelectScreen {
     }
 }
 
-crate::hot_render!(SelectScreen);
-
-impl SelectScreen {
-    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for SelectScreen {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         v_flex()
             .gap_3()
             .child(

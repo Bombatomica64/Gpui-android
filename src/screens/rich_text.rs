@@ -1,4 +1,4 @@
-use gpui::{Context, IntoElement, ParentElement, SharedString, Styled, Window, div};
+use gpui::{Context, IntoElement, ParentElement, Render, SharedString, Styled, Window, div};
 use gpui_kit::base::{SelectionFormat, TextView};
 use gpui_kit::component::{
     button::Button,
@@ -96,10 +96,9 @@ impl RichTextScreen {
     }
 }
 
-crate::hot_render!(RichTextScreen);
-
-impl RichTextScreen {
-    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for RichTextScreen {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let view = cx.entity();
         let on_link =
             move |href: &SharedString, _: &gpui::ClickEvent, _: &mut Window, cx: &mut gpui::App| {

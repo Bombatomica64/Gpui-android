@@ -49,10 +49,9 @@ impl Panel for DemoPanel {
     }
 }
 
-crate::hot_render!(DemoPanel);
-
-impl DemoPanel {
-    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for DemoPanel {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         v_flex()
             .id(self.name)
             .size_full()
@@ -111,10 +110,9 @@ impl DockScreen {
     }
 }
 
-crate::hot_render!(DockScreen);
-
-impl DockScreen {
-    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for DockScreen {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         v_flex()
             .size_full()
             .p_2()

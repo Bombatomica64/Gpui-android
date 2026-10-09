@@ -160,10 +160,9 @@ fn filled_bubble_demo(cx: &gpui::App) -> impl IntoElement {
     )
 }
 
-crate::hot_render!(ChatScreen);
-
-impl ChatScreen {
-    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for ChatScreen {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let messages = self.messages.clone();
         let scroller =
             MessageScroller::new("chat-scroller", self.scroller.clone(), move |ix, _, cx| {

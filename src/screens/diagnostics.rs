@@ -58,10 +58,9 @@ impl DiagnosticsScreen {
     }
 }
 
-crate::hot_render!(DiagnosticsScreen);
-
-impl DiagnosticsScreen {
-    fn render_view(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for DiagnosticsScreen {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let _ = &self.refresh;
         if self.animating {
             self.frames.push_back(Instant::now());

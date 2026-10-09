@@ -1,5 +1,6 @@
 use gpui::{
-    AppContext as _, Context, Entity, IntoElement, ParentElement, Styled, Subscription, Window,
+    AppContext as _, Context, Entity, IntoElement, ParentElement, Render, Styled, Subscription,
+    Window,
 };
 use gpui_kit::component::{
     button::Button,
@@ -130,10 +131,9 @@ impl QuestionnaireScreen {
     }
 }
 
-crate::hot_render!(QuestionnaireScreen);
-
-impl QuestionnaireScreen {
-    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for QuestionnaireScreen {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let state = &self.state;
         let mut questionnaire = Questionnaire::new(state).child(QuestionnaireProgress::new(state));
         for (name, choices, has_input) in ITEMS {
