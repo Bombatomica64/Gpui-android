@@ -59,6 +59,27 @@ Both were one branch, `android-host-appearance-emoji`, until an adversarial
 review: night mode came from whichever Activity registered last, and the
 public `asset_manager()` could return a dangling pointer.
 
+### Give each field its own keyboard and enter key — branches `android-text-input-configuration`, `android-text-input-purpose`
+
+The host's IME proxy always asked for a multi-line text field: password
+fields showed the typed password among the keyboard's suggestions (and the
+keyboard learned it), number and phone fields got the full keyboard, and
+single-line fields had a newline key that did nothing. The window now
+implements `set_text_input_configuration` and turns GPUI's
+`TextInputConfiguration` (enter-key action, autocorrect, suggestions,
+autocapitalization, and the purpose from the GPUI branch below) into
+`EditorInfo` `inputType`/`imeOptions`, handed to the host's new
+`gpuiShowKeyboardWithInputType` (older hosts keep `gpuiShowKeyboard`). A
+field with an action is single-line; the host reports the action key as IME
+event 6, which the field receives as its enter key, and Done, Go, Search and
+Send then hide the keyboard. The purpose half needs the GPUI branch.
+
+### Clear the Java exceptions the accessibility bridge leaves pending — branch `android-a11y-clear-exceptions`
+
+`accesskit_android`'s jni 0.21 API leaves a thrown Java exception pending,
+and the bridge never cleared it, so the next JNI call on the render thread
+ran with one pending.
+
 ## GPUI Kit
 
 ### Open a context menu with a long press — [#3393](https://github.com/longbridge/gpui-kit/pull/3393) (issue [#3392](https://github.com/longbridge/gpui-kit/issues/3392))
@@ -84,6 +105,30 @@ the focused input back into view. A focused input calls
 `Window::request_autoscroll` for its text area (the caret line in a
 textarea) when it gains focus or the viewport size changes. Needs the GPUI
 autoscroll fix below to work in plain scroll containers.
+
+### Tell the keyboard how to assist each input — branches `input-text-input-configuration`, `input-purpose`
+
+`InputState` provides GPUI's `TextInputConfiguration`: Done for single-line
+inputs and a line break for multi-line ones; autocorrect, suggestions and
+sentence caps only for plain text; Password for a masked input (still while
+revealed), Numeric/Decimal for number and digits-only masks, and the purpose
+the `Input`'s `content_type` implies (email, phone, URL, password). New
+`input_action`, `autocorrect`, `autocapitalize` and `input_purpose`
+override them, like React Native's `returnKeyType`, `autoCorrect`,
+`autoCapitalize`, `keyboardType` and `secureTextEntry`. `input-purpose`
+needs the GPUI branch below.
+
+### Keep the text on Android's back button — branch `input-back-keeps-text`
+
+Back arrives as escape, so an input with `clean_on_escape()` cleared its
+text on the second back instead of leaving the screen. On Android escape no
+longer clears; it still closes the selection handles and edit menu first.
+
+### Name icon-only input buttons for screen readers — branches `input-icon-button-labels`, `input-masked-password-role`
+
+The clear button (Input, Select, Combobox, DatePicker) and the password
+toggle were unlabelled buttons to TalkBack; they are now "Clear" and "Show
+password" / "Hide password". A masked input has the `PasswordInput` role.
 
 ## GPUI (gpui-pre 0.3.8)
 
@@ -117,6 +162,14 @@ A vertical-only container turned a horizontal pan into vertical scrolling
 unless it set `restrict_scroll_to_axis()` — a mouse-wheel convenience that
 is wrong for a finger. Scrolls dispatched from a touch gesture (including
 fling momentum) are no longer remapped; wheel input is unchanged.
+
+### Say what a text field holds — branch `text-input-purpose`
+
+`TextInputConfiguration` could not say "password" or "number", so no
+platform could pick a numeric keyboard or keep a password out of the
+keyboard's suggestions. It gains `purpose: TextInputPurpose` (HTML
+`inputmode` values plus Password and NumericPassword). Zed `main` has the
+same struct without it.
 
 ## Still handled in the host app
 
