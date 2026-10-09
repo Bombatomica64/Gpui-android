@@ -213,8 +213,8 @@ fn reload(build_args: &[String]) -> anyhow::Result<ExitCode> {
     adb(&["shell", &format!("am force-stop {PACKAGE}")])?;
     let mut start = format!("am start -W -n {PACKAGE}/.LabActivity");
     if let Some(screen) = &screen {
-        // `am start` re-parses its arguments through the shell.
-        start.push_str(&format!(" --es screen \"'{screen}'\""));
+        // One string for the device shell: quote once (titles have spaces).
+        start.push_str(&format!(" --es screen '{}'", screen.replace('\'', "'\\''")));
     }
     let out = adb(&["shell", &start])?;
     ensure!(out.contains("Status: ok"), "am start failed: {out}");
@@ -233,7 +233,8 @@ fn reload(build_args: &[String]) -> anyhow::Result<ExitCode> {
 }
 
 /// `adb push` in 16 MB parts: one call for a large library can outlast
-/// `phone adb`'s 120 s limit through the tunnel.
+/// `phone adb`'s 120 s limit through the tunnel. Libraries compress ~4x
+/// with zstd, which adb does not use unless asked.
 fn push_chunked(local: &Path, remote: &str) -> anyhow::Result<()> {
     let bytes = std::fs::read(local)?;
     let dir = state_dir().join("chunks");
@@ -243,7 +244,7 @@ fn push_chunked(local: &Path, remote: &str) -> anyhow::Result<()> {
     for (i, chunk) in bytes.chunks(16 << 20).enumerate() {
         let part = dir.join(format!("part{i:03}"));
         std::fs::write(&part, chunk)?;
-        adb(&["push", part.to_str().unwrap(), &format!("{remote}.part{i:03}")])?;
+        adb(&["push", "-z", "zstd", part.to_str().unwrap(), &format!("{remote}.part{i:03}")])?;
         parts.push(format!("{remote}.part{i:03}"));
     }
     adb(&["shell", &format!("cat {} > {remote} && rm {}", parts.join(" "), parts.join(" "))])?;
@@ -494,6 +495,8 @@ fn patch_once(
         std::fs::copy(&table_path, staged.join("patch.json"))?;
         adb(&[
             "push",
+            "-z",
+            "zstd",
             staged.join(format!("patch-{generation}.so")).to_str().unwrap(),
             staged.join("patch.json").to_str().unwrap(),
             &format!("{DEVICE_DIR}/"),
