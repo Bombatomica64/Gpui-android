@@ -1,7 +1,7 @@
 # Ideas for helping the GPUI and GPUI Kit teams
 
 Things worth working on, based on building this Android lab against GPUI Kit
-0.7.0. Current bugs and workarounds are listed in
+0.7.0 and 0.7.1. Current bugs and workarounds are listed in
 [README.md](README.md#known-android-issues) and [MOBILE_PATCHES.md](MOBILE_PATCHES.md).
 
 ## Where GPUI / GPUI Kit fit on mobile
@@ -22,12 +22,15 @@ and GPUI Kit for a narrower set of projects.
 - **One renderer.** GPUI draws every pixel itself, so the app looks the same
   everywhere, and charts and custom drawing are first-class.
 - **Owning the whole stack made bugs fixable.** The Slider, clipboard and
-  Activity-recreation fixes were each a few dozen lines.
+  Activity-recreation fixes were each a few dozen lines, and upstream merged
+  them.
 
 ### What was painful
 
 - **Compile loop.** Each change meant a 2–3 minute release build plus
-  reinstall. React Native hot-reloads in about a second.
+  reinstall, and a release build needs more memory than a small build
+  server has (the lab now builds its APK on GitHub Actions). React Native
+  hot-reloads in about a second.
 - **API churn and stale docs.** GPUI is pinned to exact pre-release snapshots,
   and several doc examples didn't match the 0.7.0 source.
 - **Binary size.** Each architecture adds about 27 MB of native library before
@@ -41,7 +44,10 @@ Fixable: the touch-drag and soft-keyboard gaps, layout overflows and the
 mobile-specific hooks. What stays structural:
 
 - **Accessibility.** A GPU-drawn UI is invisible to TalkBack unless a full
-  accessibility bridge is built. React Native gets this from native views.
+  accessibility bridge is built. A first bridge exists now (gpui-mobile
+  [#25](https://github.com/longbridge/gpui-mobile/pull/25), about 250 lines on
+  top of GPUI's AccessKit tree), but every control's labels and roles still
+  have to be right. React Native gets this from native views.
 - **Native behavior.** Autofill, spellcheck, system text-selection handles,
   share sheets and system fonts come free with native widgets. GPUI has to
   imitate each one, and the imitation drifts.
@@ -61,24 +67,56 @@ not as a full mobile framework. That matches this experience.
 
 ## Possible work items
 
-Ordered roughly by how much they'd move the verdict above.
+Ordered roughly by how much they'd move the verdict above. Status as of
+October 2026; "fork" means the fix is on one of the branches listed in
+[MOBILE_PATCHES.md](MOBILE_PATCHES.md) but not yet proposed upstream.
 
 1. **Accessibility bridge for Android.** Expose GPUI's element tree to
-   TalkBack through `AccessibilityNodeProvider`. This is the largest
-   structural gap.
-2. **Soft-keyboard and IME support.** Keyboard avoidance, composing text,
-   selection handles and autofill hooks in `gpui-mobile`.
-3. **Touch-drag and gesture handling.** Consistent drag, fling and
-   long-press semantics for Slider, scroll views and lists.
-4. **Faster iteration loop.** Hot-reload or incremental-build options, such
-   as a dev-mode `cdylib` swap, or a desktop-hosted phone-size preview.
-5. **Binary size.** Measure what contributes to the ~27 MB per architecture
-   and look at feature flags, LTO and stripping.
-6. **Docs and examples for mobile.** Update the examples that don't match
-   0.7.0 and add a minimal Android quick start.
-7. **Platform services.** Clipboard, share sheet, system dark mode, system
-   fonts, back navigation and safe-area insets as first-class APIs.
-8. **Upstream the fork fixes.** Each entry in
-   [MOBILE_PATCHES.md](MOBILE_PATCHES.md) is a candidate PR.
-9. **Kit components for small screens.** Fix layout overflows and add
-   touch-sized variants of desktop-centric controls.
+   TalkBack through `AccessibilityNodeProvider`.
+   - Open: gpui-mobile [#25](https://github.com/longbridge/gpui-mobile/pull/25),
+     rebased onto the one-window-per-host model of #26.
+   - Next: check Kit's controls for missing labels and roles once #25 lands.
+2. **Soft-keyboard and IME support.**
+   - Upstream: composing text and file picking (gpui-mobile #6); back hides
+     the keyboard and a tap brings it back (#26).
+   - Fork: keep focus when the keyboard's Done key hides it (gpui-mobile
+     `android-ime-dismiss`); ask for the keyboard when a focused input is
+     tapped, and scroll a focused input into view (gpui-kit
+     `input-tap-requests-keyboard`, `input-reveal-on-focus`).
+   - Not started: selection handles, autofill.
+3. **Touch-drag and gesture handling.**
+   - Upstream: Slider drags (gpui-kit #3313), long-press context menus
+     (#3393), Android scroll physics and fling (gpui-mobile #13, #14).
+   - Fork: `on_drag` elements on touch, autoscroll in scrollable divs, and
+     no axis remapping for touch pans (gpui-pre `touch-drag`, `autoscroll`,
+     `touch-axis`). These belong in zed-industries/zed, which gpui-pre
+     snapshots.
+4. **Faster iteration loop.** Hot reload, a dev-mode `cdylib` swap, or a
+   desktop-hosted phone-size preview. Not started. Build it as a
+   standalone package first and propose it upstream once it works.
+5. **Binary size.**
+   - Upstream: the release profile is tuned for size (opt-level `z`, fat
+     LTO, `panic=abort`).
+   - Not started: measuring what makes up the ~27 MB per architecture.
+     CI now builds the APK on every push, so the size can be tracked.
+6. **Docs and examples for mobile.**
+   - Open: gpui-mobile issue
+     [#20](https://github.com/longbridge/gpui-mobile/issues/20), the
+     example's `build.bat` launches an Activity the manifest doesn't declare;
+     the issue includes the fix.
+   - Not started: a minimal Android quick start.
+7. **Platform services.**
+   - Upstream: system clipboard (gpui-mobile #24), back navigation (#26).
+   - Fork: dark mode follows the system on resume and configuration change,
+     and emoji render on the host-driven path (gpui-mobile
+     `android-host-appearance-emoji`).
+   - In progress: share sheet and safe-area insets.
+   - Not started: system fonts.
+8. **Upstream the fork fixes.** Seven branches in
+   [MOBILE_PATCHES.md](MOBILE_PATCHES.md) are still fork-only: two in
+   gpui-mobile, two in gpui-kit, three in gpui-pre. Propose them one at a
+   time.
+9. **Kit components for small screens.**
+   - Upstream: Radio inside RadioGroup, Textarea rows, rich text color in
+     filled bubbles, Shimmer in dark mode (gpui-kit #3328–#3331).
+   - Next: touch-sized variants of desktop-centric controls.
