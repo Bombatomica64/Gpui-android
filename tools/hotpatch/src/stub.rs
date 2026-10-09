@@ -1,7 +1,9 @@
-//! ELF/aarch64 subset of Dioxus CLI's packages/cli/src/build/patch.rs
-//! (MIT OR Apache-2.0): the base library's symbol table, the stub object that
-//! resolves a patch's undefined symbols to addresses in the running app, and
-//! the jump table from old to new function addresses.
+//! Adapted from the Dioxus CLI's packages/cli/src/build/patch.rs
+//! (DioxusLabs/dioxus f951996, MIT OR Apache-2.0; see ../README.md and
+//! ../LICENSE-MIT-dioxus), reduced to ELF/aarch64: the base library's symbol
+//! table, the stub object that resolves a patch's undefined symbols to
+//! addresses in the running app, and the jump table from old to new
+//! function addresses.
 
 use std::{
     collections::{HashMap, HashSet},

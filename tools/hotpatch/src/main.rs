@@ -8,7 +8,8 @@
 //!
 //! During `fat` this binary is also cargo's `RUSTC_WORKSPACE_WRAPPER` and the
 //! lab's linker. The patch steps follow `dx serve --hotpatch` (Dioxus CLI,
-//! packages/cli/src/build/{link,patch}.rs), reduced to ELF/aarch64.
+//! packages/cli/src/build/{link,patch}.rs, MIT OR Apache-2.0), reduced to
+//! ELF/aarch64; credits in ../README.md.
 
 mod stub;
 
@@ -445,7 +446,8 @@ fn patch_once(
     Ok(())
 }
 
-/// The fat link's arguments that still apply to a patch (as `dx` keeps for lld).
+/// The fat link's arguments that still apply to a patch: the Dioxus CLI's
+/// `thin_link_args` for lld (packages/cli/src/build/link.rs).
 fn thin_link_args(fat: &[String]) -> Vec<String> {
     let mut out: Vec<String> = [
         "-shared",

@@ -120,7 +120,9 @@ How it works (`tools/hotpatch`, `src/hot.rs`):
   all of the lab's objects with a stub object into a patch library. The stub
   object sends every other symbol to its address in the running app (base
   address + ASLR slide, read once from the app's log).
-  This is the ELF/aarch64 part of `dx`'s "thin linking" (~500 lines of Rust).
+  This is the ELF/aarch64 part of the Dioxus CLI's "thin linking" (~500
+  lines of Rust), adapted from its source with credit in
+  `tools/hotpatch/README.md`.
   The tool pushes the patch and its jump table to `/data/local/tmp/gpui-hot`.
 - In the app, a GPUI task checks for a new table every 50 ms. Between frames
   it calls `subsecond::apply_patch` (which loads the library through a memfd),
