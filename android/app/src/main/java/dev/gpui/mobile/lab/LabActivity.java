@@ -6,7 +6,6 @@ import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.Selection;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -110,7 +109,10 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     @Override
     protected void onNewIntent(android.content.Intent intent) {
         super.onNewIntent(intent);
+        // Later getIntent() calls (deep links, notification payloads) see this one.
+        setIntent(intent);
         forwardScreenExtra(intent);
+        if (intent.getData() != null) nativeDeepLink(intent.getData().toString());
     }
 
     private static void forwardScreenExtra(android.content.Intent intent) {
@@ -207,7 +209,12 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
 
     // ── IME bridge (called from Rust on the render thread) ─────────────────
 
-    public void gpuiShowKeyboard(int keyboardType, long session) {
+    /**
+     * Show the keyboard for the focused field, with the EditorInfo gpui-mobile computes
+     * from GPUI's TextInputConfiguration. gpui-mobile falls back to the older
+     * gpuiShowKeyboard(int, long) only for hosts without this method.
+     */
+    public void gpuiShowKeyboardWithInputType(int inputType, int imeOptions, long session) {
         runOnUiThread(() -> {
             if (input == null) {
                 input = new InputProxy();
@@ -216,16 +223,8 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
                 addContentView(input, new ViewGroup.LayoutParams(1, 1));
             }
             input.reset(session);
-            int type = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE;
-            switch (keyboardType) {
-                case 1: type = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS; break;
-                case 2: type = InputType.TYPE_CLASS_PHONE; break;
-                case 3: type = InputType.TYPE_CLASS_NUMBER; break;
-                case 4: type = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI; break;
-                case 5: type = InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL; break;
-            }
-            input.setInputType(type);
-            input.setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
+            input.setInputType(inputType);
+            input.setImeOptions(imeOptions);
             input.requestFocus();
             InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
             imm.restartInput(input);
@@ -275,7 +274,25 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
                 nativeIme(session, 3, "", 1, 0);
                 return true;
             }
+            // A single-line TextView turns a hardware Enter into a focus move, not
+            // its editor action.
+            if (code == KeyEvent.KEYCODE_ENTER && editorAction() != EditorInfo.IME_ACTION_UNSPECIFIED) {
+                onEditorAction(editorAction());
+                return true;
+            }
             return super.onKeyDown(code, event);
+        }
+
+        @Override public boolean onKeyUp(int code, KeyEvent event) {
+            if (code == KeyEvent.KEYCODE_ENTER && editorAction() != EditorInfo.IME_ACTION_UNSPECIFIED) {
+                return true;
+            }
+            return super.onKeyUp(code, event);
+        }
+
+        /** The action of a single-line field reported as IME event 6, or UNSPECIFIED. */
+        int editorAction() {
+            return getImeOptions() & EditorInfo.IME_MASK_ACTION;
         }
 
         void reset(long nextSession) {
@@ -309,6 +326,11 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
                 nativeIme(session, 5, "", 0, 0);
             }
             return super.onKeyPreIme(code, event);
+        }
+
+        // Both the IME's action key and a hardware Enter on a single-line field end up here.
+        @Override public void onEditorAction(int action) {
+            nativeIme(session, 6, "", action, 0);
         }
 
         @Override public InputConnection onCreateInputConnection(EditorInfo info) {
@@ -384,19 +406,23 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
                         return true;
                     }
                     if (event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
-                        if (event.getAction() == KeyEvent.ACTION_DOWN) commitText("\n", 1);
+                        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                            int action = editorAction();
+                            if (action != EditorInfo.IME_ACTION_UNSPECIFIED) {
+                                performEditorAction(action);
+                            } else {
+                                commitText("\n", 1);
+                            }
+                        }
                         return true;
                     }
                     return super.sendKeyEvent(event);
                 }
                 @Override public boolean performEditorAction(int action) {
                     if (connectionSession != session) return false;
-                    if (action == EditorInfo.IME_ACTION_DONE) {
-                        finishComposingText();
-                        nativeIme(session, 4, "", 0, 0);
-                        return true;
-                    }
-                    return commitText("\n", 1);
+                    finishComposingText();
+                    onEditorAction(action);
+                    return true;
                 }
             };
         }
@@ -406,6 +432,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
 
     private static native void nativeOnCreate(Activity activity, int apiLevel);
     private static native void nativeOpenScreen(String screen);
+    private static native void nativeDeepLink(String url);
     private static native void nativeConfigurationChanged();
     private static native void nativeSurfaceChanged(long host, android.view.Surface surface, float scale);
     private static native void nativeSurfaceDestroyed(long host);
