@@ -64,7 +64,7 @@ Conclusions:
 - `build.sh` also packaged gpui-mobile's own library by mistake (137 MB in
   debug builds); fixed in #31.
 
-### A1. Subsecond spike (2–3 days, go/no-go)
+### A1. Subsecond spike (go/no-go): done, go
 
 [Subsecond](https://docs.rs/subsecond) (Dioxus) is a Rust hot-patching
 library:
@@ -80,27 +80,124 @@ library:
   - Thread-locals in the tip crate reset on each patch.
   - Static initialisers are not re-run.
 
-The spike, in order:
+#### Result (spike, 2026-10-09): go, with transport as the open item
 
-1. One `subsecond::call` in gpui-mobile's frame loop, around the window's
-   draw. All render code in the lab crate then becomes patchable. GPUI state
-   lives in `App` entities, not in tip-crate statics, so it should survive a
-   patch.
-2. Patch transport: Subsecond's devtools websocket through
-   `adb reverse tcp:<port>`.
-3. Tooling, the main risk. ThinLink (Subsecond's linker wrapper) only ships
-   inside the Dioxus CLI (`dx serve --hotpatch`), and `dx` builds its own
-   Android project, not our host Activity. Options:
-   - drive `dx` with a custom Android template;
-   - use the `dioxus-cli` crate as a library;
-   - write a minimal patch builder ourselves (diff object files, link against
-     the running binary's symbol table).
+Edits to a lab screen's text, colour and layout show on the phone **without
+a restart, keeping the current screen, inputs and view state**. With the
+phone reached through the ssh tunnel, a change took 5.4–6.2 s from saving
+the file to the patch being applied, so the < 2 s exit criterion was **not
+met as measured**. Building the patch takes ~1.6 s; the rest is pushing
+~10 MB through the tunnel.
 
-   The spike decides which.
+![Buttons screen opened after a patch, then three patches: text, colour, layout; Clicks stays 3](demos/subsecond-buttons-patches.png)
 
-Exit criteria: changing a colour, text or layout in a lab screen shows on the
-phone in under 2 s with the current screen and inputs kept. If that fails,
-document why and rely on A2.
+*Verified on the phone (OnePlus CPH2581, Android 16).* From left: the
+Buttons screen after three taps (Clicks 3), then a patch each for the section
+title, the Clicks colour and the size row's gap. The screen was opened after
+an earlier patch. The catalog's search text also survived patches.
+
+Timings per edit, measured on the phone (4 edits; first edit after a base build is slower):
+
+| Step | Time |
+|---|---|
+| `rustc` on the lab crate (incremental) | 1.2–1.6 s |
+| Stub object + link + jump table + strip | 0.3–0.4 s |
+| `adb push` of the 9.9 MB patch through the ssh tunnel | 3.6–4.9 s |
+| Saving the file → patch applied on the phone | 5.4–6.2 s |
+
+Over a local USB connection the push should take well under a second, which
+would bring a change to ~2 s. *Not measured: the phone was only reachable
+through the tunnel.*
+
+How it works (`tools/hotpatch`, `src/hot.rs`):
+
+- `hotpatch fat` builds the debug APK with itself as `RUSTC_WORKSPACE_WRAPPER`
+  and as the lab's linker. That records the lab crate's `rustc` command and
+  link arguments, and adds `-Csave-temps -Clink-dead-code -Clto=off`. The APK
+  ships the library with DWARF stripped (94 MB APK). The unstripped library
+  stays on the host.
+- `hotpatch watch` re-runs the recorded `rustc` on each save. It then links
+  all of the lab's objects with a stub object into a patch library. The stub
+  object sends every other symbol to its address in the running app (base
+  address + ASLR slide, read once from the app's log).
+  This is the ELF/aarch64 part of `dx`'s "thin linking" (~500 lines of Rust).
+  The tool pushes the patch and its jump table to `/data/local/tmp/gpui-hot`.
+- In the app, a GPUI task checks for a new table every 50 ms. Between frames
+  it calls `subsecond::apply_patch` (which loads the library through a memfd),
+  then `cx.refresh_windows()`.
+
+What the spike changed from the plan:
+
+- **`dx` can't be reused as is.** It generates its own Gradle project and
+  Activity, and assumes the app is a bin crate (its lib path passes
+  `--lib <name>`, which cargo rejects). The patch builder's core (rustc
+  replay, stub object, jump table) is small enough to own. The `dioxus-cli`
+  crate is not a library.
+- **The hook can't go in gpui-mobile's frame loop.** Subsecond only redirects
+  closures defined in the patched crate: the jump table maps the address of
+  `HotFunction::call_it` for the closure given to `subsecond::call`. GPUI
+  calls each view's `render` through a vtable built when the entity was
+  created. So the lab's 31 `Render` impls go through a macro,
+  `hot_render!(Type)`, that wraps an inherent `render_view` in
+  `subsecond::call`.
+- **No websocket.** `adb reverse` forwards to the machine running the adb
+  server, which is the user's laptop, not the build server. The patch is
+  pushed with one `adb push` (library, then table) and the app polls.
+- **Local ThinLTO dominated the compile.** At `opt-level = 1` rustc runs
+  crate-local ThinLTO: ~5 of ~6 s for a one-line change. `-Clto=off` brings
+  it to ~1.2 s.
+
+Limits hit:
+
+- **Views created by an earlier patch.** Code that runs from a patch also
+  reads the patch's own copy of the lab's statics. That includes the screen
+  table, so a screen opened after a patch is an entity whose vtable points
+  into that patch. Subsecond maps only the original library's addresses, so
+  later patches never reached that screen. Fixed: each patch's table also
+  maps every earlier patch's hot closures to the new ones, and `src/hot.rs`
+  rebases them to where it loaded that patch (`dl_iterate_phdr`).
+  Upstream Subsecond would need the same.
+- **Statics in the lab crate fork on the first patch.** The patch has its own
+  copies, which start from their initial values. The catalog's "Android API"
+  row read a static set by JNI at startup and showed "unknown" after any
+  patch, because JNI keeps writing the app's copy. Code from different
+  codegen units reaches the crate's own data PC-relatively, so it can't point
+  at the running app's copy. Linking only the changed objects doesn't help
+  either: the callers of changed code must come from the patch too, which
+  pulled in 252 of 257 objects. Workaround: keep process state that must
+  survive patches in a dependency crate, or in GPUI entities and globals.
+- **Thread-locals reset; struct layout changes and new dependencies need a
+  restart** (as documented by Subsecond, not exercised here).
+- **Not yet handled:** listeners registered once at entity creation
+  (`cx.subscribe`, `cx.observe`) keep running old code. Elements rebuilt every
+  frame (`on_click` and so on) pick up new code.
+- **Patches are not freed.** Each patch library (~10 MB) stays loaded.
+
+Side findings for A0/A2:
+
+- `build.sh` debug APKs carried dead space. Gradle repackages in place, so
+  the "265 MB" debug APK in A0 includes stale bytes. The stripped library
+  makes a 94 MB APK.
+- Each `-Csave-temps` compilation leaves ~65 MB of objects. The tool deletes
+  them after each patch.
+
+What `cargo gpui dev` needs to productise this:
+
+1. Fold `tools/hotpatch` into the CLI. Read the app's ASLR reference from a
+   file or a socket instead of logcat, which rotates within minutes.
+2. Replace the per-type `hot_render!` with something users don't have to
+   write. Options: a derive or attribute macro, or a hook in GPUI that wraps
+   `render` for views in the app crate. The closure must be monomorphised in
+   the app crate; that's untested.
+3. Make patches smaller and faster to ship. Options: compression, splitting
+   the app crate (A3), and a local adb server when the phone is on USB.
+   Measure end to end over USB before promising "< 2 s".
+4. Fall back to A2 (reload the `.so`) when a patch fails to link, or when a
+   struct layout changes.
+
+Recommendation: **go**. Hot patching keeps state and needs no Gradle, so it
+is worth productising. Ship A2 first: it covers every change Subsecond can't
+patch, and it is how the base gets onto the phone.
 
 ### A2. Fast full reload ("GPUI Go" dev client)
 
