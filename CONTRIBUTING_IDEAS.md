@@ -33,8 +33,9 @@ and GPUI Kit for a narrower set of projects.
   hot-reloads in about a second.
 - **API churn and stale docs.** GPUI is pinned to exact pre-release snapshots,
   and several doc examples didn't match the 0.7.0 source.
-- **Binary size.** Each architecture adds about 27 MB of native library before
-  any app code.
+- **Binary size.** Each architecture adds about 30 MB of native library
+  (16 MB with a size-tuned profile), and Android stores it uncompressed in
+  the APK by default.
 - **You rebuild the platform yourself.** IME handling, keyboard avoidance,
   fonts, dark mode and back navigation all had to be done by hand.
 
@@ -95,11 +96,17 @@ October 2026; "fork" means the fix is on one of the branches listed in
 4. **Faster iteration loop.** Hot reload, a dev-mode `cdylib` swap, or a
    desktop-hosted phone-size preview. Not started. Build it as a
    standalone package first and propose it upstream once it works.
-5. **Binary size.**
-   - Upstream: the release profile is tuned for size (opt-level `z`, fat
-     LTO, `panic=abort`).
-   - Not started: measuring what makes up the ~27 MB per architecture.
-     CI now builds the APK on every push, so the size can be tracked.
+5. **Binary size.** Measured in [docs/binary-size.md](docs/binary-size.md);
+   every PR's job summary shows the APK and `.so` sizes.
+   - Lab: native libraries stored compressed, APK 74 → 35 MB (#56).
+   - Lab, open: a size-tuned release profile (`z`, fat LTO, one codegen
+     unit, packed relocations), arm64 `.so` 29.5 → 15.6 MB (#60); R8 on
+     the Java side, −1.4 MB (#57). Both wait for a phone check.
+   - Upstream drafts, not opened: GPUI decoders beyond gif/jpeg/png/webp
+     opt-in (−1.4 MB); gpui-mobile's example APK with compressed libraries.
+   - Correction: gpui-mobile's example app uses `z`, fat LTO and
+     `panic=abort`, but its root profile is `3` with thin LTO, and only the
+     app's own profile applies. The lab had kept `3`/thin.
 6. **Docs and examples for mobile.**
    - Open: gpui-mobile issue
      [#20](https://github.com/longbridge/gpui-mobile/issues/20), the
