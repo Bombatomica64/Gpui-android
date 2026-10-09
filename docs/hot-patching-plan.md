@@ -38,12 +38,31 @@ So:
 
 ## Track A: development hot patching
 
-### A0. Baseline (in progress)
+### A0. Baseline (measured 2026-10-09)
 
-Measure, on this server, a clean and an incremental `cargo ndk` arm64
-**debug** build of the lab (memory capped at 7 GB), the Gradle step, and
-install. Every later step is compared against it. Today a CI release build
-takes 4–6 min; local release builds are OOM-killed.
+Measured on this server (12 cores, memory capped at 7 GB, `-j 6`), building
+the arm64 debug lab with `cargo ndk`:
+
+| Step | Time |
+|---|---|
+| Clean Rust build | 4 min 54 s. The largest compiler process peaked at about 2 GB, so debug builds fit locally (release builds don't). |
+| Incremental Rust build after a UI text change | ~6 s (3 s for a comment-only change) |
+| Gradle `assembleDebug` with a cold JVM | 20 s |
+| Debug APK | 265 MB. The library is 255 MB, about 190 MB of it debug sections (line tables + DWARF strings/ranges); `.text` is 21 MB. |
+| `llvm-strip --strip-debug` | 0.3 s, 255 MB → 49 MB |
+| `adb push` of 49 MB through the ssh tunnel | ~8 s (1.3 s of transfer) |
+| CI release build (two ABIs, warm cache) | 4–6 min |
+
+Conclusions:
+
+- Compiling Rust is not the bottleneck locally. Gradle, the huge debug APK
+  and reinstalling are.
+- A dev client that pushes a *stripped* `.so` (symbolising crashes locally
+  against the unstripped one, as `ndk-stack` does) gets a change onto the
+  phone in about 6 + 0.3 + 8 s plus a restart, ~15 s, with no Gradle and no
+  reinstall. Only hot patching beats that, and keeps state.
+- `build.sh` also packaged gpui-mobile's own library by mistake (137 MB in
+  debug builds); fixed in #31.
 
 ### A1. Subsecond spike (2–3 days, go/no-go)
 
@@ -96,8 +115,8 @@ changes, gpui/Kit/gpui-mobile changes, new dependencies.
 - Optional: save and restore a small "dev state" (current screen, scroll) so
   a reload lands where you were.
 
-Exit criteria: Rust change to running new code in about incremental build
-time + 5 s.
+Exit criteria: Rust change to running new code in about 15 s, per the A0
+numbers.
 
 ### A3. Build speed
 
