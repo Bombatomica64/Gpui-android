@@ -39,9 +39,11 @@ ndk-sys = "0.6"
 android-activity = { version = "0.6", features = ["native-activity"] }
 
 [profile.release]
-opt-level = 3
-lto = "thin"
-codegen-units = 4
+# Tuned for size, like gpui-mobile's example app: 29.5 -> 17.0 MB on arm64
+# (docs/binary-size.md).
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
 strip = true
 panic = "abort"
 
