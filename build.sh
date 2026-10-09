@@ -62,7 +62,7 @@ done
 echo "==> cargo ndk ${ABIS[*]} ($PROFILE)"
 (cd "$ROOT" && cargo ndk "${ndk_targets[@]}" --platform "$MIN_API" -o "$JNI_LIBS" build "${cargo_flags[@]}")
 # gpui-mobile also declares a cdylib; the lab links it statically.
-find "$JNI_LIBS" -name libgpui_mobile.so -delete
+find "$JNI_LIBS" \( -name "libgpui_mobile.so" -o -name "libgpui_mobile-*.so" \) -delete
 
 echo "==> gradle assemble${PROFILE^}"
 echo "sdk.dir=$ANDROID_HOME" > "$ROOT/android/local.properties"
