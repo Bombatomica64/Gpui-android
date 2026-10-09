@@ -1,6 +1,5 @@
 use gpui::{
-    AppContext as _, Context, Entity, IntoElement, ParentElement, Render, Styled, Subscription,
-    Window,
+    AppContext as _, Context, Entity, IntoElement, ParentElement, Styled, Subscription, Window,
 };
 use gpui_kit::component::{
     input::{
@@ -116,8 +115,10 @@ impl NumberOtpScreen {
     }
 }
 
-impl Render for NumberOtpScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(NumberOtpScreen);
+
+impl NumberOtpScreen {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         v_flex()
             .gap_3()
             .child(

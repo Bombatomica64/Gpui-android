@@ -1,6 +1,5 @@
 use gpui::{
-    AppContext as _, Context, Entity, IntoElement, ParentElement, Render, Styled, Subscription,
-    Window, px,
+    AppContext as _, Context, Entity, IntoElement, ParentElement, Styled, Subscription, Window, px,
 };
 use gpui_kit::component::{
     IconName,
@@ -128,8 +127,10 @@ impl TextareaScreen {
     }
 }
 
-impl Render for TextareaScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(TextareaScreen);
+
+impl TextareaScreen {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let plain_value = self.plain.read(cx).value();
         v_flex()
             .gap_3()

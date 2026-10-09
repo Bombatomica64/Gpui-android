@@ -1,6 +1,6 @@
 use gpui::{
     App, AppContext as _, Context, Entity, EventEmitter, FocusHandle, Focusable, IntoElement,
-    ParentElement, Render, Styled, Window, div, prelude::*, px,
+    ParentElement, Styled, Window, div, prelude::*, px,
 };
 use gpui_kit::component::{
     dock::{
@@ -49,8 +49,10 @@ impl Panel for DemoPanel {
     }
 }
 
-impl Render for DemoPanel {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(DemoPanel);
+
+impl DemoPanel {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         v_flex()
             .id(self.name)
             .size_full()
@@ -109,8 +111,10 @@ impl DockScreen {
     }
 }
 
-impl Render for DockScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(DockScreen);
+
+impl DockScreen {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         v_flex()
             .size_full()
             .p_2()
