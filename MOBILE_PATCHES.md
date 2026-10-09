@@ -15,45 +15,28 @@ branch is what the lab pins.
 `gpui-kit`, `gpui-fps` and `gpui-pre-mobile` are git dependencies.
 
 Fixes from earlier versions of this file that are now upstream: the
-gpui-pre 0.3.7 bump (gpui-mobile #21), Slider touch drags and the gpui-fps
-Android font (gpui-kit #3313, in v0.7.1).
+gpui-pre 0.3.7 and 0.3.8 bumps (gpui-mobile #21, #27), the system clipboard
+and the surface-teardown fix (gpui-mobile #24, reworked on top of #26's
+per-Activity `HostId`), Slider touch drags and the gpui-fps Android font
+(gpui-kit #3313, in v0.7.1).
 
 ## gpui-mobile
-
-### Bump gpui-pre to 0.3.8 — branch `bump-gpui-pre-0.3.8`
-
-GPUI Kit 0.7.1 pins `gpui-pre =0.3.8`; gpui-mobile pinned `=0.3.7`, so the
-two could not be combined. `RequestFrameOptions` gained `signal_at` and
-`signal_source`; the Android window fills them with their defaults, as the
-iOS frame callback already did. The example moves to Kit v0.7.1.
-
-### Use the system clipboard — branch `fix/android`, [#24](https://github.com/longbridge/gpui-mobile/pull/24)
-
-`AndroidClipboard` was an in-process string, so copy never reached
-Android's clipboard and text copied in other apps could not be pasted. With
-the `clipboard` feature it now goes through `ClipboardManager`, falling back
-to the local copy when the call fails.
-
-### Only tear down the surface a destroy names — branch `fix/android`, [#24](https://github.com/longbridge/gpui-mobile/pull/24)
-
-On the host-driven entry point, a recreated Activity's new surface can
-arrive before the old Activity's `surfaceDestroyed`; the render thread then
-tore down the new surface (black screen). `surface_destroyed_for` only tears
-down the surface that is attached.
 
 ### Expose GPUI's accessibility tree to TalkBack — branch `android-accessibility`, [#25](https://github.com/longbridge/gpui-mobile/pull/25)
 
 The Android window ignored GPUI's AccessKit tree, so TalkBack saw one opaque
-surface. The tree goes to `accesskit_android`'s `InjectingAdapter`.
+surface. The tree goes to `accesskit_android`'s `InjectingAdapter`. Since
+upstream gave each host Activity its own window (#26), the screen reader
+follows whichever window is active.
 [Bounds](docs/demos/android-a11y-bounds.png),
 [recording](docs/demos/android-a11y-talkback.gif).
 
-### Keep focus when the user hides the keyboard — branch `android-ime-dismiss`
+### Keep focus when the IME's Done action hides the keyboard — branch `android-ime-dismiss`
 
-Hiding the IME with back or its Done action injected an `escape` keystroke,
-which apps also use for navigation: hiding the keyboard in a dialog closed
-the dialog. The keyboard is now hidden and focus left alone, as with an
-EditText. `show_soft_keyboard` / `hide_soft_keyboard` are implemented, so
+Upstream (#26) stopped back from injecting an `escape` keystroke (IME event
+5), but Done (event 4) still did, and apps use escape for navigation: Done
+in a dialog closed the dialog. Done now hides the keyboard and keeps focus,
+like back. `show_soft_keyboard` / `hide_soft_keyboard` are implemented, so
 `Window::request_virtual_keyboard` works (Kit's Input uses it below).
 
 ### Give the host-driven path the Activity's AssetManager — branch `android-host-appearance-emoji`
@@ -62,9 +45,10 @@ Without `android-activity` there was no AssetManager, so the window never
 followed night mode (and `Platform::window_appearance` always said Dark),
 and the bundled CBDT emoji font could not be read (Android 13+'s COLRv1
 emoji font cannot be drawn by swash). `set_host_activity` now keeps the
-Activity's AssetManager; the host path syncs night mode on first open,
-re-attach and resume, and through the new `host::configuration_changed()`
-for Activities that handle `uiMode` themselves.
+Activity's AssetManager; the host path syncs each window's night mode when
+it opens, re-attaches and resumes, and through the new
+`host::configuration_changed()` for Activities that handle `uiMode`
+themselves.
 
 ## GPUI Kit
 

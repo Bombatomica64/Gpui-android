@@ -57,6 +57,7 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeOnCreate<'loca
     .resolve::<LogErrorAndDefault>();
     diagnostics::set_api_level(api_level);
     log::info!("LabActivity.onCreate (API {api_level}); starting GPUI render thread");
+    host::on_open_window(|_, cx| crate::open_window(cx));
     host::start_with_assets(gpui_kit::assets::AllAssets, crate::launch);
 }
 
@@ -64,6 +65,7 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeOnCreate<'loca
 pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeSurfaceChanged<'local>(
     env: EnvUnowned<'local>,
     _this: JObject<'local>,
+    host: i64,
     surface: JObject<'local>,
     scale: f32,
 ) {
@@ -77,7 +79,7 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeSurfaceChanged
                 window.width(),
                 window.height()
             );
-            host::surface_created(window, scale);
+            host::surface_created(host as host::HostId, window, scale);
         }
         None => log::error!("ANativeWindow_fromSurface returned null"),
     }
@@ -109,38 +111,44 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeConfigurationC
 
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeSurfaceDestroyed<'local>(
-    env: EnvUnowned<'local>,
+    _env: EnvUnowned<'local>,
     _this: JObject<'local>,
-    surface: JObject<'local>,
+    host: i64,
 ) {
     log::info!("surface destroyed");
-    // SAFETY: as in nativeSurfaceChanged; the Surface is still valid during this call.
-    let window = unsafe { NativeWindow::from_surface(env.as_raw() as _, surface.as_raw() as _) };
-    match window {
-        // A recreated Activity's new surface may already be attached; name the old one.
-        Some(window) => host::surface_destroyed_for(&window),
-        None => host::surface_destroyed(),
-    }
+    host::surface_destroyed(host as host::HostId);
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeHostDestroyed<'local>(
+    _env: EnvUnowned<'local>,
+    _this: JObject<'local>,
+    host: i64,
+) {
+    log::info!("activity finishing; closing its window");
+    host::host_destroyed(host as host::HostId);
 }
 
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeResumed<'local>(
     _env: EnvUnowned<'local>,
     _this: JObject<'local>,
+    host: i64,
 ) {
     log::info!("activity resumed");
     diagnostics::set_foreground(true);
-    host::resumed();
+    host::resumed(host as host::HostId);
 }
 
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativePaused<'local>(
     _env: EnvUnowned<'local>,
     _this: JObject<'local>,
+    host: i64,
 ) {
     log::info!("activity paused");
     diagnostics::set_foreground(false);
-    host::paused();
+    host::paused(host as host::HostId);
 }
 
 #[unsafe(no_mangle)]

@@ -40,6 +40,9 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
         System.loadLibrary("gpui_mobile_lab");
     }
 
+    /** Names this Activity's GPUI window. Kept across recreation; a fresh launch gets a new one. */
+    private static long nextHostId = 1;
+    private long hostId;
     private SurfaceView surface;
     private InputProxy input;
     private boolean keyboardVisible;
@@ -47,6 +50,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        hostId = state != null ? state.getLong("gpuiHostId", nextHostId++) : nextHostId++;
         surface = new SurfaceView(this);
         surface.getHolder().addCallback(this);
         surface.setFocusable(true);
@@ -94,22 +98,34 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
         if (screen != null) nativeOpenScreen(screen);
     }
 
-    @Override protected void onResume() { super.onResume(); nativeResumed(); }
-    @Override protected void onPause() { nativePaused(); super.onPause(); }
+    @Override protected void onResume() { super.onResume(); nativeResumed(hostId); }
+    @Override protected void onPause() { nativePaused(hostId); super.onPause(); }
+
+    @Override
+    protected void onSaveInstanceState(Bundle state) {
+        super.onSaveInstanceState(state);
+        state.putLong("gpuiHostId", hostId);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (isFinishing()) nativeHostDestroyed(hostId);
+        super.onDestroy();
+    }
 
     // ── SurfaceHolder.Callback ─────────────────────────────────────────────
 
     @Override public void surfaceCreated(SurfaceHolder holder) {
-        nativeSurfaceChanged(holder.getSurface(), getResources().getDisplayMetrics().density);
+        nativeSurfaceChanged(hostId, holder.getSurface(), getResources().getDisplayMetrics().density);
     }
 
     @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        nativeSurfaceChanged(holder.getSurface(), getResources().getDisplayMetrics().density);
+        nativeSurfaceChanged(hostId, holder.getSurface(), getResources().getDisplayMetrics().density);
     }
 
     @Override public void surfaceDestroyed(SurfaceHolder holder) {
         // Blocks until the render thread has let go of the surface.
-        nativeSurfaceDestroyed(holder.getSurface());
+        nativeSurfaceDestroyed(hostId);
     }
 
     // ── Input ──────────────────────────────────────────────────────────────
@@ -270,7 +286,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
         @Override public boolean onKeyPreIme(int code, KeyEvent event) {
             // Back while the IME is up only hides the keyboard; the input keeps focus.
             if (code == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
-                nativeIme(session, 4, "", 0, 0);
+                nativeIme(session, 5, "", 0, 0);
             }
             return super.onKeyPreIme(code, event);
         }
@@ -371,10 +387,11 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     private static native void nativeOnCreate(Activity activity, int apiLevel);
     private static native void nativeOpenScreen(String screen);
     private static native void nativeConfigurationChanged();
-    private static native void nativeSurfaceChanged(android.view.Surface surface, float scale);
-    private static native void nativeSurfaceDestroyed(android.view.Surface surface);
-    private static native void nativeResumed();
-    private static native void nativePaused();
+    private static native void nativeSurfaceChanged(long host, android.view.Surface surface, float scale);
+    private static native void nativeSurfaceDestroyed(long host);
+    private static native void nativeHostDestroyed(long host);
+    private static native void nativeResumed(long host);
+    private static native void nativePaused(long host);
     private static native void nativeKeyboardInsets(boolean visible, int heightPx);
     private static native boolean nativeMotion(int action, int actionIndex, int[] ids, float[] xs, float[] ys);
     private static native void nativeKey(int keyCode, int action, int metaState);

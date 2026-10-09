@@ -14,7 +14,7 @@ use gpui::{App, AppContext as _, WindowOptions};
 
 pub const GPUI_KIT_VERSION: &str = "0.7.1";
 pub const GPUI_VERSION: &str = "gpui-pre 0.3.8";
-pub const GPUI_MOBILE_REVISION: &str = "Bombatomica64/gpui-mobile 431d8cd";
+pub const GPUI_MOBILE_REVISION: &str = "Bombatomica64/gpui-mobile 2e32b58";
 
 /// Runs on the GPUI render thread once the first surface exists.
 pub fn launch(cx: &mut App) {
@@ -22,7 +22,11 @@ pub fn launch(cx: &mut App) {
     gpui_kit::init(cx);
     app::init(cx);
     screens::init(cx);
+    cx.activate(true);
+}
 
+/// Opens the catalog in a new host Activity's window, on the GPUI render thread.
+pub fn open_window(cx: &mut App) {
     let result = gpui_kit::open_window(WindowOptions::default(), cx, |window, cx| {
         screens::themes::apply_saved(window, cx);
         cx.new(|cx| app::LabApp::new(window, cx))
@@ -31,7 +35,6 @@ pub fn launch(cx: &mut App) {
         Ok(_) => log::info!("launch: window open, catalog is live"),
         Err(err) => log::error!("launch: open_window failed: {err:#}"),
     }
-    cx.activate(true);
 }
 
 /// `android-activity` (pulled in by gpui-mobile) links against this symbol even
