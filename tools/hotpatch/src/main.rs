@@ -119,6 +119,13 @@ fn fat(build_args: &[String]) -> anyhow::Result<ExitCode> {
         .arg(&packaged)
         .status()?;
     ensure!(status.success(), "llvm-strip failed");
+    // gpui-mobile also builds a cdylib; the lab links it statically (as #31).
+    for entry in std::fs::read_dir(packaged.parent().unwrap())? {
+        let path = entry?.path();
+        if path.file_name().unwrap().to_string_lossy().starts_with("libgpui_mobile.") || path.file_name().unwrap().to_string_lossy().starts_with("libgpui_mobile-") {
+            std::fs::remove_file(path)?;
+        }
+    }
     // Gradle repackages in place and would keep the old library's bytes as dead space.
     let built = root().join("android/app/build/outputs/apk/debug/app-debug.apk");
     _ = std::fs::remove_file(&built);
