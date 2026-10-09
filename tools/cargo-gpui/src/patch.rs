@@ -6,7 +6,7 @@
 
 use std::{
     collections::HashMap,
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::Command,
     time::{Duration, Instant},
 };
@@ -29,6 +29,8 @@ const JOBSERVER_VARS: [&str; 3] = ["CARGO_MAKEFLAGS", "MAKEFLAGS", "MFLAGS"];
 /// loaded that patch.
 #[derive(Serialize)]
 struct Patch {
+    /// Identifies this patcher: generations restart with each one.
+    session: u64,
     generation: u32,
     table: subsecond_types::JumpTable,
     earlier: Vec<EarlierMap>,
@@ -74,6 +76,7 @@ pub struct Patcher {
     /// Hash of each app object as last built, to report what changed.
     objects: HashMap<String, u64>,
     earlier: Vec<Earlier>,
+    session: u64,
     generation: u32,
     /// Build patches without pushing them (`CARGO_GPUI_OFFLINE`).
     offline: bool,
@@ -112,6 +115,10 @@ impl Patcher {
             base,
             aslr_reference,
             earlier: vec![],
+            session: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis() as u64,
             generation: 0,
             offline,
         })
@@ -187,10 +194,11 @@ impl Patcher {
 
         // 3. Map old function addresses to new ones; ship a library without DWARF.
         let device_dir = project.device_patch_dir()?;
-        let device_lib = format!("{device_dir}/patch-{generation}.so");
+        // Unique across sessions: the app may still hold an earlier session's patches.
+        let device_lib = format!("{device_dir}/patch-{}-{generation}.so", self.session);
         let mut table = stub::jump_table(&patch, &self.base)?;
         table.lib = PathBuf::from(&device_lib);
-        let stripped = state.join("push").join(format!("patch-{generation}.so"));
+        let stripped = state.join("push").join(Path::new(&device_lib).file_name().unwrap());
         _ = std::fs::remove_dir_all(stripped.parent().unwrap());
         std::fs::create_dir_all(stripped.parent().unwrap())?;
         let status = Command::new(ndk_bin("llvm-strip")?)
@@ -216,7 +224,7 @@ impl Patcher {
         self.earlier.push(Earlier { lib: device_lib.clone(), hot });
         let table_path = state.join("push/patch.json");
         let hot_closures = table.map.len();
-        write_json(&table_path, &Patch { generation, table, earlier })?;
+        write_json(&table_path, &Patch { session: self.session, generation, table, earlier })?;
         _ = std::fs::remove_file(&patch);
         lap("table+strip", &mut t);
 

@@ -46,6 +46,13 @@ pub fn ndk_bin(tool: &str) -> anyhow::Result<PathBuf> {
     Ok(ndk.join("toolchains/llvm/prebuilt/linux-x86_64/bin").join(tool))
 }
 
+/// When [`build`] last touched src/lib.rs: not a change the user made.
+static LAST_TOUCH: std::sync::Mutex<Option<SystemTime>> = std::sync::Mutex::new(None);
+
+pub fn last_touch() -> Option<SystemTime> {
+    *LAST_TOUCH.lock().unwrap()
+}
+
 /// Builds the app library (arm64 debug), records how, keeps it as the base
 /// for patches and leaves a copy without DWARF where Gradle packages it.
 /// Returns that copy.
@@ -54,10 +61,12 @@ pub fn build(build_args: &[String]) -> anyhow::Result<PathBuf> {
     let state = project.state_dir();
     std::fs::create_dir_all(&state)?;
     // Make cargo re-run rustc (and so the linker) for the app crate.
+    let now = SystemTime::now();
     std::fs::File::options()
         .append(true)
         .open(project.root.join("src/lib.rs"))?
-        .set_modified(SystemTime::now())?;
+        .set_modified(now)?;
+    *LAST_TOUCH.lock().unwrap() = Some(now);
     let t = Instant::now();
     let status = Command::new("cargo")
         .args(["ndk", "-t", "arm64-v8a", "--platform", "26", "build"])

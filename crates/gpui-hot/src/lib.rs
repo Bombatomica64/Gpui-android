@@ -101,6 +101,7 @@ pub fn init(cx: &mut App) {
         let modified = |path: &Path| std::fs::metadata(path).and_then(|m| m.modified()).ok();
         let mut applied = modified(&table_path);
         let mut loaded = Loaded::default();
+        let mut last: Option<(u64, u64)> = None;
         loop {
             cx.background_executor()
                 .timer(Duration::from_millis(50))
@@ -118,6 +119,13 @@ pub fn init(cx: &mut App) {
             };
             applied = stamp;
             let generation = patch["generation"].as_u64().unwrap_or(0);
+            // adb sets the mtime after writing the file: the same table can
+            // show up twice. Generations restart with each patcher session.
+            let id = (patch["session"].as_u64().unwrap_or(0), generation);
+            if last.is_some_and(|(session, g)| session == id.0 && g >= generation) {
+                continue;
+            }
+            last = Some(id);
             match loaded.apply(patch) {
                 Ok(entries) => {
                     log::info!("hot: patch {generation} applied ({entries} hot closures)");
@@ -139,7 +147,7 @@ pub fn init(cx: &mut App) {
 struct Loaded(Vec<(String, u64)>);
 
 impl Loaded {
-    /// `patch` is `{ generation, table, earlier: [{ lib, map: [[old, new]] }] }`
+    /// `patch` is `{ session, generation, table, earlier: [{ lib, map: [[old, new]] }] }`
     /// from `cargo gpui`. Views created while an earlier patch was active
     /// call that patch's hot closures; Subsecond only redirects the app's
     /// own, so those entries are rebased here to where the earlier patch

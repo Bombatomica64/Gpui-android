@@ -11,7 +11,7 @@ use std::{
 };
 
 use crate::{
-    device,
+    device, library,
     patch::{PatchError, Patcher},
     project::Project,
 };
@@ -54,6 +54,12 @@ impl Watcher {
         Ok(())
     }
 
+    /// The build touched src/lib.rs to make cargo recompile: not a save.
+    /// Saves during the build still count.
+    fn ignore_build_touch(&mut self) {
+        self.seen = self.seen.max(library::last_touch().unwrap_or(SystemTime::UNIX_EPOCH));
+    }
+
     fn next(&mut self) -> anyhow::Result<Event> {
         loop {
             if let Ok(line) = self.input.try_recv() {
@@ -78,6 +84,7 @@ pub fn dev(build_args: &[String]) -> anyhow::Result<ExitCode> {
         let started = device::reload(build_args)
             .and_then(|()| device::wait_for_aslr(START_TIMEOUT))
             .and_then(|aslr| Patcher::new(aslr, false));
+        watcher.ignore_build_touch();
         let mut patcher = match started {
             Ok(patcher) => patcher,
             Err(err) => {
