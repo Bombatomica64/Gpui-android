@@ -5,6 +5,8 @@
 //!                                  rustc compiled and linked the lab crate
 //!   hotpatch watch                 on each change under src/: recompile the lab
 //!                                  crate, link a patch, push it to the phone
+//!   hotpatch reload [cargo args]   rebuild, push the library and restart the
+//!                                  app on the same screen (A2, no reinstall)
 //!
 //! During `fat` this binary is also cargo's `RUSTC_WORKSPACE_WRAPPER` and the
 //! lab's linker. The patch steps follow `dx serve --hotpatch` (Dioxus CLI,
@@ -27,6 +29,7 @@ use serde::{Deserialize, Serialize};
 const TIP: &str = "gpui_mobile_lab";
 const PACKAGE: &str = "dev.gpui.mobile.lab";
 const DEVICE_DIR: &str = "/data/local/tmp/gpui-hot";
+const DEVICE_DEV_DIR: &str = "/data/local/tmp/gpui-dev";
 const LOG_TAG: &str = "GPUI_MOBILE_LAB";
 /// Cargo's jobserver file descriptors don't exist outside cargo.
 const JOBSERVER_VARS: [&str; 3] = ["CARGO_MAKEFLAGS", "MAKEFLAGS", "MFLAGS"];
@@ -71,8 +74,9 @@ fn main() -> ExitCode {
             Some("fat") => fat(&args[1..]),
             Some("watch") => watch(),
             Some("save-base") => save_base(),
+            Some("reload") => reload(&args[1..]),
             _ => {
-                eprintln!("usage: hotpatch fat [cargo args] | hotpatch watch");
+                eprintln!("usage: hotpatch fat [cargo args] | hotpatch watch | hotpatch reload [cargo args]");
                 return ExitCode::from(2);
             }
         }
@@ -113,6 +117,28 @@ fn ndk_bin(tool: &str) -> anyhow::Result<PathBuf> {
 
 /// `fat`: the normal debug build, with this binary wrapping rustc for the lab crate.
 fn fat(build_args: &[String]) -> anyhow::Result<ExitCode> {
+    build_library(build_args)?;
+    // Gradle repackages in place and would keep the old library's bytes as dead space.
+    let built = root().join("android/app/build/outputs/apk/debug/app-debug.apk");
+    _ = std::fs::remove_file(&built);
+    let status = Command::new(root().join("android/gradlew"))
+        .args(["--no-daemon", "-q", "assembleDebug"])
+        .current_dir(root().join("android"))
+        .status()?;
+    ensure!(status.success(), "gradle failed");
+    let version = std::fs::read_to_string(root().join("Cargo.toml"))?
+        .lines()
+        .find_map(|l| l.strip_prefix("version = \"")?.strip_suffix('"').map(String::from))
+        .context("no version in Cargo.toml")?;
+    let apk = root().join(format!("dist/gpui-mobile-lab-{version}-debug.apk"));
+    std::fs::copy(&built, &apk)?;
+    println!("hotpatch: {} ({} MB)", apk.display(), std::fs::metadata(&apk)?.len() / 1_000_000);
+    Ok(ExitCode::SUCCESS)
+}
+
+/// Builds the lab library recording its rustc/link commands (the base for
+/// `watch`), and leaves a copy without DWARF in jniLibs. Returns that copy.
+fn build_library(build_args: &[String]) -> anyhow::Result<PathBuf> {
     std::fs::create_dir_all(state_dir())?;
     // Make cargo re-run rustc (and so the linker) for the lab crate.
     let lib = root().join("src/lib.rs");
@@ -137,7 +163,7 @@ fn fat(build_args: &[String]) -> anyhow::Result<ExitCode> {
     save_base()?;
 
     // The phone needs no DWARF (patches link against target/hotpatch/base.so,
-    // Subsecond finds `main` via the dynamic symbol table): 305 → ~60 MB APK.
+    // Subsecond finds `main` via the dynamic symbol table): a 94 MB APK, not 305.
     // Only non-loaded sections go, so addresses are unchanged.
     let packaged = root().join("android/app/src/main/jniLibs/arm64-v8a/libgpui_mobile_lab.so");
     let status = Command::new(ndk_bin("llvm-strip")?)
@@ -148,26 +174,81 @@ fn fat(build_args: &[String]) -> anyhow::Result<ExitCode> {
     // gpui-mobile also builds a cdylib; the lab links it statically (as #31).
     for entry in std::fs::read_dir(packaged.parent().unwrap())? {
         let path = entry?.path();
-        if path.file_name().unwrap().to_string_lossy().starts_with("libgpui_mobile.") || path.file_name().unwrap().to_string_lossy().starts_with("libgpui_mobile-") {
-            std::fs::remove_file(path)?;
+        let name = path.file_name().unwrap().to_string_lossy();
+        if name.starts_with("libgpui_mobile.") || name.starts_with("libgpui_mobile-") {
+            std::fs::remove_file(&path)?;
         }
     }
-    // Gradle repackages in place and would keep the old library's bytes as dead space.
-    let built = root().join("android/app/build/outputs/apk/debug/app-debug.apk");
-    _ = std::fs::remove_file(&built);
-    let status = Command::new(root().join("android/gradlew"))
-        .args(["--no-daemon", "-q", "assembleDebug"])
-        .current_dir(root().join("android"))
-        .status()?;
-    ensure!(status.success(), "gradle failed");
-    let version = std::fs::read_to_string(root().join("Cargo.toml"))?
-        .lines()
-        .find_map(|l| l.strip_prefix("version = \"")?.strip_suffix('"').map(String::from))
-        .context("no version in Cargo.toml")?;
-    let apk = root().join(format!("dist/gpui-mobile-lab-{version}-debug.apk"));
-    std::fs::copy(&built, &apk)?;
-    println!("hotpatch: {} ({} MB)", apk.display(), std::fs::metadata(&apk)?.len() / 1_000_000);
+    Ok(packaged)
+}
+
+/// A2: run a new build without reinstalling. Pushes the stripped library to
+/// the app's files/dev/ (LabActivity loads it in debuggable builds) and
+/// restarts the app on the screen that was open. Run inside `phone session`.
+fn reload(build_args: &[String]) -> anyhow::Result<ExitCode> {
+    let mut times = vec![];
+    let mut t = Instant::now();
+    let mut lap = |name: &'static str, t: &mut Instant| {
+        times.push((name, t.elapsed()));
+        *t = Instant::now();
+    };
+    let lib = build_library(build_args)?;
+    lap("build+strip", &mut t);
+
+    let log = adb(&["shell", &format!("logcat -d -s {LOG_TAG}:I | grep -E 'open screen: |close screen: ' | tail -1")])?;
+    let screen = log.split("open screen: ").nth(1).map(|s| s.trim().to_string());
+    let staged = format!("{DEVICE_DEV_DIR}/libgpui_mobile_lab.so");
+    adb(&["shell", &format!("rm -rf {DEVICE_DEV_DIR} && mkdir -p {DEVICE_DEV_DIR} && chmod 755 {DEVICE_DEV_DIR}")])?;
+    push_chunked(&lib, &staged)?;
+    // Loaded code must be read-only for apps targeting Android 14.
+    adb(&[
+        "shell",
+        &format!(
+            "run-as {PACKAGE} sh -c 'mkdir -p files/dev && rm -f files/dev/libgpui_mobile_lab.so \
+             && cp {staged} files/dev/ && chmod 444 files/dev/libgpui_mobile_lab.so' && rm -rf {DEVICE_DEV_DIR}"
+        ),
+    ])?;
+    lap("push", &mut t);
+
+    adb(&["shell", &format!("am force-stop {PACKAGE}")])?;
+    let mut start = format!("am start -W -n {PACKAGE}/.LabActivity");
+    if let Some(screen) = &screen {
+        // `am start` re-parses its arguments through the shell.
+        start.push_str(&format!(" --es screen \"'{screen}'\""));
+    }
+    let out = adb(&["shell", &start])?;
+    ensure!(out.contains("Status: ok"), "am start failed: {out}");
+    lap("restart", &mut t);
+
+    let total: Duration = times.iter().map(|(_, d)| *d).sum();
+    let detail: Vec<String> = times.iter().map(|(n, d)| format!("{n} {} ms", d.as_millis())).collect();
+    println!(
+        "hotpatch: reloaded {:.0} MB{} in {} ms ({})",
+        std::fs::metadata(&lib)?.len() as f64 / 1e6,
+        screen.map(|s| format!(" into '{s}'")).unwrap_or_default(),
+        total.as_millis(),
+        detail.join(", ")
+    );
     Ok(ExitCode::SUCCESS)
+}
+
+/// `adb push` in 16 MB parts: one call for a large library can outlast
+/// `phone adb`'s 120 s limit through the tunnel.
+fn push_chunked(local: &Path, remote: &str) -> anyhow::Result<()> {
+    let bytes = std::fs::read(local)?;
+    let dir = state_dir().join("chunks");
+    _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir)?;
+    let mut parts = vec![];
+    for (i, chunk) in bytes.chunks(16 << 20).enumerate() {
+        let part = dir.join(format!("part{i:03}"));
+        std::fs::write(&part, chunk)?;
+        adb(&["push", part.to_str().unwrap(), &format!("{remote}.part{i:03}")])?;
+        parts.push(format!("{remote}.part{i:03}"));
+    }
+    adb(&["shell", &format!("cat {} > {remote} && rm {}", parts.join(" "), parts.join(" "))])?;
+    _ = std::fs::remove_dir_all(&dir);
+    Ok(())
 }
 
 /// Keeps the fat library and its objects' hashes for `watch`.
@@ -181,6 +262,7 @@ fn save_base() -> anyhow::Result<ExitCode> {
         .map(|o| Ok((cgu_name(&o), hash_file(&o)?)))
         .collect::<anyhow::Result<_>>()?;
     write_json(&state_dir().join("base-objects.json"), &hashes)?;
+    remove_stale_objects(&tip_objects(&fat_link))?;
     println!("hotpatch: base library {}", base.display());
     Ok(ExitCode::SUCCESS)
 }
@@ -371,14 +453,7 @@ fn patch_once(
     if !out.status.success() {
         bail!("link failed:\n{}", String::from_utf8_lossy(&out.stderr));
     }
-    // -Csave-temps keeps each compilation's objects under new names (~65 MB).
-    for path in std::fs::read_dir(objects[0].parent().unwrap())? {
-        let path = path?.path();
-        let name = path.file_name().unwrap().to_string_lossy();
-        if name.starts_with(&format!("{TIP}.")) && name.ends_with(".rcgu.o") && !objects.contains(&path) {
-            _ = std::fs::remove_file(&path);
-        }
-    }
+    remove_stale_objects(&objects)?;
     lap("link", &mut t);
 
     // 3. Map old function addresses to new ones; ship a library without DWARF.
@@ -475,6 +550,22 @@ fn thin_link_args(fat: &[String]) -> Vec<String> {
         }
     }
     out
+}
+
+/// -Csave-temps keeps each compilation's objects under new names (~65 MB):
+/// delete all but `current`.
+fn remove_stale_objects(current: &[PathBuf]) -> anyhow::Result<()> {
+    let Some(dir) = current.first().and_then(|o| o.parent()) else {
+        return Ok(());
+    };
+    for path in std::fs::read_dir(dir)? {
+        let path = path?.path();
+        let name = path.file_name().unwrap().to_string_lossy();
+        if name.starts_with(&format!("{TIP}.")) && name.ends_with(".rcgu.o") && !current.contains(&path) {
+            _ = std::fs::remove_file(&path);
+        }
+    }
+    Ok(())
 }
 
 fn tip_objects(link_args: &[String]) -> Vec<PathBuf> {
