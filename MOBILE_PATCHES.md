@@ -52,8 +52,10 @@ themselves.
 
 For upstream, this is split into two branches off upstream `main`, which
 together equal the commit above: `android-host-night-mode` (night mode,
-`window_appearance`, `configuration_changed()`) and
-`android-host-emoji-font` (the AssetManager and the emoji font).
+`window_appearance`, `configuration_changed()`;
+[#30](https://github.com/longbridge/gpui-mobile/pull/30)) and
+`android-host-emoji-font` (the AssetManager and the emoji font;
+[#29](https://github.com/longbridge/gpui-mobile/pull/29)).
 
 ## GPUI Kit
 

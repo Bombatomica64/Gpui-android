@@ -109,8 +109,8 @@ October 2026; "fork" means the fix is on one of the branches listed in
    - Upstream: system clipboard (gpui-mobile #24), back navigation (#26).
    - Fork: dark mode follows the system on resume and configuration change
      (gpui-mobile `android-host-night-mode`), and emoji render on the
-     host-driven path (`android-host-emoji-font`). One upstream PR each,
-     pending review.
+     host-driven path (`android-host-emoji-font`). Upstream as gpui-mobile
+     #30 and #29, in review.
    - Share sheet: already upstream as `packages::share::share_text`, and it
      works on the host-driven path; the Diagnostics screen has a demo
      button.
