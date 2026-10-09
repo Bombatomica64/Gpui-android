@@ -114,6 +114,9 @@ October 2026; "fork" means the fix is on one of the branches listed in
    - Share sheet: already upstream as `packages::share::share_text`, and it
      works on the host-driven path; the Diagnostics screen has a demo
      button.
+   - Not started: flags and `❤️` (VS16) still don't render with the
+     bundled emoji font; flags come from the system's COLRv1
+     `NotoColorEmojiFlags.ttf`.
    - Not started: safe-area insets. The plan is in
      [docs/safe-area-insets.md](docs/safe-area-insets.md).
    - Not started: system fonts.
