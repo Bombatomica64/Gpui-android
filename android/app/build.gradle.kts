@@ -26,7 +26,10 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 drops the unused parts of AndroidX and the Kotlin stdlib; the classes
+            // Rust reaches through JNI are kept by proguard-rules.pro.
+            isMinifyEnabled = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("debug")
         }
     }
