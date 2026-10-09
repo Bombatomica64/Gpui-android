@@ -90,8 +90,18 @@ impl Patcher {
             t.elapsed().as_millis()
         );
         if !offline {
-            let dir = Project::get()?.device_patch_dir()?;
-            adb(&["shell", &format!("rm -rf {dir} && mkdir -p {dir} && chmod 755 {dir}/.. {dir}")])?;
+            let project = Project::get()?;
+            let dir = project.device_patch_dir()?;
+            // Generations restart at 1: an acknowledgement from an earlier
+            // process or session must not count.
+            let package = project.package()?;
+            adb(&[
+                "shell",
+                &format!(
+                    "rm -rf {dir} && mkdir -p {dir} && chmod 755 {dir}/.. {dir} \
+                     && run-as {package} rm -f files/dev/applied"
+                ),
+            ])?;
         }
         Ok(Self {
             rustc: read_json(&state.join("rustc.json"))?,
