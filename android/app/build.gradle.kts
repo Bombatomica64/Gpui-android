@@ -38,6 +38,9 @@ android {
 
     packaging {
         jniLibs {
+            // Store the native library compressed: a smaller APK to download and push,
+            // at the cost of extracting it on install (minSdk 23+ defaults to uncompressed).
+            useLegacyPackaging = true
             // cargo already strips release builds; keep symbols in debug builds.
             keepDebugSymbols += listOf("**/libgpui_mobile_lab.so")
         }
