@@ -43,14 +43,13 @@
         android:supportsRtl="true"
         android:theme="@style/LabTheme">
 
-        <!-- Portrait only; configChanges keeps density/keyboard/uiMode changes from
+        <!-- configChanges keeps rotation/density/keyboard/uiMode changes from
              recreating the Activity (recreation is still handled: see LabActivity). -->
         <activity
             android:name=".LabActivity"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|navigation|uiMode|density"
             android:exported="true"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize|stateHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

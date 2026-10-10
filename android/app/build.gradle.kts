@@ -9,7 +9,7 @@ android {
     defaultConfig {
         applicationId = "dev.gpui.mobile.lab"
         minSdk = 26
-        // 34 keeps adjustResize semantics (35 forces edge-to-edge).
+        // 34: LabActivity goes edge-to-edge itself; 35 would force it.
         targetSdk = 34
         versionCode = 3
         versionName = "0.1.2"
