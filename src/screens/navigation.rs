@@ -1,5 +1,5 @@
 use gpui::{
-    AppContext as _, Context, Entity, IntoElement, ParentElement, Render, SharedString, Styled,
+    AppContext as _, Context, Entity, IntoElement, ParentElement, SharedString, Styled,
     Subscription, Window, div, px,
 };
 use gpui_kit::component::{
@@ -90,8 +90,10 @@ impl NavigationScreen {
     }
 }
 
-impl Render for NavigationScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(NavigationScreen);
+
+impl NavigationScreen {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let crumbs = PATH[..self.depth].iter().enumerate().map(|(ix, name)| {
             BreadcrumbItem::new(*name).on_click(cx.listener(move |this, _, _, cx| {
                 this.depth = ix + 1;

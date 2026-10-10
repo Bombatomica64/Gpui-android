@@ -1,5 +1,5 @@
 use gpui::{
-    Context, InteractiveElement, IntoElement, ParentElement, Render, ScrollHandle,
+    Context, InteractiveElement, IntoElement, ParentElement, ScrollHandle,
     StatefulInteractiveElement, Styled, Window, div, px,
 };
 use gpui_kit::component::{
@@ -39,8 +39,10 @@ fn panel(label: &'static str, cx: &Context<LayoutScreen>) -> gpui::Div {
         .child(label)
 }
 
-impl Render for LayoutScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(LayoutScreen);
+
+impl LayoutScreen {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let offset = self.horizontal.offset();
         let view = cx.entity();
         v_flex()

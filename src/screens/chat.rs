@@ -2,8 +2,8 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use gpui::{
-    AppContext as _, Axis, Context, Entity, IntoElement, ParentElement, Render, Styled,
-    Subscription, Window, div, prelude::*,
+    AppContext as _, Axis, Context, Entity, IntoElement, ParentElement, Styled, Subscription,
+    Window, div, prelude::*,
 };
 use gpui_kit::base::{TextView, Theme as BaseTheme, text::TextViewStyle};
 use gpui_kit::component::{
@@ -160,8 +160,10 @@ fn filled_bubble_demo(cx: &gpui::App) -> impl IntoElement {
     )
 }
 
-impl Render for ChatScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(ChatScreen);
+
+impl ChatScreen {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let messages = self.messages.clone();
         let scroller =
             MessageScroller::new("chat-scroller", self.scroller.clone(), move |ix, _, cx| {
