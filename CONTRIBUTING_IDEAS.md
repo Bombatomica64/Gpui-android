@@ -128,11 +128,18 @@ October 2026; "fork" means the fix is on one of the branches listed in
    - Not started: safe-area insets. The plan is in
      [docs/safe-area-insets.md](docs/safe-area-insets.md).
    - Not started: system fonts.
-8. **Upstream the fork fixes.** Seven branches in
-   [MOBILE_PATCHES.md](MOBILE_PATCHES.md) are still fork-only: two in
-   gpui-mobile, two in gpui-kit, three in gpui-pre. Propose them one at a
-   time. The gpui-pre ones (and `text-input-purpose`) are ready for Zed in
-   [docs/upstream-zed](docs/upstream-zed/README.md).
+8. **Upstream the fork fixes.** 22 branches in
+   [MOBILE_PATCHES.md](MOBILE_PATCHES.md) are still fork-only: 11 in
+   gpui-mobile (four for text input and TalkBack, seven for the platform
+   packages), 7 in gpui-kit and 4 in gpui-pre. Propose them one at a time.
+   - The gpui-pre ones are ready for Zed in
+     [docs/upstream-zed](docs/upstream-zed/README.md).
+   - The gpui-mobile and Kit ones are in
+     [docs/upstream](docs/upstream/README.md): 16 branches, rebased onto
+     upstream `main` (two fork branches were split), with a status table,
+     draft PR bodies and a send order. 11 can be sent now; the rest wait on
+     open gpui-mobile #25, on GPUI changes reaching gpui-pre, or on the JNI
+     rework (gpui-mobile issue #31).
 9. **Kit components for small screens.**
    - Upstream: Radio inside RadioGroup, Textarea rows, rich text color in
      filled bubbles, Shimmer in dark mode (gpui-kit #3328–#3331).

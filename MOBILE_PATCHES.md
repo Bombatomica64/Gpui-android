@@ -11,6 +11,10 @@ branch is what the lab pins.
 | [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) | [longbridge/gpui-kit](https://github.com/longbridge/gpui-kit) tag `v0.7.1` | `mobile-lab` (`v0.7.1` + the commits below) |
 | [Bombatomica64/gpui-pre](https://github.com/Bombatomica64/gpui-pre) | `gpui-pre` 0.3.8 from crates.io (a snapshot of [zed-industries/zed](https://github.com/zed-industries/zed) `crates/gpui`) | `mobile-lab` (branch `0.3.8` + the branches below) |
 
+Versions of these branches rebased onto upstream `main`, with draft PR
+texts, are in [docs/upstream](docs/upstream/README.md) (gpui-mobile, Kit)
+and [docs/upstream-zed](docs/upstream-zed/README.md) (GPUI).
+
 `gpui-pre` replaces the crates.io release through `[patch.crates-io]`;
 `gpui-kit`, `gpui-fps` and `gpui-pre-mobile` are git dependencies.
 
