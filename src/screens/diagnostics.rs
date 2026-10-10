@@ -73,6 +73,7 @@ impl Render for DiagnosticsScreen {
         let viewport = window.viewport_size();
         let visual = window.visual_viewport_bounds();
         let (keyboard, keyboard_px) = host::keyboard();
+        let (top, bottom, left, right) = gpui_mobile::safe_area_insets();
         let focused_input = window.focused_input(cx).is_some();
         let focused = window.focused(cx).map(|handle| format!("{handle:?}"));
         let touch = host::last_touch();
@@ -120,6 +121,13 @@ impl Render for DiagnosticsScreen {
             (
                 "Keyboard (host)",
                 format!("visible={keyboard}, {keyboard_px} px"),
+            ),
+            (
+                "Safe area (logical)",
+                format!(
+                    "top {top:.0} · bottom {bottom:.0} · left {left:.0} · right {right:.0} · keyboard {:.0}",
+                    gpui_mobile::keyboard_height()
+                ),
             ),
             ("Focused text input", focused_input.to_string()),
             ("Focused handle", focused.unwrap_or_else(|| "none".into())),

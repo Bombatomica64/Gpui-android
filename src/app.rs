@@ -40,6 +40,8 @@ pub struct LabApp {
     screen: Option<OpenScreen>,
     catalog_scroll: ScrollHandle,
     screen_scroll: ScrollHandle,
+    /// Last bar appearance sent to the host, so it is only sent on change.
+    light_system_bars: Option<bool>,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -82,6 +84,7 @@ impl LabApp {
             screen: None,
             catalog_scroll: ScrollHandle::new(),
             screen_scroll: ScrollHandle::new(),
+            light_system_bars: None,
             _subscriptions: vec![subscription, appearance],
         }
     }
@@ -410,19 +413,38 @@ impl Render for LabApp {
         if window.focused(cx).is_none() {
             self.focus.focus(window, cx);
         }
+        let light = !cx.theme().is_dark();
+        if self.light_system_bars != Some(light) {
+            self.light_system_bars = Some(light);
+            #[cfg(target_os = "android")]
+            crate::host::set_light_system_bars(light);
+        }
         let body = match &self.screen {
             Some(screen) => self.render_screen(screen, cx).into_any_element(),
             None => self.render_catalog(window, cx).into_any_element(),
         };
-        v_flex()
-            .key_context(CONTEXT)
-            .track_focus(&self.focus)
-            .on_action(cx.listener(Self::go_back))
+        // The window is edge to edge: keep the content clear of the system bars,
+        // the cutout and the keyboard, with the title bar color underneath them.
+        let (top, bottom, left, right) = gpui_mobile::safe_area_insets();
+        let bottom = bottom.max(gpui_mobile::keyboard_height());
+        div()
             .size_full()
-            .bg(cx.theme().background)
-            .text_color(cx.theme().foreground)
-            .font_family(cx.theme().font_family.clone())
-            .child(self.render_header(window, cx))
-            .child(body)
+            .pt(px(top))
+            .pb(px(bottom))
+            .pl(px(left))
+            .pr(px(right))
+            .bg(cx.theme().title_bar)
+            .child(
+                v_flex()
+                    .key_context(CONTEXT)
+                    .track_focus(&self.focus)
+                    .on_action(cx.listener(Self::go_back))
+                    .size_full()
+                    .bg(cx.theme().background)
+                    .text_color(cx.theme().foreground)
+                    .font_family(cx.theme().font_family.clone())
+                    .child(self.render_header(window, cx))
+                    .child(body),
+            )
     }
 }
