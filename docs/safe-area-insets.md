@@ -1,6 +1,19 @@
 # Safe-area insets on the host-driven path: what it would take
 
-Status: not started. The pieces are known; they need their own PRs.
+Status: done on the fork. Steps 1–2 are gpui-mobile branch
+`android-host-insets` (draft upstream PR in
+[upstream/safe-area-insets.md](upstream/safe-area-insets.md)); steps 3–5 are
+in the lab. Two choices differ from the plan below:
+
+- The keyboard is passed in as a fifth value (`ime`) and feeds
+  `gpui_mobile::keyboard_height()`, which iOS already fills. The shell pads
+  its bottom by `max(navigation bar, keyboard)`. Shrinking the `SurfaceView`
+  in Java would have rebuilt the swapchain on every keyboard toggle, and
+  apps would get a different contract on Android than on iOS.
+- `safe_area_insets()` reads the active window from the platform, not a
+  host-path global, so the `android-activity` path gets it as well.
+
+The original plan follows.
 
 ## Where things stand
 

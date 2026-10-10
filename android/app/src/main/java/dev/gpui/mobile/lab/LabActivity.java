@@ -1,7 +1,6 @@
 package dev.gpui.mobile.lab;
 
 import android.app.Activity;
-import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
@@ -14,20 +13,25 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputConnectionWrapper;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 /**
  * Host for the GPUI render thread (gpui_mobile::android::host).
  *
  * A plain Activity owning a SurfaceView: the Rust side keeps one process-lived
  * render thread and GPUI App, so recreating this Activity only swaps the surface.
- * The window uses adjustResize, so the SurfaceView (and GPUI's viewport) shrinks
- * above the software keyboard.
+ * The SurfaceView fills the window, behind the system bars, display cutout and
+ * software keyboard; their insets go to Rust, and the app shell pads by them.
  *
  * The IME proxy is adapted from gpui-mobile's GpuiInputActivity: an invisible
  * EditText whose InputConnection forwards composing/commit/delete to Rust.
@@ -57,19 +61,29 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
         surface.setOnTouchListener((view, event) -> forwardMotion(event));
         setContentView(surface);
 
-        // The keyboard shrinks the content via adjustResize; report its height so the
-        // diagnostics screen can show it next to GPUI's own viewport.
-        final View root = getWindow().getDecorView();
-        root.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            Rect visible = new Rect();
-            root.getWindowVisibleDisplayFrame(visible);
-            int hidden = root.getHeight() - visible.bottom;
-            boolean shown = hidden > root.getHeight() / 5;
+        // Edge to edge: with the decor no longer fitting system windows, adjustResize
+        // stops shrinking the window for the keyboard, so the IME is an inset too.
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        if (Build.VERSION.SDK_INT >= 28) {
+            // Also under the cutout in landscape, rather than letterboxed beside it.
+            getWindow().getAttributes().layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
+        if (Build.VERSION.SDK_INT >= 29) {
+            // No scrim over 3-button navigation: GPUI paints what is underneath.
+            getWindow().setNavigationBarContrastEnforced(false);
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(surface, (view, insets) -> {
+            Insets bars = insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+            int ime = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+            boolean shown = insets.isVisible(WindowInsetsCompat.Type.ime());
             if (shown != keyboardVisible) {
                 keyboardVisible = shown;
-                Log.i(TAG, "software keyboard " + (shown ? "shown" : "hidden") + " (" + hidden + " px)");
+                Log.i(TAG, "software keyboard " + (shown ? "shown" : "hidden") + " (" + ime + " px)");
             }
-            nativeKeyboardInsets(shown, shown ? hidden : 0);
+            nativeInsets(hostId, bars.top, bars.bottom, bars.left, bars.right, shown ? ime : 0);
+            return insets;
         });
 
         nativeOnCreate(this, Build.VERSION.SDK_INT);
@@ -185,6 +199,15 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
             default:
                 return false;
         }
+    }
+
+    /** Dark status and navigation bar icons over a light app theme. Called from Rust. */
+    public void gpuiSetLightSystemBars(boolean light) {
+        runOnUiThread(() -> {
+            View decor = getWindow().getDecorView();
+            WindowCompat.getInsetsController(getWindow(), decor).setAppearanceLightStatusBars(light);
+            WindowCompat.getInsetsController(getWindow(), decor).setAppearanceLightNavigationBars(light);
+        });
     }
 
     // ── IME bridge (called from Rust on the render thread) ─────────────────
@@ -419,7 +442,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     private static native void nativeHostDestroyed(long host);
     private static native void nativeResumed(long host);
     private static native void nativePaused(long host);
-    private static native void nativeKeyboardInsets(boolean visible, int heightPx);
+    private static native void nativeInsets(long host, int top, int bottom, int left, int right, int ime);
     private static native boolean nativeMotion(int action, int actionIndex, int[] ids, float[] xs, float[] ys);
     private static native void nativeKey(int keyCode, int action, int metaState);
     private static native void nativeIme(long session, int kind, String text, int start, int end);

@@ -125,8 +125,14 @@ October 2026; "fork" means the fix is on one of the branches listed in
    - Not started: flags and `❤️` (VS16) still don't render with the
      bundled emoji font; flags come from the system's COLRv1
      `NotoColorEmojiFlags.ttf`.
-   - Not started: safe-area insets. The plan is in
-     [docs/safe-area-insets.md](docs/safe-area-insets.md).
+   - Fork: safe-area insets. The host reports the system bars, the cutout
+     and the keyboard through `host::insets_changed` (gpui-mobile
+     `android-host-insets`), and `safe_area_insets()` / `keyboard_height()`
+     return them on Android. The lab is edge to edge, its shell pads by them,
+     and Diagnostics shows them. Upstream draft in
+     [docs/upstream/safe-area-insets.md](docs/upstream/safe-area-insets.md).
+     Next: Kit sheets and notifications still lay out against the whole
+     window, under the bars.
    - Not started: system fonts.
 8. **Upstream the fork fixes.** Seven branches in
    [MOBILE_PATCHES.md](MOBILE_PATCHES.md) are still fork-only: two in

@@ -77,6 +77,18 @@ Send then hide the keyboard. The purpose half needs the GPUI branch.
 [amount keyboard](docs/demos/android-amount-keyboard.png),
 [Search key, Enter](docs/demos/android-ime-actions.png).
 
+### Let host-driven apps report safe-area and keyboard insets — branch `android-host-insets`
+
+The host path had no way to pass insets in, so an edge-to-edge host could
+not tell GPUI where the system bars, the cutout and the keyboard are, and
+`safe_area_insets()` returned zeros on Android. `host::insets_changed(host,
+SafeAreaInsets, ime)` takes them in physical pixels. The render thread
+stores them on that host's window, or keeps them until the window opens,
+and re-lays out when they change. `safe_area_insets()` returns the active
+window's insets, and the attached host's keyboard feeds `keyboard_height()`,
+as on iOS. LabActivity calls it from its `OnApplyWindowInsetsListener`.
+Draft upstream PR: [docs/upstream/safe-area-insets.md](docs/upstream/safe-area-insets.md).
+
 ### Clear the Java exceptions the accessibility bridge leaves pending — branch `android-a11y-clear-exceptions`
 
 `accesskit_android`'s jni 0.21 API leaves a thrown Java exception pending,
