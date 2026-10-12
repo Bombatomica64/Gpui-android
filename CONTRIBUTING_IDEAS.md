@@ -99,7 +99,7 @@ October 2026; "fork" means the fix is on one of the branches listed in
    the library without reinstalling (8.3 s). gpui-mobile only needs a
    loader for the pushed library (`GpuiLibraryLoader`, fork branch
    `dev-hot-loader`). Next: ask upstream where they want it
-   ([issue draft](docs/upstream/hot-reload-discussion.md)). A desktop-hosted
+   ([longbridge/gpui-mobile#34](https://github.com/longbridge/gpui-mobile/issues/34)). A desktop-hosted
    phone-size preview is not started.
 5. **Binary size.** Measured in [docs/binary-size.md](docs/binary-size.md);
    every PR's job summary shows the APK and `.so` sizes.

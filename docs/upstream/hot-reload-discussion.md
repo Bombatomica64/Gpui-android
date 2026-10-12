@@ -1,8 +1,8 @@
-# Draft: hot reload for gpui-mobile apps (not posted)
+# Hot reload for gpui-mobile apps: the upstream issue
 
-> **Status: draft for review, not posted.** longbridge/gpui-mobile has GitHub
-> Discussions turned off, so this would be an **issue**. Title:
-> "Hot reload for Rust on Android: interested, and where should it live?"
+> **Status: posted 2026-10-12 as
+> [longbridge/gpui-mobile#34](https://github.com/longbridge/gpui-mobile/issues/34)**
+> (Discussions are off there). The text below is what was posted.
 
 ---
 
