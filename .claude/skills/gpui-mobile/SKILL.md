@@ -53,8 +53,9 @@ several times faster.
 | Java, manifest, assets, new packages' Java helpers | `./build.sh android --debug`, then install | Gradle + install | no |
 | Release APK | CI (`.github/workflows/android.yml`, artifact `gpui-mobile-lab-apk`) | 4–6 min | — |
 
-Hot patching and reload live in `tools/cargo-gpui` (the `cargo gpui` CLI)
-and `crates/gpui-hot` (the app side); details in
+Hot patching and reload live in [Bombatomica64/cargo-gpui](https://github.com/Bombatomica64/cargo-gpui) (the
+`cargo gpui` CLI and the `gpui-hot` app crate) and gpui-mobile's
+`GpuiLibraryLoader`; details in
 `references/hot-reload.md`.
 
 Local builds: debug arm64 builds fit on a small server (clean build ~5 min,
@@ -138,4 +139,4 @@ longbridge/gpui-component and longbridge/gpui-mobile) takes them. Bombatomica64
 repos take PRs freely. Anything aimed at upstream should be one concern per
 PR, small, with device screenshots or GIFs, and should be shown to the repo
 owner before it's opened. Credit borrowed code (for example Dioxus in
-`tools/cargo-gpui`) in headers and keep its licence file.
+cargo-gpui) in headers and keep its licence file.

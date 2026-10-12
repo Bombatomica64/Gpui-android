@@ -110,6 +110,17 @@ change. `safe_area_insets()` and `keyboard_height()` return them too, as on
 iOS. LabActivity calls it from its `OnApplyWindowInsetsListener`.
 Draft upstream PR: [docs/upstream/safe-area-insets.md](docs/upstream/safe-area-insets.md).
 
+### Load a pushed debug library without reinstalling — branch `dev-hot-loader`
+
+`GpuiLibraryLoader.load(context, name)`, a Java helper next to the others in
+the example project: in a debuggable build it loads `files/dev/lib<name>.so`
+when a dev tool ([cargo-gpui](https://github.com/Bombatomica64/cargo-gpui))
+has pushed one, else the packaged library. Release builds always load the
+packaged one. It replaces the `loadLibrary()` the lab's `LabActivity`
+carried; `build.sh` copies it with the other helpers. Host-driven Activities
+only (`NativeActivity` loads the packaged library itself). Not proposed
+upstream yet.
+
 ### Clear the Java exceptions the accessibility bridge leaves pending — branch `android-a11y-clear-exceptions`, now part of `android-accessibility`
 
 `accesskit_android`'s jni 0.21 API leaves a thrown Java exception pending,
