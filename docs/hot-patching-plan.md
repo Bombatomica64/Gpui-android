@@ -197,7 +197,22 @@ What `cargo gpui dev` needs to productise this:
 4. Fall back to A2 (reload the `.so`) when a patch fails to link, or when a
    struct layout changes.
 
-Status (2026-10-09, code only; not yet run on the phone):
+Status (2026-10-12, verified on the phone through the ssh tunnel with
+`cargo gpui dev`: install, reload, two patches, `r`):
+
+| Step | Time |
+|---|---|
+| Save → patch applied (app's acknowledgement) | 3.3–3.6 s (A1 spike: 5.4–6.2 s) |
+| of which rustc / stub + link + table / push | 1.1 s / 0.3 s / 1.4–1.6 s |
+| Reload with a 1.4 MB delta (build, push, restart) | 8.3 s (2.7 + 4.0 + 1.5) |
+| Reload right after install (delta against the APK's library) | 7.2 s |
+
+The first phone run found a crash on the second patch: Subsecond adds the
+ASLR slide to every key with an overflow-checked add, and the rebased keys
+of an earlier patch wrapped when that patch loaded below the app. gpui-hot
+now rebases every key itself and gives Subsecond a zero offset.
+
+The items:
 
 1. Done: `tools/cargo-gpui` (below). The app writes its ASLR reference to
    `files/dev/aslr` and acknowledges each patch in `files/dev/applied`.
@@ -267,7 +282,9 @@ Findings:
   even be crashed. The first reload of a session pushes the full library.
   If the phone's copy is missing or isn't the delta's base, zstd's checksum
   fails and the reload falls back to the full push. Verified on the host
-  (byte-identical output; wrong base rejected); not yet measured on the phone.
+  (byte-identical output; wrong base rejected) and on the phone: a reload
+  with a 1.4 MB delta takes 8.3 s instead of 47 s (push 4.0 s instead of
+  39 s). The checksum fallback ran only on the host.
 - The library is 84 MB rather than 49 MB because the build keeps everything
   A1 needs (`-Clink-dead-code`, no section GC). A reload-only build could
   drop that, but then hot patching stops working until the next fat build.

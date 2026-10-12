@@ -154,8 +154,15 @@ impl Loaded {
     /// was loaded.
     fn apply(&mut self, mut patch: serde_json::Value) -> anyhow::Result<usize> {
         let mut table: subsecond::JumpTable = serde_json::from_value(patch["table"].take())?;
-        // apply_patch adds this to every key.
-        let slide = (subsecond::aslr_reference() as u64).wrapping_sub(table.aslr_reference);
+        // Keys become runtime addresses here, and apply_patch's own offset
+        // (aslr_reference() - table.aslr_reference) becomes 0. Leaving it to
+        // apply_patch would need earlier patches' keys as `bias + old - slide`,
+        // which wraps when a patch loads below the app, and apply_patch's
+        // add (overflow-checked in debug) then panics.
+        let reference = subsecond::aslr_reference() as u64;
+        let slide = reference.wrapping_sub(table.aslr_reference);
+        table.aslr_reference = reference;
+        table.map = table.map.iter().map(|(&old, &new)| (old.wrapping_add(slide), new)).collect();
         for earlier in patch["earlier"].as_array().into_iter().flatten() {
             let lib = earlier["lib"].as_str().unwrap_or_default();
             let Some(&(_, bias)) = self.0.iter().find(|(l, _)| l == lib) else {
@@ -163,7 +170,7 @@ impl Loaded {
             };
             for pair in earlier["map"].as_array().into_iter().flatten() {
                 if let (Some(old), Some(new)) = (pair[0].as_u64(), pair[1].as_u64()) {
-                    table.map.insert(bias.wrapping_add(old).wrapping_sub(slide), new);
+                    table.map.insert(bias.wrapping_add(old), new);
                 }
             }
         }

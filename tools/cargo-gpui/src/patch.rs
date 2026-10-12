@@ -136,6 +136,7 @@ impl Patcher {
             *t = Instant::now();
         };
 
+        println!("cargo gpui: change seen, building a patch");
         // 1. Recompile the app crate with the recorded command (incremental).
         let rustc = &self.rustc;
         let out = Command::new(&rustc.rustc)

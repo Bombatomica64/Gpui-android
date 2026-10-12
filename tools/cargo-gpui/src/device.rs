@@ -85,10 +85,26 @@ pub fn wait_applied(generation: u32, timeout: Duration) -> anyhow::Result<()> {
             }
         }
         if start.elapsed() > timeout {
-            bail!("the app did not acknowledge patch {generation} within {timeout:?}");
+            bail!(
+                "the app did not acknowledge patch {generation} within {timeout:?}{}",
+                recent_log().map(|l| format!("; its log:\n{l}")).unwrap_or_default()
+            );
         }
         std::thread::sleep(Duration::from_millis(100));
     }
+}
+
+/// The app's recent hot-patching lines and any crash, for error messages.
+fn recent_log() -> Option<String> {
+    let out = adb(&["logcat", "-d", "-b", "main,crash", "-t", "2000", "-v", "brief"]).ok()?;
+    let lines: Vec<&str> = out
+        .lines()
+        .filter(|l| {
+            l.contains("hot: ") || l.starts_with("F/") || l.contains("panicked") || l.contains("FATAL")
+        })
+        .collect();
+    let tail = &lines[lines.len().saturating_sub(30)..];
+    (!tail.is_empty()).then(|| tail.join("\n"))
 }
 
 /// A2: run a new build without reinstalling. Pushes the stripped library to
