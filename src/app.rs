@@ -92,6 +92,8 @@ impl LabApp {
             return;
         };
         log::info!("open screen: {}", def.title);
+        // A reload (`cargo gpui`) reopens it: LabActivity reads this extra.
+        gpui_hot::remember("screen", Some(def.title));
         let view = (def.build)(window, cx);
         self.screen = Some(OpenScreen { def, view });
         self.screen_scroll = ScrollHandle::new();
@@ -102,6 +104,7 @@ impl LabApp {
     fn close_screen(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         if let Some(screen) = self.screen.take() {
             log::info!("close screen: {}", screen.def.title);
+            gpui_hot::remember("screen", None);
         }
         self.focus.focus(window, cx);
         cx.notify();
@@ -403,10 +406,9 @@ impl Focusable for LabApp {
     }
 }
 
-crate::hot_render!(LabApp);
-
-impl LabApp {
-    fn render_view(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for LabApp {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         // Back needs a focused node inside this key context. When a focused input
         // is removed or blurs, nothing is focused and back would be dropped.
         if window.focused(cx).is_none() {

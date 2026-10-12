@@ -43,10 +43,9 @@ impl DisplayScreen {
     }
 }
 
-crate::hot_render!(DisplayScreen);
-
-impl DisplayScreen {
-    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for DisplayScreen {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let names = [
             "Ada Lovelace",
             "Bruno Rossi",

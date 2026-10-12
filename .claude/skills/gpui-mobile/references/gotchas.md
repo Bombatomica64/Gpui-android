@@ -48,7 +48,7 @@ anything newer.
 | Release build gets OOM-killed | LTO release builds need lots of RAM. Build release in CI; locally use `--debug`. |
 | Two copies of GPUI types don't match ("expected `gpui::App`, found `gpui::App`") | Two `gpui-pre` versions. `cargo tree -d`, then align revs/the patch entry. |
 | `INSTALL_FAILED_UPDATE_INCOMPATIBLE` | The installed APK was signed with another key (each CI run uses a fresh debug key). Uninstall first. |
-| Debug APK is huge | The library carries debug sections; `hotpatch fat` and `reload` strip it (255 → ~49 MB). Gradle repackaging in place also leaves dead space: delete the old APK before rebuilding. |
+| Debug APK is huge | The library carries debug sections; `cargo gpui apk` and `reload` strip it (now ~84 MB with hot-patching symbols; dependencies build without DWARF). Gradle repackaging in place also leaves dead space: delete the old APK before rebuilding. |
 | APK contains `libgpui_mobile.so` too | gpui-mobile's own cdylib; `build.sh` deletes it since the app links it statically. |
 | Wrong revision shown in diagnostics | `GPUI_MOBILE_REVISION` in the lab is a hard-coded string; update it with the pin. |
 

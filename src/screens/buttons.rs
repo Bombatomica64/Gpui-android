@@ -1,7 +1,8 @@
 use std::time::Duration;
 
 use gpui::{
-    Anchor, Context, IntoElement, Keystroke, ParentElement, SharedString, Styled, Window, actions,
+    Anchor, Context, IntoElement, Keystroke, ParentElement, Render, SharedString, Styled, Window,
+    actions,
 };
 use gpui_kit::component::{
     IconName, Size,
@@ -60,10 +61,9 @@ impl ButtonsScreen {
     }
 }
 
-crate::hot_render!(ButtonsScreen);
-
-impl ButtonsScreen {
-    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for ButtonsScreen {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let variants = [
             ("Primary", 0),
             ("Secondary", 1),

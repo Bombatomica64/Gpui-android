@@ -176,6 +176,7 @@ fn permission_buttons(cx: &mut Context<PlatformApisScreen>) -> Vec<Button> {
         .collect()
 }
 
+#[gpui_hot::hot]
 impl Render for PlatformApisScreen {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let thread_label: SharedString = if self.on_gpui_thread {
