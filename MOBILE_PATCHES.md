@@ -119,7 +119,8 @@ has pushed one, else the packaged library. Release builds always load the
 packaged one. It replaces the `loadLibrary()` the lab's `LabActivity`
 carried; `build.sh` copies it with the other helpers. Host-driven Activities
 only (`NativeActivity` loads the packaged library itself). Not proposed
-upstream yet.
+upstream yet: an [issue draft](docs/upstream/hot-reload-discussion.md) asks
+the maintainers first.
 
 ### Clear the Java exceptions the accessibility bridge leaves pending — branch `android-a11y-clear-exceptions`, now part of `android-accessibility`
 
