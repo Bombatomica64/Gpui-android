@@ -35,6 +35,19 @@ follows whichever window is active.
 [Bounds](docs/demos/android-a11y-bounds.png),
 [recording](docs/demos/android-a11y-talkback.gif).
 
+Review changes requested; rebased onto upstream `main` and fixed in separate
+commits. The reply draft is in
+[docs/upstream/replies](docs/upstream/replies/gpui-mobile-25.md). The
+adapter now goes on each host's own Activity: hosts call the new
+`host::set_activity(env, host, activity)` (the lab does) in place of
+`set_host_activity`. It is attached when the window becomes active rather than
+in `onCreate`, is retried after a failure, and is dropped with its window. A
+view that already has another delegate is skipped. The exception-clearing
+branch below is folded in. One gap stays open: a screen reader turned off
+between the GPUI-side `isEnabled()` check and `accesskit_android`'s UI-thread
+runnable still throws, because only the adapter can check there
+(`accesskit_android` 0.9 does, but needs `accesskit` 0.25).
+
 ### Keep focus when the IME's Done action hides the keyboard — branch `android-ime-dismiss`
 
 Upstream (#26) stopped back from injecting an `escape` keystroke (IME event
@@ -97,7 +110,7 @@ change. `safe_area_insets()` and `keyboard_height()` return them too, as on
 iOS. LabActivity calls it from its `OnApplyWindowInsetsListener`.
 Draft upstream PR: [docs/upstream/safe-area-insets.md](docs/upstream/safe-area-insets.md).
 
-### Clear the Java exceptions the accessibility bridge leaves pending — branch `android-a11y-clear-exceptions`
+### Clear the Java exceptions the accessibility bridge leaves pending — branch `android-a11y-clear-exceptions`, now part of `android-accessibility`
 
 `accesskit_android`'s jni 0.21 API leaves a thrown Java exception pending,
 and the bridge never cleared it, so the next JNI call on the render thread

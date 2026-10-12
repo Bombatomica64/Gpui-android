@@ -94,7 +94,7 @@ API:
 
 | Call | When |
 |---|---|
-| `jni::set_host_activity(env, &activity)` | first thing in every `onCreate`, recreation included |
+| `host::set_activity(env, host, &activity)` (or `jni::set_host_activity`, which does not tell hosts apart: TalkBack then lands on the wrong Activity after Back) | first thing in every `onCreate`, recreation included |
 | `host::on_open_window(\|_, cx\| open_window(cx))` | before the first surface |
 | `host::start_with_assets(gpui_kit::assets::AllAssets, launch)` | every `onCreate`; only the first call starts the render thread |
 | `host::surface_created(host, NativeWindow::from_surface(env, surface), scale)` | `surfaceCreated` and `surfaceChanged` (a repeat is a resize) |

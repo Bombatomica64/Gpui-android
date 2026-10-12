@@ -45,12 +45,14 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeOnCreate<'loca
     mut env: EnvUnowned<'local>,
     _this: JObject<'local>,
     activity: JObject<'local>,
+    host: i64,
     api_level: i32,
 ) {
     init_logging();
     env.with_env(|env| -> jni::errors::Result<()> {
-        if let Err(err) = mobile_jni::set_host_activity(env, &activity) {
-            log::error!("set_host_activity failed: {err}");
+        // Per host, so the screen reader goes on this Activity's views after Back.
+        if let Err(err) = host::set_activity(env, host as host::HostId, &activity) {
+            log::error!("set_activity failed: {err}");
         }
         Ok(())
     })

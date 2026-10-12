@@ -106,7 +106,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
             return insets;
         });
 
-        nativeOnCreate(this, Build.VERSION.SDK_INT);
+        nativeOnCreate(this, hostId, Build.VERSION.SDK_INT);
         forwardScreenExtra(getIntent());
     }
 
@@ -453,7 +453,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
 
     // ── Native (src/host.rs) ───────────────────────────────────────────────
 
-    private static native void nativeOnCreate(Activity activity, int apiLevel);
+    private static native void nativeOnCreate(Activity activity, long host, int apiLevel);
     private static native void nativeOpenScreen(String screen);
     private static native void nativeDeepLink(String url);
     private static native void nativeConfigurationChanged();
