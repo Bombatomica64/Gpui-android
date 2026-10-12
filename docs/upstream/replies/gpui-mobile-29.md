@@ -5,7 +5,7 @@ Draft, to be posted by hand. All changes are in
 
 ---
 
-Thanks for the careful review! All three points are addressed in 773e5ad:
+Thanks for the review! All three points are addressed in 773e5ad:
 
 1. **Call order / load once.** I went with the lazy option, plus the other two.
    If `AndroidPlatform::new` finds no AssetManager, it logs a `warn!` and keeps
