@@ -98,7 +98,8 @@ October 2026; "fork" means the fix is on one of the branches listed in
    screen in 3.3–3.6 s through an ssh adb tunnel, state kept) and reloads
    the library without reinstalling (8.3 s). gpui-mobile only needs a
    loader for the pushed library (`GpuiLibraryLoader`, fork branch
-   `dev-hot-loader`). Next: ask upstream where they want it. A desktop-hosted
+   `dev-hot-loader`). Next: ask upstream where they want it
+   ([issue draft](docs/upstream/hot-reload-discussion.md)). A desktop-hosted
    phone-size preview is not started.
 5. **Binary size.** Measured in [docs/binary-size.md](docs/binary-size.md);
    every PR's job summary shows the APK and `.so` sizes.

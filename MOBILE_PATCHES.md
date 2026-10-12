@@ -120,7 +120,8 @@ packaged one. It replaces the `loadLibrary()` the lab's `LabActivity`
 carried; the lab keeps a copy in `android/app/src/main/java` (`LabActivity`
 needs it to compile, also in `cargo gpui apk`, which skips `build.sh`). Host-driven Activities
 only (`NativeActivity` loads the packaged library itself). Not proposed
-upstream yet.
+upstream yet: an [issue draft](docs/upstream/hot-reload-discussion.md) asks
+the maintainers first.
 
 ### Clear the Java exceptions the accessibility bridge leaves pending — branch `android-a11y-clear-exceptions`, now part of `android-accessibility`
 
