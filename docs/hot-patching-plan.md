@@ -207,6 +207,8 @@ Status (2026-10-12, verified on the phone through the ssh tunnel with
 | Reload with a 1.4 MB delta (build, push, restart) | 8.3 s (2.7 + 4.0 + 1.5) |
 | Reload right after install (delta against the APK's library) | 7.2 s |
 
+A4 has the later numbers (patch deltas, fewer round trips, USB).
+
 The first phone run found a crash on the second patch: Subsecond adds the
 ASLR slide to every key with an overflow-checked add, and the rebased keys
 of an earlier patch wrapped when that patch loaded below the app. gpui-hot
@@ -219,7 +221,8 @@ The items:
 2. Done: `#[gpui_hot::hot]` on an ordinary `impl Render` (crate
    `gpui-hot-macros`). The hot closure is still monomorphised in the app
    crate: offline patches find all 31 of the lab's.
-3. Deltas for reloads (A2) and the A3 build changes; USB still unmeasured.
+3. Done: deltas for reloads (A2) and patches, fewer adb round trips, the
+   A3 build changes; measured over USB (A4).
 4. Done: `cargo gpui dev` reloads when a patch fails to link or the app
    reports it could not apply it, and on `r` + Enter. Layout changes are
    not detected: press `r`.
@@ -339,6 +342,82 @@ Tried, no gain or not available:
 Left: the lab crate's 1.1 s is one crate of 31 screens; splitting it would
 let a screen change recompile less, but every patch then has to link the
 split crates too. Not worth it at this size.
+
+### A4. Transfer: patch deltas, adb round trips, USB (2026-10-12)
+
+[cargo-gpui#2](https://github.com/Bombatomica64/cargo-gpui/pull/2). The
+patch is now 15 MB stripped (it was 9.9 MB in A1, before the lab grew), and
+2.3 MB with `push -z zstd`. Every patch links all 257 of the lab crate's
+objects, so it is that size even when one object changed.
+
+- **Patch deltas.** From the second patch on, the tool sends a zstd
+  `--patch-from` delta against the previous patch. For a one-line change
+  it is **0.10 MB** at `-9` (0.2 s on the host), or 0.32 MB at `-3`
+  (0.08 s). The first patch goes whole: a delta against the staged library
+  is 1.9 MB, only ~20 % smaller, and `unpatch` would read 89 MB on the
+  phone.
+- **One adb call per patch.** The delta and `patch.json` go on the stdin of
+  one `adb shell -T`. On the phone, `unpatch` rebuilds the library, then
+  writes the table and renames it into place, so the table still lands
+  last. The same call waits there for the app's acknowledgement. Before, it
+  took a push, then a `run-as cat` from the host every 100 ms. If the base
+  is wrong or missing, zstd's checksum fails, the script exits 42, and the
+  tool pushes the whole patch as before.
+- **One adb call per reload with a delta.** It applies the delta, copies
+  the library into the app, force-stops it, clears the patches, and starts
+  it with its remembered extras. Before, that took seven calls. The `aslr`
+  wait also polls on the phone now, and `unpatch` is pushed once per run.
+
+Each adb call costs 0.3–0.5 s through the ssh tunnel, which goes through a
+Tailscale relay (`fra`). Over USB, a call costs 33–54 ms.
+
+**Through the tunnel** (`cargo gpui dev` on the Buttons screen, a
+one-line change; old and new binaries in the same session):
+
+| | Before | After |
+|---|---|---|
+| Patch: push + acknowledgement | ~1.9 s (push 1.4–1.6 s) | 0.8–1.7 s (0.32 MB delta) |
+| Save → patch applied | 3.8–4.1 s | 2.7–3.6 s |
+| Reload, 1.5 MB delta | 8.2 s (build 3.4, push 3.4, restart 1.3) | 5.3 s (build 3.2, delta + restart 2.1) |
+
+That run used `-3` deltas (0.32 MB). The final `-9` (0.10 MB) ran
+through the tunnel only while another job kept the server's 12 cores busy
+(load ~30). There, push + acknowledgement took 1.5–1.7 s for a delta and
+2.2–2.8 s for the full first patch, and rustc took 3–8 s instead of 1.4 s.
+Those numbers are skewed by the load and are not in the table.
+
+**Over USB.** The phone is plugged into the laptop at the other end of the
+tunnel. The tool ran the same device commands through the laptop's own adb
+server. The app's `aslr` was read there, the patches were built on this
+server against it (`CARGO_GPUI_OFFLINE`), and then copied over.
+
+| | Before | After |
+|---|---|---|
+| Patch: push + acknowledgement | 423 ms (full patch) | 308–342 ms (delta); 285 ms (full) |
+| Reload: push + restart + `aslr` | 1.80 s (push 0.44 s) | 1.29 s |
+| Full 89 MB library, six 16 MB parts | | 1.13 s |
+
+Over USB the transfer is no longer the bottleneck. The full patch is about
+as fast as the delta, since `unpatch` reads the 15 MB base on the phone.
+End to end, a patch over USB would be about 1.9 s of host work (save seen,
+rustc 1.4 s, stub, link, table) plus 0.3 s on the phone, so about 2.2 s.
+This is an estimate: the host and USB parts were measured on different
+machines. A reload would be about 3.2 s of build plus 1.3 s, so about
+4.5 s.
+
+Where a reload's time goes now:
+- **Build:** 3.2 s, of which the lab crate takes 1.4 s, link 0.7 s, cargo
+  0.6 s and strip 0.4 s.
+- **Delta and restart:** one round trip, plus the 1.5 MB delta through the
+  relay, plus about 0.9 s on the phone. Most of that 0.9 s is
+  `am start -W`, the app's own start.
+- **`aslr` wait:** 0.4 s over USB.
+
+Left:
+- Through the tunnel, a round trip still costs more than the patch's
+  bytes. A direct Tailscale connection, without the relay, may help.
+- rustc's 1.4 s for the lab crate is now the largest part of a patch
+  (A3).
 
 ## Track B: production updates without a store release (deferred)
 
