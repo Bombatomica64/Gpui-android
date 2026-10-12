@@ -425,16 +425,17 @@ impl LabApp {
             Some(screen) => self.render_screen(screen, cx).into_any_element(),
             None => self.render_catalog(window, cx).into_any_element(),
         };
-        // The window is edge to edge: keep the content clear of the system bars,
-        // the cutout and the keyboard, with the title bar color underneath them.
-        let (top, bottom, left, right) = gpui_mobile::safe_area_insets();
-        let bottom = bottom.max(gpui_mobile::keyboard_height());
+        // The window is edge to edge: keep the content inside the part GPUI knows
+        // is clear of the system bars, the cutout and the keyboard, with the
+        // title bar color underneath them.
+        let viewport = window.viewport_size();
+        let visible = window.fully_visible_bounds();
         div()
             .size_full()
-            .pt(px(top))
-            .pb(px(bottom))
-            .pl(px(left))
-            .pr(px(right))
+            .pt(visible.top())
+            .pb(viewport.height - visible.bottom())
+            .pl(visible.left())
+            .pr(viewport.width - visible.right())
             .bg(cx.theme().title_bar)
             .child(
                 v_flex()

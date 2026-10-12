@@ -74,6 +74,7 @@ impl DiagnosticsScreen {
         let visual = window.visual_viewport_bounds();
         let (keyboard, keyboard_px) = host::keyboard();
         let (top, bottom, left, right) = gpui_mobile::safe_area_insets();
+        let visible_area = window.fully_visible_bounds();
         let focused_input = window.focused_input(cx).is_some();
         let focused = window.focused(cx).map(|handle| format!("{handle:?}"));
         let touch = host::last_touch();
@@ -127,6 +128,16 @@ impl DiagnosticsScreen {
                 format!(
                     "top {top:.0} · bottom {bottom:.0} · left {left:.0} · right {right:.0} · keyboard {:.0}",
                     gpui_mobile::keyboard_height()
+                ),
+            ),
+            (
+                "Fully visible (GPUI)",
+                format!(
+                    "origin {:.0},{:.0} size {:.0} × {:.0}",
+                    visible_area.origin.x.as_f32(),
+                    visible_area.origin.y.as_f32(),
+                    visible_area.size.width.as_f32(),
+                    visible_area.size.height.as_f32()
                 ),
             ),
             ("Focused text input", focused_input.to_string()),
