@@ -64,7 +64,7 @@ echo "==> cargo ndk ${ABIS[*]} ($PROFILE)"
 # gpui-mobile also declares a cdylib; the lab links it statically.
 find "$JNI_LIBS" \( -name "libgpui_mobile.so" -o -name "libgpui_mobile-*.so" \) -delete
 
-# The platform packages and LabActivity call Java helpers that gpui-mobile ships in its example
+# The platform packages call Java helpers that gpui-mobile ships in its example
 # project; take them from the checkout Cargo resolved, so they match the pinned rev.
 MOBILE_DIR="$(cd "$ROOT" && cargo metadata --format-version 1 \
     | python3 -c 'import json, sys; print(next(p["manifest_path"] for p in json.load(sys.stdin)["packages"] if p["name"] == "gpui-pre-mobile"))' \
@@ -72,7 +72,7 @@ MOBILE_DIR="$(cd "$ROOT" && cargo metadata --format-version 1 \
 HELPERS_SRC="$MOBILE_DIR/example/android/gradle/app/src/main/java/dev/gpui/mobile"
 HELPERS_DST="$ROOT/android/app/build/generated/gpui-helpers/dev/gpui/mobile"
 rm -rf "$HELPERS_DST" && mkdir -p "$HELPERS_DST"
-for helper in Audio AuthActivity Calendar Contacts FilePicker ImagePicker LibraryLoader LocalAuth Location \
+for helper in Audio AuthActivity Calendar Contacts FilePicker ImagePicker LocalAuth Location \
               MediaSession Microphone Notifications PermissionActivity Permissions PickerActivity; do
     cp "$HELPERS_SRC/Gpui$helper.java" "$HELPERS_DST/"
 done

@@ -117,7 +117,8 @@ the example project: in a debuggable build it loads `files/dev/lib<name>.so`
 when a dev tool ([cargo-gpui](https://github.com/Bombatomica64/cargo-gpui))
 has pushed one, else the packaged library. Release builds always load the
 packaged one. It replaces the `loadLibrary()` the lab's `LabActivity`
-carried; `build.sh` copies it with the other helpers. Host-driven Activities
+carried; the lab keeps a copy in `android/app/src/main/java` (`LabActivity`
+needs it to compile, also in `cargo gpui apk`, which skips `build.sh`). Host-driven Activities
 only (`NativeActivity` loads the packaged library itself). Not proposed
 upstream yet: an [issue draft](docs/upstream/hot-reload-discussion.md) asks
 the maintainers first.

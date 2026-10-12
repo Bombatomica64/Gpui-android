@@ -111,8 +111,8 @@ asset or Gradle changes.
    (`None` when it closes); a reload passes it back as `--es screen <title>`.
 5. In the host Activity, replace the static `System.loadLibrary` with
    `GpuiLibraryLoader.load(this, "<lib name>")` at the start of `onCreate`
-   (a gpui-mobile helper in its example project; the lab's `build.sh` copies
-   it like the other helpers). In a debuggable build it loads
+   (a gpui-mobile helper in its example project; the lab keeps a copy in
+   `android/app/src/main/java`, since `LabActivity` needs it to compile). In a debuggable build it loads
    `files/dev/lib<name>.so` when it exists, else the packaged library.
    `NativeActivity` hosts can't use it: `NativeActivity` loads the packaged
    library itself.
