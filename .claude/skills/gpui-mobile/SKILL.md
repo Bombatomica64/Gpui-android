@@ -108,7 +108,7 @@ These come from bugs actually hit in this stack.
    them from `cx.background_spawn(...)`; from GPUI's thread they return an
    error on purpose.
 2. **Host wiring order matters.** In the host's `onCreate`, call
-   `set_host_activity` first, then register `host::on_open_window`, then
+   `host::set_activity(env, host, &activity)` first, then register `host::on_open_window`, then
    `host::start_with_assets(gpui_kit::assets::AllAssets, launch)`. Without
    `start_with_assets` Kit's icons are blank; without `on_open_window` before
    the first surface, the screen stays blank.
