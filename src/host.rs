@@ -165,14 +165,27 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativePaused<'local>
     host::paused(host as host::HostId);
 }
 
+/// Physical pixels relative to the `SurfaceView`, which fills the window: the
+/// system bars and display cutout, and the software keyboard (0 when hidden).
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeKeyboardInsets<'local>(
+pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeInsets<'local>(
     _env: EnvUnowned<'local>,
     _this: JObject<'local>,
-    visible: bool,
-    height_px: i32,
+    host: i64,
+    top: i32,
+    bottom: i32,
+    left: i32,
+    right: i32,
+    ime: i32,
 ) {
-    diagnostics::set_keyboard(visible, height_px);
+    diagnostics::set_keyboard(ime > 0, ime);
+    let safe_area = gpui_mobile::android::SafeAreaInsets {
+        top: top as f32,
+        bottom: bottom as f32,
+        left: left as f32,
+        right: right as f32,
+    };
+    host::insets_changed(host as host::HostId, safe_area, ime as f32);
 }
 
 /// `ids`, `xs`, `ys` hold every pointer of the `MotionEvent` in index order,
@@ -270,5 +283,27 @@ pub fn move_task_to_back() {
     });
     if let Err(err) = result {
         log::error!("moveTaskToBack failed: {err}");
+    }
+}
+
+/// Dark system bar icons for a light theme, light ones for a dark theme: the
+/// window is edge to edge, so the bars sit over GPUI's own colors.
+pub fn set_light_system_bars(light: bool) {
+    let result = mobile_jni::with_env(|env| {
+        let activity = mobile_jni::activity(env)?;
+        env.call_method(
+            &activity,
+            jni::jni_str!("gpuiSetLightSystemBars"),
+            jni::jni_sig!("(Z)V"),
+            &[jni::objects::JValue::Bool(light)],
+        )
+        .map_err(|e| {
+            env.exception_clear();
+            e.to_string()
+        })?;
+        Ok(())
+    });
+    if let Err(err) = result {
+        log::error!("gpuiSetLightSystemBars failed: {err}");
     }
 }

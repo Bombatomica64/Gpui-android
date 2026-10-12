@@ -83,6 +83,20 @@ Send then hide the keyboard. The purpose half needs the GPUI branch.
 [amount keyboard](docs/demos/android-amount-keyboard.png),
 [Search key, Enter](docs/demos/android-ime-actions.png).
 
+### Let host-driven apps report safe-area and keyboard insets — branch `android-host-insets`
+
+The host path had no way to pass insets in, so an edge-to-edge host could
+not tell GPUI where the system bars, the cutout and the keyboard are: the
+Android window returned GPUI's default, zero, `PlatformWindow::insets`.
+`host::insets_changed(host, SafeAreaInsets, ime)` takes them in physical
+pixels. The render thread stores them on that host's window, or keeps them
+until the window opens. The window implements `insets()` and
+`on_insets_changed`, so apps read them through GPUI
+(`Window::fully_visible_bounds`) and GPUI refreshes the window when they
+change. `safe_area_insets()` and `keyboard_height()` return them too, as on
+iOS. LabActivity calls it from its `OnApplyWindowInsetsListener`.
+Draft upstream PR: [docs/upstream/safe-area-insets.md](docs/upstream/safe-area-insets.md).
+
 ### Clear the Java exceptions the accessibility bridge leaves pending — branch `android-a11y-clear-exceptions`
 
 `accesskit_android`'s jni 0.21 API leaves a thrown Java exception pending,
@@ -140,8 +154,10 @@ press on a focused input calls `Window::request_virtual_keyboard`.
 When the IME opens, `adjustResize` shrinks the viewport, but nothing scrolled
 the focused input back into view. A focused input calls
 `Window::request_autoscroll` for its text area (the caret line in a
-textarea) when it gains focus or the viewport size changes. Needs the GPUI
-autoscroll fix below to work in plain scroll containers.
+textarea) when it gains focus or `Window::fully_visible_bounds()` changes:
+the viewport resizing under `adjustResize`, or the keyboard arriving as an
+inset on an edge-to-edge window. Needs the GPUI autoscroll fix below to work
+in plain scroll containers.
 
 ### Tell the keyboard how to assist each input — branches `input-text-input-configuration`, `input-purpose`
 
