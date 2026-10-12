@@ -74,6 +74,7 @@ fn main() -> ExitCode {
             Some("fat") => fat(&args[1..]),
             Some("watch") => watch(),
             Some("save-base") => save_base(),
+            Some("build") => build_library(&args[1..]).map(|_| ExitCode::SUCCESS),
             Some("reload") => reload(&args[1..]),
             _ => {
                 eprintln!("usage: hotpatch fat [cargo args] | hotpatch watch | hotpatch reload [cargo args]");
@@ -146,39 +147,46 @@ fn build_library(build_args: &[String]) -> anyhow::Result<PathBuf> {
         .append(true)
         .open(&lib)?
         .set_modified(SystemTime::now())?;
-    // build.sh's steps, but Gradle only sees the stripped library (the
-    // unstripped one is ~290 MB, copied several times into Gradle's outputs).
-    let jni_libs = root().join("android/app/src/main/jniLibs");
-    _ = std::fs::remove_dir_all(&jni_libs);
+    let t = Instant::now();
     let status = Command::new("cargo")
-        .args(["ndk", "-t", "arm64-v8a", "--platform", "26", "-o"])
-        .arg(&jni_libs)
-        .arg("build")
+        .args(["ndk", "-t", "arm64-v8a", "--platform", "26", "build"])
         .args(build_args)
         .current_dir(root())
         .env("RUSTC_WORKSPACE_WRAPPER", env::current_exe()?)
         .env("HOTPATCH_MODE", "fat")
         .status()?;
     ensure!(status.success(), "cargo ndk failed");
+    let cargo_ms = t.elapsed().as_millis();
+    let rustc_ms: u128 = read_json(&state_dir().join("rustc-ms.json"))?;
+    let link_ms: u128 = read_json(&state_dir().join("link-ms.json"))?;
+    let t = Instant::now();
     save_base()?;
+    let save_ms = t.elapsed().as_millis();
 
-    // The phone needs no DWARF (patches link against target/hotpatch/base.so,
-    // Subsecond finds `main` via the dynamic symbol table): a 94 MB APK, not 305.
-    // Only non-loaded sections go, so addresses are unchanged.
-    let packaged = root().join("android/app/src/main/jniLibs/arm64-v8a/libgpui_mobile_lab.so");
+    // build.sh's steps, but Gradle only sees a library without DWARF: the
+    // phone needs none (patches link against target/hotpatch/base.so,
+    // Subsecond finds `main` via the dynamic symbol table), so the APK is
+    // 94 MB, not 305. Only non-loaded sections go: addresses are unchanged.
+    // Stripping from cargo's output also skips cargo-ndk's copy (`-o`) of
+    // the ~290 MB library.
+    let jni_libs = root().join("android/app/src/main/jniLibs/arm64-v8a");
+    _ = std::fs::remove_dir_all(&jni_libs);
+    std::fs::create_dir_all(&jni_libs)?;
+    let packaged = jni_libs.join(format!("lib{TIP}.so"));
     let status = Command::new(ndk_bin("llvm-strip")?)
         .arg("--strip-debug")
+        .arg(state_dir().join("base.so"))
+        .arg("-o")
         .arg(&packaged)
         .status()?;
     ensure!(status.success(), "llvm-strip failed");
-    // gpui-mobile also builds a cdylib; the lab links it statically (as #31).
-    for entry in std::fs::read_dir(packaged.parent().unwrap())? {
-        let path = entry?.path();
-        let name = path.file_name().unwrap().to_string_lossy();
-        if name.starts_with("libgpui_mobile.") || name.starts_with("libgpui_mobile-") {
-            std::fs::remove_file(&path)?;
-        }
-    }
+    println!(
+        "hotpatch: build {} ms: lab crate {} ms, link {link_ms} ms, cargo {} ms, save base {save_ms} ms, strip {} ms",
+        cargo_ms + t.elapsed().as_millis(),
+        rustc_ms.saturating_sub(link_ms),
+        cargo_ms.saturating_sub(rustc_ms),
+        t.elapsed().as_millis() - save_ms,
+    );
     Ok(packaged)
 }
 
@@ -315,7 +323,13 @@ fn push_chunked(local: &Path, remote: &str) -> anyhow::Result<()> {
 fn save_base() -> anyhow::Result<ExitCode> {
     let fat_link: Vec<String> = read_json(&state_dir().join("link-fat.json"))?;
     let base = link_output(&fat_link)?;
-    std::fs::copy(&base, state_dir().join("base.so"))?;
+    // A hard link, not a 290 MB copy: lld replaces its output file rather
+    // than writing into it, so the next build leaves this one alone.
+    let saved = state_dir().join("base.so");
+    _ = std::fs::remove_file(&saved);
+    if std::fs::hard_link(&base, &saved).is_err() {
+        std::fs::copy(&base, &saved)?;
+    }
     // Patches only carry the objects that differ from these.
     let hashes: Vec<(String, u64)> = tip_objects(&fat_link)
         .into_iter()
@@ -364,12 +378,15 @@ fn wrap_rustc(args: &[String]) -> anyhow::Result<ExitCode> {
         linker: linker.clone(),
     };
     write_json(&state_dir().join("rustc.json"), &recorded)?;
-    run_status(
+    let t = Instant::now();
+    let status = run_status(
         Command::new(rustc)
             .args(&args)
             .env("HOTPATCH_SHIM", "1")
             .env("HOTPATCH_REAL_LINKER", &linker),
-    )
+    );
+    write_json(&state_dir().join("rustc-ms.json"), &t.elapsed().as_millis())?;
+    status
 }
 
 /// rustc's linker for the lab: records the arguments, then links (fat) or
@@ -387,7 +404,10 @@ fn link_shim(args: &[String]) -> anyhow::Result<ExitCode> {
     if mode == "thin" {
         return Ok(ExitCode::SUCCESS);
     }
-    run_status(Command::new(env::var("HOTPATCH_REAL_LINKER")?).args(args))
+    let t = Instant::now();
+    let status = run_status(Command::new(env::var("HOTPATCH_REAL_LINKER")?).args(args));
+    write_json(&state_dir().join("link-ms.json"), &t.elapsed().as_millis())?;
+    status
 }
 
 fn watch() -> anyhow::Result<ExitCode> {
