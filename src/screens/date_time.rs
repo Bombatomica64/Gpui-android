@@ -1,7 +1,6 @@
 use chrono::{Days, NaiveTime};
 use gpui::{
-    AppContext as _, Context, Entity, IntoElement, ParentElement, Render, Styled, Subscription,
-    Window,
+    AppContext as _, Context, Entity, IntoElement, ParentElement, Styled, Subscription, Window,
 };
 use gpui_kit::component::{
     button::Button,
@@ -150,8 +149,10 @@ impl DateTimeScreen {
     }
 }
 
-impl Render for DateTimeScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(DateTimeScreen);
+
+impl DateTimeScreen {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let today = chrono::Local::now().date_naive();
         let presets = vec![
             DateRangePreset::range("Last 7 days", today - Days::new(6), today),

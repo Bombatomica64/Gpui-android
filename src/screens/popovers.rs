@@ -1,5 +1,5 @@
 use gpui::{
-    AppContext as _, Context, Entity, InteractiveElement, IntoElement, ParentElement, Render,
+    AppContext as _, Context, Entity, InteractiveElement, IntoElement, ParentElement,
     StatefulInteractiveElement, Styled, Window, div, point, px,
 };
 use gpui_kit::component::{
@@ -41,8 +41,10 @@ impl PopoversScreen {
     }
 }
 
-impl Render for PopoversScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(PopoversScreen);
+
+impl PopoversScreen {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let view = cx.entity();
         let word_wrap = self.word_wrap;
         let show_hidden = self.show_hidden;

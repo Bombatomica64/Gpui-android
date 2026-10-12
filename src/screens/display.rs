@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use gpui::{
-    Context, Image, ImageFormat, IntoElement, ObjectFit, ParentElement, Render, Styled, Window,
-    div, img, prelude::*, px,
+    Context, Image, ImageFormat, IntoElement, ObjectFit, ParentElement, Styled, Window, div, img,
+    prelude::*, px,
 };
 use gpui_kit::component::{
     Icon, IconName, Size,
@@ -43,8 +43,10 @@ impl DisplayScreen {
     }
 }
 
-impl Render for DisplayScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(DisplayScreen);
+
+impl DisplayScreen {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let names = [
             "Ada Lovelace",
             "Bruno Rossi",

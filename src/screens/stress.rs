@@ -4,8 +4,8 @@ use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 
 use gpui::{
-    AppContext as _, Context, Entity, IntoElement, ParentElement, Render, SharedString, Styled,
-    Window, div, px, uniform_list,
+    AppContext as _, Context, Entity, IntoElement, ParentElement, SharedString, Styled, Window,
+    div, px, uniform_list,
 };
 use gpui_kit::component::{
     button::Button,
@@ -85,8 +85,10 @@ impl StressScreen {
     }
 }
 
-impl Render for StressScreen {
-    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(StressScreen);
+
+impl StressScreen {
+    fn render_view(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let render_start = Instant::now();
         if self.running {
             let now = Instant::now();

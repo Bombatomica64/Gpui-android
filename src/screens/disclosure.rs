@@ -1,6 +1,6 @@
 use gpui::{
-    Context, InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement,
-    Styled, Window, div,
+    Context, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement, Styled,
+    Window, div,
 };
 use gpui_kit::component::{
     Icon, IconName, accordion::Accordion, button::Button, collapsible::Collapsible, h_flex, v_flex,
@@ -28,8 +28,10 @@ impl DisclosureScreen {
     }
 }
 
-impl Render for DisclosureScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(DisclosureScreen);
+
+impl DisclosureScreen {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let open = self.open.clone();
         let accordion = Accordion::new("faq")
             .multiple(self.multiple)

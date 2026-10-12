@@ -3,9 +3,7 @@
 use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 
-use gpui::{
-    Context, IntoElement, ParentElement, Render, Styled, Task, Window, div, prelude::*, px,
-};
+use gpui::{Context, IntoElement, ParentElement, Styled, Task, Window, div, prelude::*, px};
 use gpui_kit::component::{WindowExt as _, button::Button, h_flex, v_flex};
 
 use crate::diagnostics as host;
@@ -60,8 +58,10 @@ impl DiagnosticsScreen {
     }
 }
 
-impl Render for DiagnosticsScreen {
-    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(DiagnosticsScreen);
+
+impl DiagnosticsScreen {
+    fn render_view(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let _ = &self.refresh;
         if self.animating {
             self.frames.push_back(Instant::now());

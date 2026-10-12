@@ -1,6 +1,6 @@
 use gpui::{
-    AppContext as _, Context, Entity, Hsla, IntoElement, ParentElement, Render, Styled,
-    Subscription, Window, div, prelude::*,
+    AppContext as _, Context, Entity, Hsla, IntoElement, ParentElement, Styled, Subscription,
+    Window, div, prelude::*,
 };
 use gpui_kit::component::{
     IndexPath,
@@ -193,8 +193,10 @@ impl SelectScreen {
     }
 }
 
-impl Render for SelectScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(SelectScreen);
+
+impl SelectScreen {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         v_flex()
             .gap_3()
             .child(

@@ -1,6 +1,6 @@
 use gpui::{
-    App, AppContext as _, Context, Entity, Global, IntoElement, ParentElement, Render,
-    SharedString, Styled, Window, div, prelude::*, px,
+    App, AppContext as _, Context, Entity, Global, IntoElement, ParentElement, SharedString,
+    Styled, Window, div, prelude::*, px,
 };
 use gpui_kit::component::{
     button::Button,
@@ -76,8 +76,10 @@ impl SettingsFormScreen {
     }
 }
 
-impl Render for SettingsFormScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(SettingsFormScreen);
+
+impl SettingsFormScreen {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let settings = Settings::new("lab-settings").pages(vec![
             SettingPage::new("General").default_open(true).groups(vec![
                 SettingGroup::new().title("Behaviour").items(vec![

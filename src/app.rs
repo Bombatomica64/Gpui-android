@@ -2,8 +2,8 @@
 
 use gpui::{
     AnyView, App, AppContext as _, Context, Entity, FocusHandle, Focusable, InteractiveElement,
-    IntoElement, KeyBinding, ParentElement, Render, ScrollHandle, SharedString,
-    StatefulInteractiveElement, Styled, Subscription, Window, actions, div, prelude::*, px,
+    IntoElement, KeyBinding, ParentElement, ScrollHandle, SharedString, StatefulInteractiveElement,
+    Styled, Subscription, Window, actions, div, prelude::*, px,
 };
 use gpui_kit::component::{
     IconName,
@@ -403,8 +403,10 @@ impl Focusable for LabApp {
     }
 }
 
-impl Render for LabApp {
-    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(LabApp);
+
+impl LabApp {
+    fn render_view(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         // Back needs a focused node inside this key context. When a focused input
         // is removed or blurs, nothing is focused and back would be dropped.
         if window.focused(cx).is_none() {

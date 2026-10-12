@@ -3,8 +3,7 @@
 use std::rc::Rc;
 
 use gpui::{
-    App, Context, Global, IntoElement, ParentElement, Render, SharedString, Styled, Window, div,
-    prelude::*,
+    App, Context, Global, IntoElement, ParentElement, SharedString, Styled, Window, div, prelude::*,
 };
 use gpui_kit::component::{
     Theme, ThemeConfig, ThemeMode, ThemeRegistry, button::Button, h_flex, v_flex,
@@ -121,8 +120,10 @@ impl ThemesScreen {
     }
 }
 
-impl Render for ThemesScreen {
-    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(ThemesScreen);
+
+impl ThemesScreen {
+    fn render_view(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let current = cx.global::<CurrentChoice>().0.clone();
         let base = [
             ("System", Choice::System),

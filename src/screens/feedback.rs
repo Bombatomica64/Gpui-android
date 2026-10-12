@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use gpui::{Context, IntoElement, ParentElement, Render, Styled, Task, Window, div, px};
+use gpui::{Context, IntoElement, ParentElement, Styled, Task, Window, div, px};
 use gpui_kit::component::{
     IconName, Size,
     alert::Alert,
@@ -67,8 +67,10 @@ impl FeedbackScreen {
     }
 }
 
-impl Render for FeedbackScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+crate::hot_render!(FeedbackScreen);
+
+impl FeedbackScreen {
+    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let alert = |this: &Self, id: &'static str, alert: Alert, cx: &mut Context<Self>| {
             alert
                 .visible(!this.closed_alerts.contains(&id))
