@@ -1,7 +1,6 @@
 package dev.gpui.mobile.lab;
 
 import android.app.Activity;
-import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
@@ -26,7 +25,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import java.io.File;
+import dev.gpui.mobile.GpuiLibraryLoader;
+
 
 /**
  * Host for the GPUI render thread (gpui_mobile::android::host).
@@ -42,26 +42,6 @@ import java.io.File;
 public class LabActivity extends Activity implements SurfaceHolder.Callback {
     private static final String TAG = "GPUI_MOBILE_LAB";
 
-    private static boolean libraryLoaded;
-
-    /**
-     * Debuggable builds run a library pushed by `cargo gpui reload` when there
-     * is one (files/dev/, copied read-only as Android 14 requires for loaded
-     * code), so a Rust change needs no reinstall; otherwise the packaged one.
-     */
-    private void loadLibrary() {
-        if (libraryLoaded) return;
-        libraryLoaded = true;
-        File dev = new File(getFilesDir(), "dev/libgpui_mobile_lab.so");
-        boolean debuggable = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
-        if (debuggable && dev.isFile()) {
-            Log.i(TAG, "loading dev library " + dev);
-            System.load(dev.getAbsolutePath());
-        } else {
-            System.loadLibrary("gpui_mobile_lab");
-        }
-    }
-
     /** Names this Activity's GPUI window. Kept across recreation; a fresh launch gets a new one. */
     private static long nextHostId = 1;
     private long hostId;
@@ -72,7 +52,8 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
-        loadLibrary();
+        // Debuggable builds prefer a library pushed by `cargo gpui reload`.
+        GpuiLibraryLoader.load(this, "gpui_mobile_lab");
         hostId = state != null ? state.getLong("gpuiHostId", nextHostId++) : nextHostId++;
         surface = new SurfaceView(this);
         surface.getHolder().addCallback(this);

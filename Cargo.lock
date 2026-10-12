@@ -2407,6 +2407,7 @@ dependencies = [
 [[package]]
 name = "gpui-hot"
 version = "0.1.0"
+source = "git+https://github.com/Bombatomica64/cargo-gpui?rev=538678d244c27b814a073529177977fabcbd3842#538678d244c27b814a073529177977fabcbd3842"
 dependencies = [
  "anyhow",
  "gpui-hot-macros",
@@ -2420,6 +2421,7 @@ dependencies = [
 [[package]]
 name = "gpui-hot-macros"
 version = "0.1.0"
+source = "git+https://github.com/Bombatomica64/cargo-gpui?rev=538678d244c27b814a073529177977fabcbd3842#538678d244c27b814a073529177977fabcbd3842"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2726,7 +2728,7 @@ dependencies = [
 [[package]]
 name = "gpui-pre-mobile"
 version = "0.1.0"
-source = "git+https://github.com/Bombatomica64/gpui-mobile?rev=4acd1761b4b2a734f49ff2bce930c61b01cfe5be#4acd1761b4b2a734f49ff2bce930c61b01cfe5be"
+source = "git+https://github.com/Bombatomica64/gpui-mobile?rev=c45635642cf6c1e7718c40e113ba2c925878f998#c45635642cf6c1e7718c40e113ba2c925878f998"
 dependencies = [
  "accesskit_android",
  "android-activity",

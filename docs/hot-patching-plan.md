@@ -214,7 +214,7 @@ now rebases every key itself and gives Subsecond a zero offset.
 
 The items:
 
-1. Done: `tools/cargo-gpui` (below). The app writes its ASLR reference to
+1. Done: `cargo gpui` (below; since moved to [cargo-gpui](https://github.com/Bombatomica64/cargo-gpui)). The app writes its ASLR reference to
    `files/dev/aslr` and acknowledges each patch in `files/dev/applied`.
 2. Done: `#[gpui_hot::hot]` on an ordinary `impl Render` (crate
    `gpui-hot-macros`). The hot closure is still monomorphised in the app
@@ -277,7 +277,7 @@ Findings:
 - **A delta is 15× smaller again.** `zstd --patch-from=<previous build>`
   makes a 1.4 MB delta in 0.4 s. `cargo gpui reload` now sends only that:
   the last pushed library stays in `/data/local/tmp/gpui-dev`, and a 0.6 MB
-  arm64 `unpatch` binary (`tools/cargo-gpui/unpatch`, the zstd crate) rebuilds
+  arm64 `unpatch` binary (`unpatch` in cargo-gpui, the zstd crate) rebuilds
   the new one there as the shell user, so the app needs no change and can
   even be crashed. The first reload of a session pushes the full library.
   If the phone's copy is missing or isn't the delta's base, zstd's checksum
@@ -406,6 +406,7 @@ content-driven screens, B3 for logic.
 3. A2 dev client. Needed either way.
 4. A3 build speed, guided by A0.
 5. `cargo gpui` CLI, folding in A1 and A2 as they land. Started:
-   `tools/cargo-gpui` (`dev`, `reload`, `watch`, `build`, `apk`,
-   `install`) and the `gpui-hot` crate.
+   `cargo gpui` (`dev`, `reload`, `watch`, `build`, `apk`, `install`) and
+   the `gpui-hot` crate, now in [cargo-gpui](https://github.com/Bombatomica64/cargo-gpui); the loader in
+   gpui-mobile (`GpuiLibraryLoader`).
 6. Track B only when a real app needs it.

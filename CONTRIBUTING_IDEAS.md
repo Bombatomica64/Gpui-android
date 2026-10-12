@@ -93,9 +93,13 @@ October 2026; "fork" means the fix is on one of the branches listed in
      `touch-axis`). These belong in zed-industries/zed, which gpui-pre
      snapshots. Branches on Zed `main` and draft PR texts:
      [docs/upstream-zed](docs/upstream-zed/README.md).
-4. **Faster iteration loop.** Hot reload, a dev-mode `cdylib` swap, or a
-   desktop-hosted phone-size preview. Not started. Build it as a
-   standalone package first and propose it upstream once it works.
+4. **Faster iteration loop.** Done as a standalone package:
+   [cargo-gpui](https://github.com/Bombatomica64/cargo-gpui) hot patches Rust with Dioxus's Subsecond (save to
+   screen in 3.3–3.6 s through an ssh adb tunnel, state kept) and reloads
+   the library without reinstalling (8.3 s). gpui-mobile only needs a
+   loader for the pushed library (`GpuiLibraryLoader`, fork branch
+   `dev-hot-loader`). Next: ask upstream where they want it. A desktop-hosted
+   phone-size preview is not started.
 5. **Binary size.** Measured in [docs/binary-size.md](docs/binary-size.md);
    every PR's job summary shows the APK and `.so` sizes.
    - Lab: native libraries stored compressed, APK 74 → 35 MB (#56).

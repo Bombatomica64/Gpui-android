@@ -1,8 +1,9 @@
 # Hot patching and fast reload
 
-`cargo gpui` (`tools/cargo-gpui`, a standalone crate with its own workspace)
-on the host, plus the `gpui-hot` crate (`crates/gpui-hot`) in the app. Both
-are debug-only: release builds compile the hooks to nothing.
+`cargo gpui` on the host, plus the `gpui-hot` crate in the app, both in the
+standalone repo [Bombatomica64/cargo-gpui](https://github.com/Bombatomica64/cargo-gpui); gpui-mobile's
+`GpuiLibraryLoader` loads a pushed library in the host Activity. All of it
+is debug-only: release builds compile the hooks to nothing.
 
 - **Hot patching** with [Subsecond](https://docs.rs/subsecond) (Dioxus). On
   save, `cargo gpui` recompiles only the app crate, links a small patch
@@ -17,7 +18,7 @@ are debug-only: release builds compile the hooks to nothing.
 `cargo gpui dev` does both: patch on every save, reload when a patch can't
 be built or applied, and on `r` + Enter. Background, measurements and the
 go/no-go are in `docs/hot-patching-plan.md` (sections A0–A3); usage is in
-`tools/cargo-gpui/README.md`.
+the [cargo-gpui README](https://github.com/Bombatomica64/cargo-gpui#readme).
 
 ## Contents
 - One-time setup
@@ -35,7 +36,7 @@ and `unzip` on the host. The tool assumes a Linux x86_64 host and an arm64
 phone.
 
 ```sh
-cargo install --path tools/cargo-gpui     # or run tools/cargo-gpui/target/debug/cargo-gpui gpui …
+cargo install --git https://github.com/Bombatomica64/cargo-gpui cargo-gpui
 cargo gpui apk                            # base debug APK → dist/<name>-<version>-debug.apk
 cargo gpui install                        # install it, ready for delta reloads
 ```
@@ -89,7 +90,7 @@ asset or Gradle changes.
    android-activity = ".MainActivity"
 
    [dependencies]
-   gpui-hot = { path = "…/crates/gpui-hot" }
+   gpui-hot = { git = "https://github.com/Bombatomica64/cargo-gpui", rev = "…" }
    ```
 2. Call `gpui_hot::init(cx)` once in `launch`, after your own init. It
    returns at once in release builds; in debug it writes the app's ASLR
@@ -108,10 +109,13 @@ asset or Gradle changes.
    ```
 4. Optional: `gpui_hot::remember("screen", Some(title))` when a screen opens
    (`None` when it closes); a reload passes it back as `--es screen <title>`.
-5. In the host Activity, replace the static `System.loadLibrary` with the
-   lab's `loadLibrary()` from `onCreate`: if debuggable and
-   `getFilesDir()/dev/lib<name>.so` exists, `System.load` it, else
-   `System.loadLibrary`.
+5. In the host Activity, replace the static `System.loadLibrary` with
+   `GpuiLibraryLoader.load(this, "<lib name>")` at the start of `onCreate`
+   (a gpui-mobile helper in its example project; the lab's `build.sh` copies
+   it like the other helpers). In a debuggable build it loads
+   `files/dev/lib<name>.so` when it exists, else the packaged library.
+   `NativeActivity` hosts can't use it: `NativeActivity` loads the packaged
+   library itself.
 
 ## What a patch can and can't change
 
