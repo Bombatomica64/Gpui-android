@@ -5,6 +5,11 @@ edition = "2024"
 publish = false
 description = "On-device test gallery for GPUI Kit v0.7.1 on Android"
 
+# `cargo gpui` (tools/cargo-gpui): where the dev loop installs and reloads.
+[package.metadata.gpui]
+android-package = "dev.gpui.mobile.lab"
+android-activity = ".LabActivity"
+
 [lib]
 name = "gpui_mobile_lab"
 crate-type = ["cdylib"]
@@ -30,10 +35,8 @@ log = "0.4"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
 regex = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
-# Dev hot patching (src/hot.rs); inert without debug assertions.
-subsecond = "0.7.10"
-serde_json = "1"
-libc = "0.2"
+# `cargo gpui dev`: hot patching and reload state; inert without debug assertions.
+gpui-hot = { path = "crates/gpui-hot" }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.15"
@@ -58,6 +61,10 @@ debug = "line-tables-only"
 
 [profile.dev.package."*"]
 opt-level = 2
+# No DWARF for dependencies (panic messages keep their file:line): the debug
+# library is 100 MB instead of 288, links faster and the compiler peaks at
+# 0.6 GB instead of 1.2 (docs/hot-patching-plan.md, A3).
+debug = false
 
 [patch.crates-io]
 gpui-pre = { git = "https://github.com/Bombatomica64/gpui-pre", rev = "bc4b49bd280062c75b703536a9cec22585694fb3" }

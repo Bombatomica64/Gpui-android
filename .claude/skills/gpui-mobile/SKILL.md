@@ -48,15 +48,14 @@ several times faster.
 
 | Change | Tool | Time to screen | State kept |
 |---|---|---|---|
-| Render code in the app crate (text, colours, layout, handlers built in `render`) | `hotpatch watch` | ~5–6 s (1.2–1.6 s compile) | yes: screen, input, view state |
-| Anything else in the app crate, struct changes, gpui/Kit/gpui-mobile changes, new deps | `hotpatch reload` | ~15 s, no Gradle, no reinstall | only the open screen |
+| Render code in the app crate (text, colours, layout, handlers built in `render`) | `cargo gpui dev` (patch on save) | ~3.5 s (1.1 s compile) | yes: screen, input, view state |
+| Anything else in the app crate, struct changes, gpui/Kit/gpui-mobile changes, new deps | `cargo gpui dev` then `r` (or `cargo gpui reload`) | ~8 s, no Gradle, no reinstall | only the open screen |
 | Java, manifest, assets, new packages' Java helpers | `./build.sh android --debug`, then install | Gradle + install | no |
 | Release APK | CI (`.github/workflows/android.yml`, artifact `gpui-mobile-lab-apk`) | 4–6 min | — |
 
-Hot patching and reload live in `tools/hotpatch` and `src/hot.rs`. They were
-built in the lab's hot-patching work (PRs #30/#51 and the `dev-reload`
-branch); if they are missing from your checkout, those haven't merged yet,
-so say so instead of guessing at commands.
+Hot patching and reload live in `tools/cargo-gpui` (the `cargo gpui` CLI)
+and `crates/gpui-hot` (the app side); details in
+`references/hot-reload.md`.
 
 Local builds: debug arm64 builds fit on a small server (clean build ~5 min,
 ~2 GB peak per rustc). Release builds with LTO need far more memory; on a
@@ -139,4 +138,4 @@ longbridge/gpui-component and longbridge/gpui-mobile) takes them. Bombatomica64
 repos take PRs freely. Anything aimed at upstream should be one concern per
 PR, small, with device screenshots or GIFs, and should be shown to the repo
 owner before it's opened. Credit borrowed code (for example Dioxus in
-`tools/hotpatch`) in headers and keep its licence file.
+`tools/cargo-gpui`) in headers and keep its licence file.

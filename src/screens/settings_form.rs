@@ -76,10 +76,9 @@ impl SettingsFormScreen {
     }
 }
 
-crate::hot_render!(SettingsFormScreen);
-
-impl SettingsFormScreen {
-    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for SettingsFormScreen {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let settings = Settings::new("lab-settings").pages(vec![
             SettingPage::new("General").default_open(true).groups(vec![
                 SettingGroup::new().title("Behaviour").items(vec![

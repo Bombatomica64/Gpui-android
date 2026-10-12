@@ -1,5 +1,5 @@
 use gpui::{
-    AppContext as _, Context, Entity, IntoElement, ParentElement, SharedString, Styled,
+    AppContext as _, Context, Entity, IntoElement, ParentElement, Render, SharedString, Styled,
     Subscription, Window, div, px,
 };
 use gpui_kit::component::{
@@ -224,10 +224,9 @@ impl TablesScreen {
     }
 }
 
-crate::hot_render!(TablesScreen);
-
-impl TablesScreen {
-    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for TablesScreen {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let (selected_row, selection) = {
             let state = self.table.read(cx);
             (state.selected_row(), format!("{:?}", state.selection()))

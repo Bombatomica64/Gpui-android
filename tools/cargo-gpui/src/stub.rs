@@ -19,7 +19,7 @@ use object::{
 };
 use subsecond_types::{AddressMap, JumpTable};
 
-/// Subsecond's reference symbol, exported by the lab (src/hot.rs) and so by each patch.
+/// Subsecond's reference symbol, exported by the app (the gpui-hot crate) and given to each patch by the stub.
 const SENTINEL: &str = "main";
 
 pub struct BaseSymbol {
@@ -61,7 +61,7 @@ impl BaseSymbols {
             .collect::<HashMap<_, _>>();
         ensure!(
             symbols.contains_key(SENTINEL),
-            "no `{SENTINEL}` in {} (debug build with src/hot.rs?)",
+            "no `{SENTINEL}` in {} (debug build with the gpui-hot crate?)",
             path.display()
         );
         let tdata = obj
@@ -157,6 +157,22 @@ pub fn undefined_symbol_stub(
                 });
             }
         }
+    }
+    // Subsecond finds each patch's base with dlsym(patch, "main"); `main`
+    // usually lives in the gpui-hot crate, not in the patched app crate.
+    if !defined.contains(SENTINEL) {
+        let ret = 0xD65F03C0u32.to_le_bytes(); // ret
+        let offset = obj.append_section_data(text, &ret, 4);
+        obj.add_symbol(Symbol {
+            name: SENTINEL.as_bytes().to_vec(),
+            value: offset,
+            size: 4,
+            kind: SymbolKind::Text,
+            scope: SymbolScope::Dynamic,
+            weak: false,
+            section: SymbolSection::Section(text),
+            flags: object::SymbolFlags::None,
+        });
     }
     Ok(obj.write()?)
 }

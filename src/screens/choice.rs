@@ -1,6 +1,6 @@
 use gpui::{
-    AppContext as _, Context, Entity, IntoElement, ParentElement, Styled, Subscription, Window,
-    div, px,
+    AppContext as _, Context, Entity, IntoElement, ParentElement, Render, Styled, Subscription,
+    Window, div, px,
 };
 use gpui_kit::component::{
     IconName, Size,
@@ -121,10 +121,9 @@ impl ChoiceScreen {
     }
 }
 
-crate::hot_render!(ChoiceScreen);
-
-impl ChoiceScreen {
-    fn render_view(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for ChoiceScreen {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let checkbox = |this: &Self, ix: usize, label: &'static str, cx: &mut Context<Self>| {
             Checkbox::new(("check", ix))
                 .label(label)

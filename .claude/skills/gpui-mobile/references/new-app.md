@@ -118,7 +118,7 @@ Copy that pattern.
 
 Copy `LabActivity.java` and rename. What it must do:
 - Load the library in `onCreate` (debug: prefer `files/dev/lib<name>.so` for
-  `hotpatch reload`).
+  `cargo gpui reload`).
 - Own a `SurfaceView`; forward its callbacks and touch events.
 - `dispatchKeyEvent`: let volume keys through, send Back to Rust (it arrives
   as `escape`), send printable keys to the IME proxy while it has focus.
@@ -187,7 +187,7 @@ release. Fetch it with `gh run download <run-id> -n gpui-mobile-lab-apk`.
 
 1. `src/screens/foo.rs`: `pub struct FooScreen` with
    `pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self` and a
-   render (via `hot_render!` if the app uses hot patching).
+   `impl Render` marked `#[gpui_hot::hot]` (for hot patching).
 2. `mod foo;` and `screen!("Foo", foo::FooScreen)` in `src/screens/mod.rs`
    (third argument `true` if it owns its scroll container).
 3. Lab tools also go in `TOOLS`; component demos get a row in

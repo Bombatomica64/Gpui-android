@@ -120,10 +120,9 @@ impl ThemesScreen {
     }
 }
 
-crate::hot_render!(ThemesScreen);
-
-impl ThemesScreen {
-    fn render_view(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+#[gpui_hot::hot]
+impl Render for ThemesScreen {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let current = cx.global::<CurrentChoice>().0.clone();
         let base = [
             ("System", Choice::System),
