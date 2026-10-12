@@ -39,7 +39,7 @@ captures in [../demos](../demos) and say where a capture is missing.
 | 17 | kit | `input-purpose` (fork branch only) | ⛔ | #4, plus the same GPUI change; conflicts with `main` (to rebase then) | yes | — |
 | 18 | mobile | `android-activity-requests`, `android-picker-files` (fork only) | ⛔ | the JNI rework (issue #31): built on its `jni.rs` | partly ([picker screenshots](../demos/platform-apis)) | — |
 | 19 | mobile | `android-string-arrays` (fork only) | ⛔ | #6, plus the JNI rework (#31): `contacts/android.rs` was rewritten there | no | — |
-| 20 | mobile | [`dev-hot-loader`](https://github.com/Bombatomica64/gpui-mobile/tree/dev-hot-loader) (`GpuiLibraryLoader`) | ⏳ ask first: an issue asking where hot reload should live; the PR only if they want it | — | phone strip from the A1 spike | [issue draft](hot-reload-discussion.md) |
+| 20 | mobile | [`dev-hot-loader`](https://github.com/Bombatomica64/gpui-mobile/tree/dev-hot-loader) (`GpuiLibraryLoader`) | ⏳ asked in [#34](https://github.com/longbridge/gpui-mobile/issues/34) where hot reload should live; the PR only if they want it | — | phone strip from the A1 spike | [issue draft](hot-reload-discussion.md) |
 
 Notes on the triage:
 
