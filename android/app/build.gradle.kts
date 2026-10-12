@@ -43,8 +43,20 @@ android {
         }
     }
 
+    sourceSets {
+        // gpui-mobile's Java helpers, copied by build.sh from the pinned checkout.
+        getByName("main").java.srcDir("build/generated/gpui-helpers")
+    }
+
     lint {
         abortOnError = false
         checkReleaseBuilds = false
     }
+}
+
+dependencies {
+    // Needed by gpui-mobile's Java helpers (notifications, biometric prompt, media session).
+    implementation("androidx.core:core:1.12.0")
+    implementation("androidx.biometric:biometric:1.1.0")
+    implementation("androidx.media:media:1.7.1")
 }

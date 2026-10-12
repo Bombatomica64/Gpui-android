@@ -101,6 +101,20 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeOpenScreen<'lo
 }
 
 #[unsafe(no_mangle)]
+pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeDeepLink<'local>(
+    mut env: EnvUnowned<'local>,
+    _this: JObject<'local>,
+    url: JString<'local>,
+) {
+    env.with_env(|env| -> jni::errors::Result<()> {
+        let url = url.try_to_string(env)?;
+        gpui_mobile::packages::deeplink::handle_link(&url);
+        Ok(())
+    })
+    .resolve::<LogErrorAndDefault>();
+}
+
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeConfigurationChanged<'local>(
     _env: EnvUnowned<'local>,
     _this: JObject<'local>,
