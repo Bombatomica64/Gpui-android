@@ -127,9 +127,10 @@ October 2026; "fork" means the fix is on one of the branches listed in
      `NotoColorEmojiFlags.ttf`.
    - Fork: safe-area insets. The host reports the system bars, the cutout
      and the keyboard through `host::insets_changed` (gpui-mobile
-     `android-host-insets`), and `safe_area_insets()` / `keyboard_height()`
-     return them on Android. The lab is edge to edge, its shell pads by them,
-     and Diagnostics shows them. Upstream draft in
+     `android-host-insets`). They become GPUI's `PlatformWindow::insets`, so
+     `Window::fully_visible_bounds()` works on Android. The lab is edge to
+     edge, its shell pads by them, Kit inputs reveal above the keyboard
+     (`input-reveal-on-focus`), and Diagnostics shows them. Upstream draft in
      [docs/upstream/safe-area-insets.md](docs/upstream/safe-area-insets.md).
      Next: Kit sheets and notifications still lay out against the whole
      window, under the bars.

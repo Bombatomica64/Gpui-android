@@ -3,13 +3,19 @@
 Status: done on the fork. Steps 1–2 are gpui-mobile branch
 `android-host-insets` (draft upstream PR in
 [upstream/safe-area-insets.md](upstream/safe-area-insets.md)); steps 3–5 are
-in the lab. Two choices differ from the plan below:
+in the lab. Three choices differ from the plan below:
 
-- The keyboard is passed in as a fifth value (`ime`) and feeds
-  `gpui_mobile::keyboard_height()`, which iOS already fills. The shell pads
-  its bottom by `max(navigation bar, keyboard)`. Shrinking the `SurfaceView`
-  in Java would have rebuilt the swapchain on every keyboard toggle, and
-  apps would get a different contract on Android than on iOS.
+- GPUI does have a safe-area concept: gpui-pre 0.3.8 has
+  `PlatformWindow::insets()` (`WindowInsets { safe_area, ime }`),
+  `on_insets_changed` and `Window::fully_visible_bounds()`. gpui-mobile
+  implements them, and the lab shell pads by `fully_visible_bounds()`. The
+  plan below missed this.
+- The keyboard is passed in as a fifth value (`ime`): it becomes GPUI's `ime`
+  inset and feeds `gpui_mobile::keyboard_height()`, which iOS already fills.
+  Shrinking the `SurfaceView` in Java would have rebuilt the swapchain on
+  every keyboard toggle, and apps would get a different contract on Android
+  than on iOS. Kit's input reveal had to follow `fully_visible_bounds()`
+  instead of the viewport size (Kit `input-reveal-on-focus`).
 - `safe_area_insets()` reads the active window from the platform, not a
   host-path global, so the `android-activity` path gets it as well.
 
