@@ -2407,7 +2407,7 @@ dependencies = [
 [[package]]
 name = "gpui-hot"
 version = "0.1.0"
-source = "git+https://github.com/Bombatomica64/cargo-gpui?rev=538678d244c27b814a073529177977fabcbd3842#538678d244c27b814a073529177977fabcbd3842"
+source = "git+https://github.com/Bombatomica64/cargo-gpui?rev=266146cce0ae62f13a3d10811470a7424c76ba57#266146cce0ae62f13a3d10811470a7424c76ba57"
 dependencies = [
  "anyhow",
  "gpui-hot-macros",
@@ -2421,7 +2421,7 @@ dependencies = [
 [[package]]
 name = "gpui-hot-macros"
 version = "0.1.0"
-source = "git+https://github.com/Bombatomica64/cargo-gpui?rev=538678d244c27b814a073529177977fabcbd3842#538678d244c27b814a073529177977fabcbd3842"
+source = "git+https://github.com/Bombatomica64/cargo-gpui?rev=266146cce0ae62f13a3d10811470a7424c76ba57#266146cce0ae62f13a3d10811470a7424c76ba57"
 dependencies = [
  "proc-macro2",
  "quote",
