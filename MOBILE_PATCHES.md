@@ -57,7 +57,9 @@ the new `host::configuration_changed()`, which updates every host's window.
 Android 13+'s COLRv1 emoji font cannot be drawn by swash, and the bundled
 CBDT fallback was only read through `android-activity`'s AssetManager, so
 emoji were empty boxes. The first `set_host_activity` keeps the
-application's AssetManager for the life of the process.
+application's AssetManager for the life of the process; if the platform
+started before it, the font is loaded then. Review changes requested; the
+reply draft is in [docs/upstream/replies](docs/upstream/replies/gpui-mobile-29.md).
 
 Both were one branch, `android-host-appearance-emoji`, until an adversarial
 review: night mode came from whichever Activity registered last, and the
