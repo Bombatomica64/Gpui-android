@@ -120,9 +120,10 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeDeepLink<'loca
 pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeConfigurationChanged<'local>(
     _env: EnvUnowned<'local>,
     _this: JObject<'local>,
+    ui_mode: i32,
 ) {
     log::info!("configuration changed");
-    host::configuration_changed();
+    host::configuration_changed(ui_mode);
 }
 
 #[unsafe(no_mangle)]

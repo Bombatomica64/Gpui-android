@@ -127,7 +127,7 @@ These come from bugs actually hit in this stack.
    Activity pointers. Load app classes with `find_app_class`, since
    `FindClass` on a native thread can't see them.
 6. **If the Activity handles `uiMode` in `configChanges`, call
-   `host::configuration_changed()` from `onConfigurationChanged`**, or dark
+   `host::configuration_changed(newConfig.uiMode)` from `onConfigurationChanged`**, or dark
    mode never updates.
 7. **`window.request_animation_frame()` only inside `render`.** Called from a
    click handler it panics.

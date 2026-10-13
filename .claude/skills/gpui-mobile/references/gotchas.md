@@ -10,7 +10,7 @@ anything newer.
 | Blank screen on start | `host::on_open_window` registered after the first `surface_created`, or not at all. |
 | Icons and SVGs missing | `host::start` instead of `host::start_with_assets(gpui_kit::assets::AllAssets, …)`. |
 | Emoji show as boxes | Android 13+ ships a COLRv1 emoji font that swash can't draw. Bundle `assets/fonts/NotoColorEmoji.ttf` (CBDT) and call `host::set_activity` (or `set_host_activity`) before `host::start`. Flags and ❤️ with VS16 still don't render. |
-| Dark mode doesn't follow the system | The Activity lists `uiMode` in `configChanges` but doesn't call `host::configuration_changed()` from `onConfigurationChanged`. |
+| Dark mode doesn't follow the system | The Activity lists `uiMode` in `configChanges` but doesn't call `host::configuration_changed(newConfig.uiMode)` from `onConfigurationChanged`. |
 | Text white on white in a dark chat bubble; shimmer invisible | Kit bugs kit#3326, kit#3327; not Android-specific. |
 | Bold/italic look regular | Roboto is a variable font; weights aren't applied. |
 | Popover or submenu off screen | Not clamped to the viewport yet. |
