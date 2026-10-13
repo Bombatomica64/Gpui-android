@@ -60,10 +60,14 @@ like back. `show_soft_keyboard` / `hide_soft_keyboard` are implemented, so
 
 Without `android-activity`, night mode was never read, so the window stayed
 Light (and `Platform::window_appearance` always said Dark). It is now read
-from the application context's configuration, which the first
-`set_host_activity` keeps, and applied to each window when it opens,
-re-attaches and resumes. An Activity that handles `uiMode` itself must call
-the new `host::configuration_changed()`, which updates every host's window.
+from the current host Activity's Resources, so an app-local night mode
+counts too, and applied by the platform whenever a window opens or gets a
+new surface, and on resume. An Activity that handles `uiMode` itself must
+call the new `host::configuration_changed(newConfig.uiMode)`, which updates
+every host's window. `window_appearance` answers the value last applied.
+Review fixes pushed and replied to, see
+[docs/upstream/replies](docs/upstream/replies/gpui-mobile-30.md); merged into
+`main` with fork PR #14.
 
 ### Load the bundled emoji font on the host path — branch `android-host-emoji-font`, [#29](https://github.com/longbridge/gpui-mobile/pull/29)
 

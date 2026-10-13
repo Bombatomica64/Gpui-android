@@ -101,7 +101,7 @@ API:
 | `host::surface_destroyed(host)` | `surfaceDestroyed`; blocks up to 2 s until the renderer lets go |
 | `host::resumed(host)` / `host::paused(host)` | `onResume` / `onPause` |
 | `host::host_destroyed(host)` | `onDestroy`, only when `isFinishing()` |
-| `host::configuration_changed()` | `onConfigurationChanged` |
+| `host::configuration_changed(ui_mode)` | `onConfigurationChanged`, with `newConfig.uiMode` |
 | `host::motion_event(action, index, &[Pointer { id, x, y }]) -> bool` | touch listener; physical px relative to the SurfaceView |
 | `host::key(code, action, meta)` | `dispatchKeyEvent` |
 | `host::ime_event(session, kind, text, start, end)` | from the IME proxy; kinds: 0 composing, 1 commit, 2 delete surrounding, 3 delete code points, 4 done, 5 keyboard hidden by Back, 6 action key (`IME_ACTION_*` in `start`) |
@@ -130,7 +130,7 @@ Copy `LabActivity.java` and rename. What it must do:
   Copy it as is.
 - `onNewIntent`: `setIntent(intent)`, then forward the data URI to
   `deeplink::handle_link` and any `screen` extra.
-- `onConfigurationChanged`: call the native `configuration_changed`.
+- `onConfigurationChanged`: call the native `configuration_changed` with `newConfig.uiMode`.
 
 ## Manifest and Gradle
 

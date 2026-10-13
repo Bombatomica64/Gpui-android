@@ -96,7 +96,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     @Override
     public void onConfigurationChanged(android.content.res.Configuration config) {
         super.onConfigurationChanged(config);
-        nativeConfigurationChanged();
+        nativeConfigurationChanged(config.uiMode);
     }
 
     // Testing aid: `adb shell am start -n dev.gpui.mobile.lab/.LabActivity --es screen "Charts"`
@@ -437,7 +437,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     private static native void nativeOnCreate(Activity activity, long host, int apiLevel);
     private static native void nativeOpenScreen(String screen);
     private static native void nativeDeepLink(String url);
-    private static native void nativeConfigurationChanged();
+    private static native void nativeConfigurationChanged(int uiMode);
     private static native void nativeSurfaceChanged(long host, android.view.Surface surface, float scale);
     private static native void nativeSurfaceDestroyed(long host);
     private static native void nativeHostDestroyed(long host);
