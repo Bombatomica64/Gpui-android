@@ -2,7 +2,7 @@
 
 - Branch: [`upstream/android-text-input-purpose`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-text-input-purpose), one commit on top of `upstream/android-text-input-configuration`
 - Diff (own commit): 1 file, `src/android/input_type.rs`, about +64 −6
-- **Blocked.** It reads `TextInputConfiguration::purpose`, which exists only in our gpui-pre fork. It needs the Zed PR ([../../upstream-zed/text-input-purpose.md](../../upstream-zed/text-input-purpose.md)) merged and released in a `gpui-pre` snapshot, and gpui-mobile bumped to that snapshot. Until then the branch does not build against crates.io `gpui-pre`. It was not compiled for this prep; it builds on our fork's `main`, which patches gpui-pre.
+- **Blocked.** It reads `TextInputConfiguration::purpose`, which exists only in my gpui-pre fork. It needs the Zed PR ([../../upstream-zed/text-input-purpose.md](../../upstream-zed/text-input-purpose.md)) merged and released in a `gpui-pre` snapshot, and gpui-mobile bumped to that snapshot. Until then the branch does not build against crates.io `gpui-pre`. It was not compiled for this prep; it builds on my fork's `main`, which patches gpui-pre.
 - Also depends on: android-text-input-configuration (and so android-ime-dismiss).
 - Recording: [password keyboard before/after](../../demos/android-password-keyboard.png), [amount keyboard](../../demos/android-amount-keyboard.png).
 
@@ -25,6 +25,6 @@ OnePlus CPH2581, Android 16, SwiftKey: a masked input before (suggests "Hunter2"
 
 ### Testing
 
-- On device with our forks: a masked input asks for `inputType=0x81` with `IME_FLAG_NO_PERSONALIZED_LEARNING`, and SwiftKey shows no suggestion strip. The phone mask gets `TYPE_CLASS_PHONE`, the amount mask number|decimal, a PIN (masked + digit mask) a numeric password.
+- On device with my forks: a masked input asks for `inputType=0x81` with `IME_FLAG_NO_PERSONALIZED_LEARNING`, and SwiftKey shows no suggestion strip. The phone mask gets `TYPE_CLASS_PHONE`, the amount mask number|decimal, a PIN (masked + digit mask) a numeric password.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

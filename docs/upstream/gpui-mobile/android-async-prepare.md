@@ -20,9 +20,9 @@ No signature changes (`PlayerState::Loading` already exists). `set_url`'s doc sa
 ### Testing
 
 - `cargo fmt --all -- --check`; `cargo check --target aarch64-linux-android --all-targets` and `cargo clippy --target aarch64-linux-android`: no new warnings; `cargo test --lib`: 46 passed.
-- `GpuiAudio.java` is the same as on our fork, whose CI builds the example APK.
-- On device (OnePlus CPH2581, Android 16, our fork's `main`), an MP3 over Wi-Fi: `set_url` took 1222 ms before and 21–27 ms after. `state()` is `Loading` until it's ready, a `play()` made while loading starts playback once it is, and pause and `state()` work afterwards. The failure path (bad URL) was not checked on the device.
-- Not changed: `GpuiVideoPlayer` prepares synchronously the same way. Our test app can't exercise the video player, so I left it alone.
+- `GpuiAudio.java` is the same as on my fork, whose CI builds the example APK.
+- On device (OnePlus CPH2581, Android 16, my fork's `main`), an MP3 over Wi-Fi: `set_url` took 1222 ms before and 21–27 ms after. `state()` is `Loading` until it's ready, a `play()` made while loading starts playback once it is, and pause and `state()` work afterwards. The failure path (bad URL) was not checked on the device.
+- Not changed: `GpuiVideoPlayer` prepares synchronously the same way. My test app can't exercise the video player, so I left it alone.
 
 Thanks for taking the time to review this.
 

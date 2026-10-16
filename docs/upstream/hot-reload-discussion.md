@@ -68,7 +68,7 @@ the click counter kept its value (3).*
   `System.loadLibrary`. In a debuggable build it loads
   `files/dev/lib<name>.so` when a dev tool has pushed one; release builds
   always load the packaged library. It's opt-in, about 50 lines, and adds no
-  Rust code or dependency. It's on our fork as branch
+  Rust code or dependency. It's on my fork as branch
   [`dev-hot-loader`](https://github.com/Bombatomica64/gpui-mobile/blob/dev-hot-loader/example/android/gradle/app/src/main/java/dev/gpui/mobile/GpuiLibraryLoader.java),
   based on your `main`.
 

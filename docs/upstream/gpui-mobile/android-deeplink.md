@@ -26,7 +26,7 @@ A deep link that reaches an app that is already running is lost on the host-driv
 ### Testing
 
 - `cargo fmt --all -- --check`; `cargo check --target aarch64-linux-android --all-targets` and `cargo clippy --target aarch64-linux-android`: no new warnings; `cargo test --lib`: 46 passed.
-- On device (OnePlus CPH2581, Android 16, our fork's `main`; the test app's Activity calls `handle_link` from `onNewIntent`): a cold start with `gpuilab://cold/1`, then `am start -d gpuilab://warm/2`.
+- On device (OnePlus CPH2581, Android 16, my fork's `main`; the test app's Activity calls `handle_link` from `onNewIntent`): a cold start with `gpuilab://cold/1`, then `am start -d gpuilab://warm/2`.
   - Before: `get_latest_link()` stays `gpuilab://cold/1`, and the handler is never called.
   - After: the handler fires with `gpuilab://warm/2`, and `get_latest_link()` returns it.
 - The re-entrancy fix (a handler replacing itself) is checked by reading the code only.

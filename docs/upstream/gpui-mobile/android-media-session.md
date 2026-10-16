@@ -22,8 +22,8 @@ No public API changes.
 ### Testing
 
 - `cargo fmt --all -- --check`; `cargo check --target aarch64-linux-android --all-targets` and `cargo clippy --target aarch64-linux-android`: no new warnings; `cargo test --lib`: 46 passed.
-- `GpuiMediaSession.java` is the same as on our fork, whose CI builds the example APK.
-- On device (OnePlus CPH2581, Android 16, our fork's `main`): `media_session::init()` succeeds. `adb shell cmd media_session dispatch pause` and `dispatch next` reach `onPause` / `onSkipToNext` on the main thread, and the Rust handler receives `Pause`, `Next`.
+- `GpuiMediaSession.java` is the same as on my fork, whose CI builds the example APK.
+- On device (OnePlus CPH2581, Android 16, my fork's `main`): `media_session::init()` succeeds. `adb shell cmd media_session dispatch pause` and `dispatch next` reach `onPause` / `onSkipToNext` on the main thread, and the Rust handler receives `Pause`, `Next`.
 - The re-entrancy fix is checked by reading the code only.
 
 Thanks for taking the time to review this.

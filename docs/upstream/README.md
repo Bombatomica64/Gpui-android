@@ -1,6 +1,6 @@
 # Upstreaming the gpui-mobile and GPUI Kit fixes
 
-These are the fixes that live only in our forks of
+These are the fixes that live only in my forks of
 [longbridge/gpui-mobile](https://github.com/longbridge/gpui-mobile) and
 [longbridge/gpui-kit](https://github.com/longbridge/gpui-kit), prepared to be
 sent one at a time. This is item 8 of [CONTRIBUTING_IDEAS.md](../../CONTRIBUTING_IDEAS.md).
@@ -10,7 +10,7 @@ Posted so far (2026-10-16): #1–#4 as gpui-kit #3554–#3557, #20 as
 gpui-mobile #39, and the first two JNI PRs from issue #31 as gpui-mobile #40
 and #41. The Kit ones were rebased onto Kit `main` 319b56cf first; the old
 branch tips are tagged `archive/2026-10-10/upstream/<name>`. Each fix is a minimal branch named
-`upstream/<name>` on our fork
+`upstream/<name>` on my fork
 ([Bombatomica64/gpui-mobile](https://github.com/Bombatomica64/gpui-mobile),
 [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit)), based on
 upstream `main` as of 2026-10-10: gpui-mobile f9fe5a7 (#24), Kit 0bbd9870
