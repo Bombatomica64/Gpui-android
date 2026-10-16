@@ -3,7 +3,7 @@
 Not posted. Branch
 [`Bombatomica64/gpui-mobile:android-host-insets`](https://github.com/Bombatomica64/gpui-mobile/tree/android-host-insets),
 one commit on upstream `main` (f9fe5a7), 4 files, +155 −6. It applies to
-upstream as is; on our fork `main` it only conflicts next to
+upstream as is; on my fork `main` it only conflicts next to
 `configuration_changed` (#30).
 
 ---

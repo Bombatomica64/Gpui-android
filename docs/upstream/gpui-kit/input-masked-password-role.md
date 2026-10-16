@@ -25,7 +25,7 @@ Android (OnePlus CPH2581, Android 16), the masked field of Kit's Input demo:
 
 - `cargo clippy -p gpui-base -p gpui-component -p gpui-kit --features gpui-kit/test-support --tests -- --deny warnings`: clean
 - `cargo test -p gpui-kit --features test-support --test input --test input_focus`: input 180 passed (incl. the new `masked_input_is_a_password_field`), input_focus 4 passed
-- On Android, through our test app (Kit 0.7.1 plus this change), with uiautomator.
+- On Android, through my test app (Kit 0.7.1 plus this change), with uiautomator.
 
 ## Checklist
 

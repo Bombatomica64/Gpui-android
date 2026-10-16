@@ -5,10 +5,10 @@
 - Depends on, to be useful:
   - **Zed PR "gpui: Reveal a descendant's autoscroll request in scrollable divs"** ([draft](../../upstream-zed/autoscroll.md)), released in a `gpui-pre` snapshot that Kit pins. Without it only `List` honours the request, so in the usual `overflow_y_scroll()` form this PR does nothing. It's safe but inert.
   - On Android, a viewport that shrinks when the IME opens (gpui-mobile's host with `adjustResize`, as today).
-- **Its own test fails on Kit `main` today**: `focused_input_asks_its_scroll_container_to_reveal_it` uses an `overflow_y_scroll` div, and stock gpui-pre 0.3.8 divs ignore the request, so `assert!(scroll_handle.offset().y < px(0.))` fails (the test was written against our fork's patched gpui-pre; not re-run there for this prep). Once Kit pins a gpui-pre with the autoscroll change, it should pass unchanged; re-run it then. (Another option: test it inside a `List`, which honours the request today. But that wouldn't test the common case.)
+- **Its own test fails on Kit `main` today**: `focused_input_asks_its_scroll_container_to_reveal_it` uses an `overflow_y_scroll` div, and stock gpui-pre 0.3.8 divs ignore the request, so `assert!(scroll_handle.offset().y < px(0.))` fails (the test was written against my fork's patched gpui-pre; not re-run there for this prep). Once Kit pins a gpui-pre with the autoscroll change, it should pass unchanged; re-run it then. (Another option: test it inside a `List`, which honours the request today. But that wouldn't test the common case.)
 - **Send after the GPUI autoscroll change is in a gpui-pre release.** Sending it earlier would ask reviewers to accept code whose main effect they can't see.
 - Desktop impact: an input inside a `List` now scrolls into view when it gains focus (e.g. by Tab), or when the window is resized while it has focus. Worth stating; it's arguably the right behaviour.
-- Recording: **missing.** Follow-up: a long form in a scrolling div, tapping a field near the bottom. Before: the keyboard covers it. After: the page scrolls it above the keyboard. This needs the GPUI autoscroll change, so it can only be captured on our fork build.
+- Recording: **missing.** Follow-up: a long form in a scrolling div, tapping a field near the bottom. Before: the keyboard covers it. After: the page scrolls it above the keyboard. This needs the GPUI autoscroll change, so it can only be captured on my fork build.
 
 ---
 

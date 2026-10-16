@@ -3,7 +3,7 @@
 - Branch: [`upstream/input-icon-button-labels`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-icon-button-labels), one commit on upstream `main` (0bbd9870)
 - Diff: 3 files, +37 (one `accessibility_label`, one localized string, a 29-line UI test)
 - Depends on: nothing.
-- **Trimmed for upstream.** Our fork branch also named the password mask toggle. Open PR longbridge/gpui-kit#3424 (counterbeing, 2026-10-09) does exactly that ("Show password" / "Hide password", plus the sidebar caret), so that half is dropped here to avoid a duplicate. Our string keys (`Input.Show password`) differed from #3424's (`Input.Show Password`), so there's no conflict either way.
+- **Trimmed for upstream.** My fork branch also named the password mask toggle. Open PR longbridge/gpui-kit#3424 (counterbeing, 2026-10-09) does exactly that ("Show password" / "Hide password", plus the sidebar caret), so that half is dropped here to avoid a duplicate. Our string keys (`Input.Show password`) differed from #3424's (`Input.Show Password`), so there's no conflict either way.
 - Recording: before, a `uiautomator dump` ([a11y-text-input-baseline.xml](../../demos/a11y-text-input-baseline.xml)): every clear button is an `android.widget.Button` with empty `text` and `content-desc`. After: checked with uiautomator and TalkBack (Gpui-android#38), but no screenshot. A TalkBack screenshot would help; a follow-up.
 
 ---
@@ -26,7 +26,7 @@ Android (OnePlus CPH2581, Android 16, TalkBack), Kit's Input with `cleanable(tru
 
 - `cargo clippy -p gpui-base -p gpui-component -p gpui-kit --features gpui-kit/test-support --tests -- --deny warnings`: clean
 - `cargo test -p gpui-kit --features test-support --test input --test input_focus`: input 180 passed (incl. the new `clear_button_is_named`), input_focus 4 passed
-- On Android, through our test app (Kit 0.7.1 plus this change): uiautomator shows `content-desc="Clear"`, and TalkBack focuses and activates it.
+- On Android, through my test app (Kit 0.7.1 plus this change): uiautomator shows `content-desc="Clear"`, and TalkBack focuses and activates it.
 
 ## Checklist
 

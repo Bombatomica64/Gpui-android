@@ -21,7 +21,7 @@ A touch press (`GlobalState::is_touch_press`) with the left button on an editabl
 
 - `cargo clippy -p gpui-base -p gpui-component -p gpui-kit --features gpui-kit/test-support --tests -- --deny warnings`: clean
 - `cargo test -p gpui-base --lib input`: 337 passed; `cargo test -p gpui-kit --features test-support --test input --test input_focus`: input 179 passed, input_focus 4 passed
-- To check on Android (our test app: Kit 0.7.1 plus this change, gpui-mobile with `show_soft_keyboard`): hide the keyboard with back, then tap the focused field; the keyboard should come back. *(The lab carries this change, but there is no recorded check of it; capture one before sending.)*
+- To check on Android (my test app: Kit 0.7.1 plus this change, gpui-mobile with `show_soft_keyboard`): hide the keyboard with back, then tap the focused field; the keyboard should come back. *(The lab carries this change, but there is no recorded check of it; capture one before sending.)*
 
 ## Checklist
 
