@@ -1,6 +1,6 @@
 # What the forks carry on top of upstream
 
-The lab builds against one GPUI snapshot (`gpui-pre` 0.3.8) and three forks,
+The lab builds against one GPUI snapshot (`gpui-pre` 0.3.9) and three forks,
 each pinned by `rev` in `Cargo.toml`. Every fix lives on its own branch,
 based on upstream, so it can be proposed upstream on its own; a combined
 branch is what the lab pins.
@@ -8,8 +8,8 @@ branch is what the lab pins.
 | Fork | Upstream | Branch the lab pins |
 |---|---|---|
 | [Bombatomica64/gpui-mobile](https://github.com/Bombatomica64/gpui-mobile) | [longbridge/gpui-mobile](https://github.com/longbridge/gpui-mobile) `main` | `main` (upstream `main` + the branches below, merged) |
-| [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) | [longbridge/gpui-kit](https://github.com/longbridge/gpui-kit) tag `v0.7.1` | `mobile-lab` (`v0.7.1` + the commits below) |
-| [Bombatomica64/gpui-pre](https://github.com/Bombatomica64/gpui-pre) | `gpui-pre` 0.3.8 from crates.io (a snapshot of [zed-industries/zed](https://github.com/zed-industries/zed) `crates/gpui`) | `mobile-lab` (branch `0.3.8` + the branches below) |
+| [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) | [longbridge/gpui-kit](https://github.com/longbridge/gpui-kit) tag `v0.7.3` | `mobile-lab` (`v0.7.3` + the commits below) |
+| [Bombatomica64/gpui-pre](https://github.com/Bombatomica64/gpui-pre) | `gpui-pre` 0.3.9 from crates.io (a snapshot of [zed-industries/zed](https://github.com/zed-industries/zed) `crates/gpui`) | `mobile-lab` (branch `0.3.9` + the branches below) |
 
 Versions of these branches rebased onto upstream `main`, with draft PR
 texts, are in [docs/upstream](docs/upstream/README.md) (gpui-mobile, Kit)
@@ -19,34 +19,25 @@ and [docs/upstream-zed](docs/upstream-zed/README.md) (GPUI).
 `gpui-kit`, `gpui-fps` and `gpui-pre-mobile` are git dependencies.
 
 Fixes from earlier versions of this file that are now upstream: the
-gpui-pre 0.3.7 and 0.3.8 bumps (gpui-mobile #21, #27), the system clipboard
-and the surface-teardown fix (gpui-mobile #24, reworked on top of #26's
-per-Activity `HostId`), Slider touch drags and the gpui-fps Android font
-(gpui-kit #3313, in v0.7.1).
+gpui-pre 0.3.7, 0.3.8 and 0.3.9 bumps (gpui-mobile #21, #27, #36), the system
+clipboard and the surface-teardown fix (gpui-mobile #24, reworked on top of
+#26's per-Activity `HostId`), the TalkBack bridge (#25, with the
+exception-clearing fix folded in), the emoji font (#29) and night mode (#30)
+on the host path, Slider touch drags and the gpui-fps Android font (gpui-kit
+#3313, in v0.7.1), and long-press context menus (gpui-kit #3393, in v0.7.2).
+
+Two things the merged versions changed for hosts: the TalkBack adapter goes
+on each host's own Activity, so hosts call `host::set_activity(env, host,
+activity)`; and night mode is read from the application context, so an
+Activity that handles `uiMode` itself calls
+`host::configuration_changed(newConfig.uiMode)`, and an app-local night mode
+(`AppCompatDelegate`) does not count.
+
+The commits the lab pinned before the 0.3.9 rebase are kept as tags:
+`archive/pre-0.3.9/main` (gpui-mobile), `archive/v0.7.1/mobile-lab` (Kit) and
+`archive/0.3.8/*` (gpui-pre).
 
 ## gpui-mobile
-
-### Expose GPUI's accessibility tree to TalkBack — branch `android-accessibility`, [#25](https://github.com/longbridge/gpui-mobile/pull/25)
-
-The Android window ignored GPUI's AccessKit tree, so TalkBack saw one opaque
-surface. The tree goes to `accesskit_android`'s `InjectingAdapter`. Since
-upstream gave each host Activity its own window (#26), the screen reader
-follows whichever window is active.
-[Bounds](docs/demos/android-a11y-bounds.png),
-[recording](docs/demos/android-a11y-talkback.gif).
-
-Review changes requested; rebased onto upstream `main` and fixed in separate
-commits. The reply draft is in
-[docs/upstream/replies](docs/upstream/replies/gpui-mobile-25.md). The
-adapter now goes on each host's own Activity: hosts call the new
-`host::set_activity(env, host, activity)` (the lab does) in place of
-`set_host_activity`. It is attached when the window becomes active rather than
-in `onCreate`, is retried after a failure, and is dropped with its window. A
-view that already has another delegate is skipped. The exception-clearing
-branch below is folded in. One gap stays open: a screen reader turned off
-between the GPUI-side `isEnabled()` check and `accesskit_android`'s UI-thread
-runnable still throws, because only the adapter can check there
-(`accesskit_android` 0.9 does, but needs `accesskit` 0.25).
 
 ### Keep focus when the IME's Done action hides the keyboard — branch `android-ime-dismiss`
 
@@ -55,32 +46,6 @@ Upstream (#26) stopped back from injecting an `escape` keystroke (IME event
 in a dialog closed the dialog. Done now hides the keyboard and keeps focus,
 like back. `show_soft_keyboard` / `hide_soft_keyboard` are implemented, so
 `Window::request_virtual_keyboard` works (Kit's Input uses it below).
-
-### Follow the system night mode on the host path — branch `android-host-night-mode`, [#30](https://github.com/longbridge/gpui-mobile/pull/30)
-
-Without `android-activity`, night mode was never read, so the window stayed
-Light (and `Platform::window_appearance` always said Dark). It is now read
-from the current host Activity's Resources, so an app-local night mode
-counts too, and applied by the platform whenever a window opens or gets a
-new surface, and on resume. An Activity that handles `uiMode` itself must
-call the new `host::configuration_changed(newConfig.uiMode)`, which updates
-every host's window. `window_appearance` answers the value last applied.
-Review fixes pushed and replied to, see
-[docs/upstream/replies](docs/upstream/replies/gpui-mobile-30.md); merged into
-`main` with fork PR #14.
-
-### Load the bundled emoji font on the host path — branch `android-host-emoji-font`, [#29](https://github.com/longbridge/gpui-mobile/pull/29)
-
-Android 13+'s COLRv1 emoji font cannot be drawn by swash, and the bundled
-CBDT fallback was only read through `android-activity`'s AssetManager, so
-emoji were empty boxes. The first `set_host_activity` keeps the
-application's AssetManager for the life of the process; if the platform
-started before it, the font is loaded then. Review changes requested; the
-reply draft is in [docs/upstream/replies](docs/upstream/replies/gpui-mobile-29.md).
-
-Both were one branch, `android-host-appearance-emoji`, until an adversarial
-review: night mode came from whichever Activity registered last, and the
-public `asset_manager()` could return a dangling pointer.
 
 ### Give each field its own keyboard and enter key — branches `android-text-input-configuration`, `android-text-input-purpose`
 
@@ -123,15 +88,20 @@ has pushed one, else the packaged library. Release builds always load the
 packaged one. It replaces the `loadLibrary()` the lab's `LabActivity`
 carried; the lab keeps a copy in `android/app/src/main/java` (`LabActivity`
 needs it to compile, also in `cargo gpui apk`, which skips `build.sh`). Host-driven Activities
-only (`NativeActivity` loads the packaged library itself). Not proposed
-upstream yet: [longbridge/gpui-mobile#34](https://github.com/longbridge/gpui-mobile/issues/34)
-asks the maintainers first ([text](docs/upstream/hot-reload-discussion.md)).
+only (`NativeActivity` loads the packaged library itself). Proposed as
+[longbridge/gpui-mobile#39](https://github.com/longbridge/gpui-mobile/pull/39),
+for the question in [#34](https://github.com/longbridge/gpui-mobile/issues/34)
+([text](docs/upstream/hot-reload-discussion.md)).
 
-### Clear the Java exceptions the accessibility bridge leaves pending — branch `android-a11y-clear-exceptions`, now part of `android-accessibility`
+### Rework the JNI layer — branch `jni-refactor`
 
-`accesskit_android`'s jni 0.21 API leaves a thrown Java exception pending,
-and the bridge never cleared it, so the next JNI call on the render thread
-ran with one pending.
+Host Activity lifetime, pending Java exceptions, UI-thread calls and class
+lookup, audited in gpui-mobile issue
+[#31](https://github.com/longbridge/gpui-mobile/issues/31) and proposed there
+as eight small PRs. The first two are open, ported onto upstream `main`:
+[#40](https://github.com/longbridge/gpui-mobile/pull/40) (the `with_env` docs,
+SAFETY comments) and [#41](https://github.com/longbridge/gpui-mobile/pull/41)
+(`or_clear` / `or_catch` in the core files).
 
 ### Make the platform packages behave — seven branches, merged as gpui-mobile #2–#8
 
@@ -163,16 +133,6 @@ ones the lab uses from the pinned checkout.
 
 ## GPUI Kit
 
-### Open a context menu with a long press — [#3393](https://github.com/longbridge/gpui-kit/pull/3393) (issue [#3392](https://github.com/longbridge/gpui-kit/issues/3392))
-
-`ContextMenu` only opened on the right mouse button, which a finger does not
-have. A `LongPressEvent` now opens it at the press position; an `Input`
-inside the trigger keeps its own long-press selection.
-[Before](docs/demos/pr-longpress-before.gif),
-[after](docs/demos/pr-longpress-after.gif).
-On `mobile-lab` this is the 0.7.x version of the change; the PR is against
-`main`, whose context menu has since been reworked.
-
 ### Ask for the virtual keyboard when a focused input is tapped — branch `input-tap-requests-keyboard`
 
 After the user hides the keyboard, the input keeps focus, and a later tap
@@ -189,7 +149,7 @@ the viewport resizing under `adjustResize`, or the keyboard arriving as an
 inset on an edge-to-edge window. Needs the GPUI autoscroll fix below to work
 in plain scroll containers.
 
-### Tell the keyboard how to assist each input — branches `input-text-input-configuration`, `input-purpose`
+### Tell the keyboard how to assist each input — branches `input-text-input-configuration` ([#3557](https://github.com/longbridge/gpui-kit/pull/3557)), `input-purpose`
 
 `InputState` provides GPUI's `TextInputConfiguration`: Done for single-line
 inputs and a line break for multi-line ones; autocorrect, suggestions and
@@ -201,19 +161,30 @@ override them, like React Native's `returnKeyType`, `autoCorrect`,
 `autoCapitalize`, `keyboardType` and `secureTextEntry`. `input-purpose`
 needs the GPUI branch below.
 
-### Keep the text on Android's back button — branch `input-back-keeps-text`
+### Keep the text on Android's back button — branch `input-back-keeps-text`, [#3556](https://github.com/longbridge/gpui-kit/pull/3556)
 
 Back arrives as escape, so an input with `clean_on_escape()` cleared its
 text on the second back instead of leaving the screen. On Android escape no
 longer clears; it still closes the selection handles and edit menu first.
 
-### Name icon-only input buttons for screen readers — branches `input-icon-button-labels`, `input-masked-password-role`
+### Name icon-only input buttons for screen readers — branches `input-icon-button-labels` ([#3554](https://github.com/longbridge/gpui-kit/pull/3554)), `input-masked-password-role` ([#3555](https://github.com/longbridge/gpui-kit/pull/3555))
 
 The clear button (Input, Select, Combobox, DatePicker) and the password
 toggle were unlabelled buttons to TalkBack; they are now "Clear" and "Show
 password" / "Hide password". A masked input has the `PasswordInput` role.
+#3554 names the clear button only; the toggle half stays on the fork while
+gpui-kit #3424, which named it too, is closed but can be reopened.
 
-## GPUI (gpui-pre 0.3.8)
+### Keep sheets and toasts out from under the system bars — branch `upstream/overlays-safe-area`
+
+On an edge-to-edge window a sheet's title and close button sat under the
+status bar, and toasts under the keyboard: both were laid out against the
+whole viewport. The sheet host and the notification layer are now inset by
+`Window::fully_visible_bounds()`, on top of the frame insets the sheet
+already used; on desktop nothing changes. A Kit UI test covers it. Not
+proposed yet: it waits for before/after captures on the phone.
+
+## GPUI (gpui-pre 0.3.9)
 
 Each was checked against Zed `main`: none of the three is fixed there. The
 touch-drag patch applies to Zed `main` as is; the files the other two touch

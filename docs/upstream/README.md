@@ -6,7 +6,10 @@ These are the fixes that live only in our forks of
 sent one at a time. This is item 8 of [CONTRIBUTING_IDEAS.md](../../CONTRIBUTING_IDEAS.md).
 The GPUI fixes for Zed are in [../upstream-zed](../upstream-zed/README.md).
 
-Nothing here has been posted upstream. Each fix is a minimal branch named
+Posted so far (2026-10-16): #1–#4 as gpui-kit #3554–#3557, #20 as
+gpui-mobile #39, and the first two JNI PRs from issue #31 as gpui-mobile #40
+and #41. The Kit ones were rebased onto Kit `main` 319b56cf first; the old
+branch tips are tagged `archive/2026-10-10/upstream/<name>`. Each fix is a minimal branch named
 `upstream/<name>` on our fork
 ([Bombatomica64/gpui-mobile](https://github.com/Bombatomica64/gpui-mobile),
 [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit)), based on
@@ -20,10 +23,10 @@ captures in [../demos](../demos) and say where a capture is missing.
 
 | # | Repo | Branch | Status | Depends on | Recording | Draft |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | kit | [`upstream/input-icon-button-labels`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-icon-button-labels) | ✅ (trimmed to the clear button) | — (the mask toggle half is in open #3424) | before: uiautomator dump; after: no | [draft](gpui-kit/input-icon-button-labels.md) |
-| 2 | kit | [`upstream/input-masked-password-role`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-masked-password-role) | ✅ | — | before: uiautomator dump; after: no | [draft](gpui-kit/input-masked-password-role.md) |
-| 3 | kit | [`upstream/input-back-keeps-text`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-back-keeps-text) | ✅ | — | before only | [draft](gpui-kit/input-back-keeps-text.md) |
-| 4 | kit | [`upstream/input-text-input-configuration`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-text-input-configuration) | ✅ | — (gpui-pre 0.3.8 has the API) | yes (Android, with #13) | [draft](gpui-kit/input-text-input-configuration.md) |
+| 1 | kit | [`upstream/input-icon-button-labels`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-icon-button-labels) | ✅ posted: [#3554](https://github.com/longbridge/gpui-kit/pull/3554) | — (the mask toggle half is in open #3424) | before: uiautomator dump; after: no | [draft](gpui-kit/input-icon-button-labels.md) |
+| 2 | kit | [`upstream/input-masked-password-role`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-masked-password-role) | ✅ posted: [#3555](https://github.com/longbridge/gpui-kit/pull/3555) | — | before: uiautomator dump; after: no | [draft](gpui-kit/input-masked-password-role.md) |
+| 3 | kit | [`upstream/input-back-keeps-text`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-back-keeps-text) | ✅ posted: [#3556](https://github.com/longbridge/gpui-kit/pull/3556) | — | before only | [draft](gpui-kit/input-back-keeps-text.md) |
+| 4 | kit | [`upstream/input-text-input-configuration`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-text-input-configuration) | ✅ posted: [#3557](https://github.com/longbridge/gpui-kit/pull/3557) | — (gpui-pre 0.3.8 has the API) | yes (Android, with #13) | [draft](gpui-kit/input-text-input-configuration.md) |
 | 5 | mobile | [`upstream/android-package-visibility`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-package-visibility) | ✅ (docs + manifest) | — | not needed | [draft](gpui-mobile/android-package-visibility.md) |
 | 6 | mobile | [`upstream/android-permission-errors`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-permission-errors) | ✅ | — | measured values | [draft](gpui-mobile/android-permission-errors.md) |
 | 7 | mobile | [`upstream/android-media-session`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-media-session) | ✅ | — | log lines | [draft](gpui-mobile/android-media-session.md) |
@@ -33,13 +36,13 @@ captures in [../demos](../demos) and say where a capture is missing.
 | 11 | mobile | [`upstream/android-ime-dismiss`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-ime-dismiss) | ✅ | — | after only | [draft](gpui-mobile/android-ime-dismiss.md) |
 | 12 | kit | [`upstream/input-tap-requests-keyboard`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-tap-requests-keyboard) | ⏳ | #11 (otherwise it's a no-op on Android) | no | [draft](gpui-kit/input-tap-requests-keyboard.md) |
 | 13 | mobile | [`upstream/android-text-input-configuration`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-text-input-configuration) | ⏳ | #11 merged, #4 released in Kit | yes | [draft](gpui-mobile/android-text-input-configuration.md) |
-| 14 | mobile | [`upstream/android-a11y-clear-exceptions`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-a11y-clear-exceptions) | ✅ | pushed to #25 (7006f50) with the review fixes | not possible (code audit) | [draft](gpui-mobile/android-a11y-clear-exceptions.md) |
+| 14 | mobile | [`upstream/android-a11y-clear-exceptions`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-a11y-clear-exceptions) | ✅ merged with #25 | pushed to #25 (7006f50) with the review fixes | not possible (code audit) | [draft](gpui-mobile/android-a11y-clear-exceptions.md) |
 | 15 | kit | [`upstream/input-reveal-on-focus`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-reveal-on-focus) | ⏳ | Zed autoscroll PR in a gpui-pre release (its own test fails until then) | no | [draft](gpui-kit/input-reveal-on-focus.md) |
 | 16 | mobile | [`upstream/android-text-input-purpose`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-text-input-purpose) | ⛔ | #13, plus Zed `TextInputConfiguration::purpose` in a gpui-pre release; doesn't build until then | yes | [draft](gpui-mobile/android-text-input-purpose.md) |
 | 17 | kit | `input-purpose` (fork branch only) | ⛔ | #4, plus the same GPUI change; conflicts with `main` (to rebase then) | yes | — |
 | 18 | mobile | `android-activity-requests`, `android-picker-files` (fork only) | ⛔ | the JNI rework (issue #31): built on its `jni.rs` | partly ([picker screenshots](../demos/platform-apis)) | — |
 | 19 | mobile | `android-string-arrays` (fork only) | ⛔ | #6, plus the JNI rework (#31): `contacts/android.rs` was rewritten there | no | — |
-| 20 | mobile | [`dev-hot-loader`](https://github.com/Bombatomica64/gpui-mobile/tree/dev-hot-loader) (`GpuiLibraryLoader`) | ⏳ asked in [#34](https://github.com/longbridge/gpui-mobile/issues/34) where hot reload should live; the PR only if they want it | — | phone strip from the A1 spike | [issue draft](hot-reload-discussion.md) |
+| 20 | mobile | [`dev-hot-loader`](https://github.com/Bombatomica64/gpui-mobile/tree/dev-hot-loader) (`GpuiLibraryLoader`) | ✅ posted: [#39](https://github.com/longbridge/gpui-mobile/pull/39), after #34 got no reply | — | phone strip from the A1 spike | [issue draft](hot-reload-discussion.md) |
 
 Notes on the triage:
 
@@ -59,9 +62,8 @@ Not compiled: #16 and #17, which need the unreleased GPUI field.
 
 ## Suggested send order
 
-The open gpui-mobile PRs (#25 TalkBack, #29 emoji font, #30 night mode) are
-still waiting for review, so don't pile more on that repo yet. GPUI Kit
-merges quickly, so start there.
+#25, #29 and #30 are merged. gpui-mobile now has #39–#41 open from us, so
+send the next ones there as those land.
 
 1. **Kit, now, one or two at a time:** #1 (clear label), #2 (masked role), #3 (back keeps text), #4 (text input configuration). They're independent of each other. #4 is the only one with new public API. #3 is the one most likely to get a design question (Android-only `cfg`).
 2. **gpui-mobile, once #29/#30 are merged or reviewed:** the small independent ones first, at most two open at a time: #5 (docs), #6, #7, #8, then #9 and #10, which change behaviour (an `Err` where there was `Ok`, an async load).

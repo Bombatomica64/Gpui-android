@@ -69,14 +69,18 @@ not as a full mobile framework. That matches this experience.
 ## Possible work items
 
 Ordered roughly by how much they'd move the verdict above. Status as of
-October 2026; "fork" means the fix is on one of the branches listed in
+2026-10-16; "fork" means the fix is on one of the branches listed in
 [MOBILE_PATCHES.md](MOBILE_PATCHES.md) but not yet proposed upstream.
 
 1. **Accessibility bridge for Android.** Expose GPUI's element tree to
    TalkBack through `AccessibilityNodeProvider`.
-   - Open: gpui-mobile [#25](https://github.com/longbridge/gpui-mobile/pull/25),
-     rebased onto the one-window-per-host model of #26.
-   - Next: check Kit's controls for missing labels and roles once #25 lands.
+   - Upstream: gpui-mobile [#25](https://github.com/longbridge/gpui-mobile/pull/25),
+     merged 2026-10-14.
+   - Open: Kit's clear button gets a name (gpui-kit
+     [#3554](https://github.com/longbridge/gpui-kit/pull/3554)) and a masked
+     input the password role ([#3555](https://github.com/longbridge/gpui-kit/pull/3555)).
+   - Next: check the rest of Kit's controls for missing labels and roles
+     with TalkBack.
 2. **Soft-keyboard and IME support.**
    - Upstream: composing text and file picking (gpui-mobile #6); back hides
      the keyboard and a tap brings it back (#26).
@@ -84,7 +88,12 @@ October 2026; "fork" means the fix is on one of the branches listed in
      `android-ime-dismiss`); ask for the keyboard when a focused input is
      tapped, and scroll a focused input into view (gpui-kit
      `input-tap-requests-keyboard`, `input-reveal-on-focus`).
-   - Not started: selection handles, autofill.
+   - Upstream: touch selection handles are in Kit `main`
+     (`touch_selection`), not yet in a release the lab pins.
+   - Open: back keeps the text in a `clean_on_escape` input (gpui-kit
+     [#3556](https://github.com/longbridge/gpui-kit/pull/3556)); inputs say
+     how the keyboard should assist them ([#3557](https://github.com/longbridge/gpui-kit/pull/3557)).
+   - Not started: autofill.
 3. **Touch-drag and gesture handling.**
    - Upstream: Slider drags (gpui-kit #3313), long-press context menus
      (#3393), Android scroll physics and fling (gpui-mobile #13, #14).
@@ -97,9 +106,10 @@ October 2026; "fork" means the fix is on one of the branches listed in
    [cargo-gpui](https://github.com/Bombatomica64/cargo-gpui) hot patches Rust with Dioxus's Subsecond (save to
    screen in 3.3–3.6 s through an ssh adb tunnel, state kept) and reloads
    the library without reinstalling (8.3 s). gpui-mobile only needs a
-   loader for the pushed library (`GpuiLibraryLoader`, fork branch
-   `dev-hot-loader`). Next: ask upstream where they want it
-   ([longbridge/gpui-mobile#34](https://github.com/longbridge/gpui-mobile/issues/34)). A desktop-hosted
+   loader for the pushed library (`GpuiLibraryLoader`), proposed as
+   [longbridge/gpui-mobile#39](https://github.com/longbridge/gpui-mobile/pull/39)
+   after [#34](https://github.com/longbridge/gpui-mobile/issues/34) got no
+   reply. A desktop-hosted
    phone-size preview is not started.
 5. **Binary size.** Measured in [docs/binary-size.md](docs/binary-size.md);
    every PR's job summary shows the APK and `.so` sizes.
@@ -119,11 +129,9 @@ October 2026; "fork" means the fix is on one of the branches listed in
      the issue includes the fix.
    - Not started: a minimal Android quick start.
 7. **Platform services.**
-   - Upstream: system clipboard (gpui-mobile #24), back navigation (#26).
-   - Fork: dark mode follows the system on resume and configuration change
-     (gpui-mobile `android-host-night-mode`), and emoji render on the
-     host-driven path (`android-host-emoji-font`). Upstream as gpui-mobile
-     #30 and #29, in review.
+   - Upstream: system clipboard (gpui-mobile #24), back navigation (#26),
+     dark mode following the system (#30) and emoji (#29) on the host-driven
+     path.
    - Share sheet: already upstream as `packages::share::share_text`, and it
      works on the host-driven path; the Diagnostics screen has a demo
      button.
@@ -137,21 +145,22 @@ October 2026; "fork" means the fix is on one of the branches listed in
      edge, its shell pads by them, Kit inputs reveal above the keyboard
      (`input-reveal-on-focus`), and Diagnostics shows them. Upstream draft in
      [docs/upstream/safe-area-insets.md](docs/upstream/safe-area-insets.md).
-     Next: Kit sheets and notifications still lay out against the whole
-     window, under the bars.
+     Kit sheets and toasts now stay out from under the bars and the
+     keyboard too (Kit branch `upstream/overlays-safe-area`, in the lab;
+     to propose once it has phone captures).
    - Not started: system fonts.
-8. **Upstream the fork fixes.** 22 branches in
-   [MOBILE_PATCHES.md](MOBILE_PATCHES.md) are still fork-only: 11 in
-   gpui-mobile (four for text input and TalkBack, seven for the platform
-   packages), 7 in gpui-kit and 4 in gpui-pre. Propose them one at a time.
+8. **Upstream the fork fixes.** The branches in
+   [MOBILE_PATCHES.md](MOBILE_PATCHES.md). Open since 2026-10-16: gpui-kit
+   #3554–#3557 and gpui-mobile #39–#41; the forks are rebased onto gpui-pre
+   0.3.9, Kit v0.7.3 and gpui-mobile `main`.
    - The gpui-pre ones are ready for Zed in
      [docs/upstream-zed](docs/upstream-zed/README.md).
    - The gpui-mobile and Kit ones are in
      [docs/upstream](docs/upstream/README.md): 16 branches, rebased onto
      upstream `main` (two fork branches were split), with a status table,
-     draft PR bodies and a send order. 11 can be sent now; the rest wait on
-     open gpui-mobile #25, on GPUI changes reaching gpui-pre, or on the JNI
-     rework (gpui-mobile issue #31).
+     draft PR bodies and a send order. The rest wait on the open PRs, on
+     GPUI changes reaching gpui-pre, or on the JNI rework (gpui-mobile
+     issue #31, PRs #40 and #41 so far).
 9. **Kit components for small screens.**
    - Upstream: Radio inside RadioGroup, Textarea rows, rich text color in
      filled bubbles, Shimmer in dark mode (gpui-kit #3328–#3331).

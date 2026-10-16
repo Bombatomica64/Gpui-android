@@ -40,7 +40,7 @@ name = "my_app"
 crate-type = ["cdylib"]
 
 [dependencies]
-gpui = { package = "gpui-pre", version = "=0.3.8", default-features = false }
+gpui = { package = "gpui-pre", version = "=0.3.9", default-features = false }
 gpui-kit = { git = "https://github.com/Bombatomica64/gpui-kit", rev = "<rev>", default-features = false, features = ["component", "assets"] }
 gpui-mobile = { package = "gpui-pre-mobile", git = "https://github.com/Bombatomica64/gpui-mobile", rev = "<rev>", default-features = false, features = ["clipboard", "share"] }
 log = "0.4"
