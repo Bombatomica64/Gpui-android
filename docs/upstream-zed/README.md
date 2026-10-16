@@ -5,8 +5,23 @@ zed-industries/zed (`crates/gpui`, which gpui-pre snapshots). Items 3 and 8
 of [CONTRIBUTING_IDEAS.md](../../CONTRIBUTING_IDEAS.md).
 
 Nothing here has been posted upstream. Each branch is on our fork
-[Bombatomica64/zed](https://github.com/Bombatomica64/zed), based on Zed
-`main` 7fb155e9a2 (2026-10-09).
+[Bombatomica64/zed](https://github.com/Bombatomica64/zed), rebased on
+2026-10-16 onto Zed `main` 14119f8d87 (the 2026-10-09 versions are tagged
+`archive/2026-10-09/<branch>`). `cargo test -p gpui --lib` passes on each.
+
+Changes in Zed `main` since the drafts were written:
+
+- #64239 (merged 2026-10-16) lets a touch that catches a fling pick its own
+  axis. It is a different bug from touch-axis, and a recent precedent for a
+  touch PR in gpui.
+- #63068 added an iOS backend (`gpui_ios`). Its `keyboardType` is always
+  `Default`, so iOS would ignore `purpose`: the text-input-purpose draft
+  should say so or map it (Email → `EmailAddress`, Url → `URL`, Phone →
+  `PhonePad`, Numeric → `NumberPad`, Decimal → `DecimalPad`, Search →
+  `WebSearch`, Password → `secureTextEntry`). The branch only updates the iOS
+  test's struct literal.
+- Open #64205 (Windows touch, press-and-hold) changes the drag listener in
+  `div.rs` that touch-drag also edits; whichever lands second needs a rebase.
 
 | Fix | Branch | Applies to Zed `main` | Draft |
 | --- | --- | --- | --- |

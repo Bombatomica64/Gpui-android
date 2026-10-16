@@ -6,7 +6,7 @@ The patched `gpui-pre` adds `TextInputPurpose` (what the field holds) next to
 `TextInputAction` and `Autocapitalize`. gpui-mobile turns them into Android
 `EditorInfo` input types and IME options for the host's
 `gpuiShowKeyboardWithInputType`. `TextInputPurpose` doesn't exist in Zed's
-GPUI or crates.io 0.3.8, so this needs the `[patch.crates-io]` pin.
+GPUI or crates.io 0.3.9, so this needs the `[patch.crates-io]` pin.
 
 Kit's `InputState` builders (`fn(self, …) -> Self`):
 
