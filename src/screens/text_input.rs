@@ -73,7 +73,9 @@ impl TextInputScreen {
             }),
             make("message", window, cx, &|s| {
                 s.input_action(TextInputAction::Send)
-                    .placeholder("Message (Send key)")
+                    .autocorrect(true)
+                    .autocapitalize(Autocapitalize::Sentences)
+                    .placeholder("Message (autocorrect, Send key)")
             }),
             make("pin", window, cx, &|s| {
                 s.masked(true).mask_pattern("9999").placeholder("PIN (digit keyboard)")

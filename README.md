@@ -1,14 +1,14 @@
 # GPUI Kit Mobile Lab (Android)
 
 An on-device test gallery for [GPUI Kit](https://github.com/longbridge/gpui-kit)
-**v0.7.3** on Android: a phone-sized version of Kit's story gallery. Every
+**v0.8.0** on Android: a phone-sized version of Kit's story gallery. Every
 user-facing component has a demo screen that exercises its states and events
 (each interactive screen shows the current value and an event log), plus lab
 tools for touch, scrolling, diagnostics, rendering stress and themes.
 
 - Component coverage and per-component Android status: **[COMPONENT_MATRIX.md](COMPONENT_MATRIX.md)**
   (the app renders its catalog from this file).
-- What our forks of gpui-mobile, GPUI Kit and GPUI carry: **[MOBILE_PATCHES.md](MOBILE_PATCHES.md)**.
+- What my forks of gpui-mobile, GPUI Kit and GPUI carry: **[MOBILE_PATCHES.md](MOBILE_PATCHES.md)**.
 - Assessment and possible work for the GPUI / GPUI Kit teams:
   **[CONTRIBUTING_IDEAS.md](CONTRIBUTING_IDEAS.md)**.
 
@@ -19,9 +19,9 @@ version of every `gpui-pre-*` crate.
 
 | Dependency | Version / revision |
 |---|---|
-| GPUI Kit (`gpui-kit`, `gpui-component`, `gpui-base`, `gpui-fps`) | 0.7.3 from [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) `mobile-lab` (tag `v0.7.3` + 10 commits) |
+| GPUI Kit (`gpui-kit`, `gpui-component`, `gpui-base`, `gpui-fps`) | 0.8.0 from [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) `mobile-lab` (tag `v0.8.0` + 6 commits) |
 | GPUI (`gpui-pre`) | 0.3.9 from [Bombatomica64/gpui-pre](https://github.com/Bombatomica64/gpui-pre) `mobile-lab` (crates.io 0.3.9 + 3 touch fixes and `TextInputConfiguration::purpose`), via `[patch.crates-io]` |
-| GPUI's other crates (`gpui-pre-wgpu`, …) | 0.3.9 from crates.io (the snapshot GPUI Kit 0.7.3 pins) |
+| GPUI's other crates (`gpui-pre-wgpu`, …) | 0.3.9 from crates.io (the snapshot GPUI Kit 0.8.0 pins) |
 | gpui-mobile (`gpui-pre-mobile`) | [Bombatomica64/gpui-mobile](https://github.com/Bombatomica64/gpui-mobile) `main` (upstream `main` + the fork-only branches in MOBILE_PATCHES.md) |
 | Renderer | `wgpu` 29.0.4 (Vulkan preferred, GLES fallback) |
 | Rust | 1.98.1 stable, edition 2024 |
@@ -142,7 +142,7 @@ Limits of that setup:
 
 ## Known Android issues
 
-Each is detailed in the matrix; fixes carried by our forks are in MOBILE_PATCHES.md.
+Each is detailed in the matrix; fixes carried by my forks are in MOBILE_PATCHES.md.
 
 **Broken on a touch-only phone**
 
@@ -181,7 +181,7 @@ Each is detailed in the matrix; fixes carried by our forks are in MOBILE_PATCHES
   can continue as vertical page scrolling.
 - After a tap, the touched menu row keeps its hover highlight.
 
-**Fixed in our forks** (checked on a OnePlus CPH2581, Android 16)
+**Fixed in my forks** (checked on a OnePlus CPH2581, Android 16)
 
 - Finger drags on `on_drag` elements: Resizable dividers and Dock splitters
   and tabs work ([Resizable](docs/demos/touch-drag-resizable.png),

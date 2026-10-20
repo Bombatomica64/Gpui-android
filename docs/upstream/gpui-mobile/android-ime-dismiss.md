@@ -25,7 +25,7 @@ OnePlus CPH2581, Android 16, host-driven test app. A dialog with an input: typin
 ### Testing
 
 - `cargo fmt --all -- --check`; `cargo check --target aarch64-linux-android --all-targets` and `cargo clippy --target aarch64-linux-android`: no new warnings (the 8 on `main` remain); `cargo test --lib`: 46 passed.
-- On the device above, with our fork's `main` (which carries this commit on top of the JNI work in #31): Done in a dialog's input hides the keyboard and keeps the dialog and focus. A tap on the field shows the keyboard again. Back behaves as before.
+- On the device above, with my fork's `main` (which carries this commit on top of the JNI work in #31): Done in a dialog's input hides the keyboard and keeps the dialog and focus. A tap on the field shows the keyboard again. Back behaves as before.
 
 Test app: [Bombatomica64/Gpui-android](https://github.com/Bombatomica64/Gpui-android) (Dialogs & Sheets screen).
 

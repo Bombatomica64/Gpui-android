@@ -238,7 +238,7 @@ changes, gpui/Kit/gpui-mobile changes, new dependencies.
 
 - A debug host APK is built once. On start it loads the app library from its
   private directory (`System.load(path)`), falling back to the packaged one.
-- `cargo gpui dev` (our CLI, below) builds the arm64 debug `.so`, pushes it
+- `cargo gpui dev` (my CLI, below) builds the arm64 debug `.so`, pushes it
   (`adb push` + `run-as` copy), and restarts the app process. No Gradle, no
   reinstall.
 - Optional: save and restore a small "dev state" (current screen, scroll) so

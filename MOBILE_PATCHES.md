@@ -8,7 +8,7 @@ branch is what the lab pins.
 | Fork | Upstream | Branch the lab pins |
 |---|---|---|
 | [Bombatomica64/gpui-mobile](https://github.com/Bombatomica64/gpui-mobile) | [longbridge/gpui-mobile](https://github.com/longbridge/gpui-mobile) `main` | `main` (upstream `main` + the branches below, merged) |
-| [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) | [longbridge/gpui-kit](https://github.com/longbridge/gpui-kit) tag `v0.7.3` | `mobile-lab` (`v0.7.3` + the commits below) |
+| [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) | [longbridge/gpui-kit](https://github.com/longbridge/gpui-kit) tag `v0.8.0` | `mobile-lab` (`v0.8.0` + the commits below) |
 | [Bombatomica64/gpui-pre](https://github.com/Bombatomica64/gpui-pre) | `gpui-pre` 0.3.9 from crates.io (a snapshot of [zed-industries/zed](https://github.com/zed-industries/zed) `crates/gpui`) | `mobile-lab` (branch `0.3.9` + the branches below) |
 
 Versions of these branches rebased onto upstream `main`, with draft PR
@@ -24,7 +24,10 @@ clipboard and the surface-teardown fix (gpui-mobile #24, reworked on top of
 #26's per-Activity `HostId`), the TalkBack bridge (#25, with the
 exception-clearing fix folded in), the emoji font (#29) and night mode (#30)
 on the host path, Slider touch drags and the gpui-fps Android font (gpui-kit
-#3313, in v0.7.1), and long-press context menus (gpui-kit #3393, in v0.7.2).
+#3313, in v0.7.1), long-press context menus (gpui-kit #3393, in v0.7.2), and
+the input keyboard configuration, names for the clear and password buttons,
+the password role and back keeping the text (gpui-kit #3554–#3557, in
+v0.8.0).
 
 Two things the merged versions changed for hosts: the TalkBack adapter goes
 on each host's own Activity, so hosts call `host::set_activity(env, host,
@@ -34,7 +37,8 @@ Activity that handles `uiMode` itself calls
 (`AppCompatDelegate`) does not count.
 
 The commits the lab pinned before the 0.3.9 rebase are kept as tags:
-`archive/pre-0.3.9/main` (gpui-mobile), `archive/v0.7.1/mobile-lab` (Kit) and
+`archive/pre-0.3.9/main` (gpui-mobile), `archive/v0.7.1/mobile-lab` and
+`archive/v0.7.3/mobile-lab` (Kit), and
 `archive/0.3.8/*` (gpui-pre).
 
 ## gpui-mobile
@@ -149,31 +153,17 @@ the viewport resizing under `adjustResize`, or the keyboard arriving as an
 inset on an edge-to-edge window. Needs the GPUI autoscroll fix below to work
 in plain scroll containers.
 
-### Tell the keyboard how to assist each input — branches `input-text-input-configuration` ([#3557](https://github.com/longbridge/gpui-kit/pull/3557)), `input-purpose`
+### Say what an input holds — branch `input-purpose`
 
-`InputState` provides GPUI's `TextInputConfiguration`: Done for single-line
-inputs and a line break for multi-line ones; autocorrect, suggestions and
-sentence caps only for plain text; Password for a masked input (still while
-revealed), Numeric/Decimal for number and digits-only masks, and the purpose
-the `Input`'s `content_type` implies (email, phone, URL, password). New
-`input_action`, `autocorrect`, `autocapitalize` and `input_purpose`
-override them, like React Native's `returnKeyType`, `autoCorrect`,
-`autoCapitalize`, `keyboardType` and `secureTextEntry`. `input-purpose`
-needs the GPUI branch below.
-
-### Keep the text on Android's back button — branch `input-back-keeps-text`, [#3556](https://github.com/longbridge/gpui-kit/pull/3556)
-
-Back arrives as escape, so an input with `clean_on_escape()` cleared its
-text on the second back instead of leaving the screen. On Android escape no
-longer clears; it still closes the selection handles and edit menu first.
-
-### Name icon-only input buttons for screen readers — branches `input-icon-button-labels` ([#3554](https://github.com/longbridge/gpui-kit/pull/3554)), `input-masked-password-role` ([#3555](https://github.com/longbridge/gpui-kit/pull/3555))
-
-The clear button (Input, Select, Combobox, DatePicker) and the password
-toggle were unlabelled buttons to TalkBack; they are now "Clear" and "Show
-password" / "Hide password". A masked input has the `PasswordInput` role.
-#3554 names the clear button only; the toggle half stays on the fork while
-gpui-kit #3424, which named it too, is closed but can be reopened.
+Kit v0.8.0 has `input_action`, `autocorrect` and `autocapitalize`
+([#3557](https://github.com/longbridge/gpui-kit/pull/3557)); the review
+made text assistance opt-in, so autocorrect, suggestions and caps are off
+unless an input asks for them. This branch adds the purpose on top:
+Password for a masked input (still while revealed), Numeric/Decimal for
+number and digits-only masks, and the purpose the `Input`'s `content_type`
+implies (email, phone, URL, password), with `input_purpose` to override it,
+like React Native's `keyboardType` and `secureTextEntry`. It needs the GPUI
+branch below.
 
 ### Keep sheets and toasts out from under the system bars — branch `upstream/overlays-safe-area`
 

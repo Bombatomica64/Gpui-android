@@ -12,7 +12,7 @@ Status meanings:
 - **BROKEN** — cannot be used on a touch-only phone (it may still render).
 - **NOT_APPLICABLE** — no meaning inside an Android app, or disabled on mobile by design.
 
-"(patched)" means the status holds with the fixes our forks carry, listed in
+"(patched)" means the status holds with the fixes my forks carry, listed in
 [MOBILE_PATCHES.md](MOBILE_PATCHES.md). How statuses were determined, and the
 limits of the test device, are in [README.md](README.md#how-statuses-were-verified).
 

@@ -27,8 +27,8 @@ Behaviour change: `show()` returns `Err` instead of `Ok(())` when the notificati
 ### Testing
 
 - `cargo fmt --all -- --check`; `cargo check --target aarch64-linux-android --all-targets` and `cargo clippy --target aarch64-linux-android`: no new warnings; `cargo test --lib`: 46 passed.
-- `GpuiNotifications.java` is the same as on our fork, whose CI builds the example APK.
-- On device (OnePlus CPH2581, Android 16, test app with targetSdk 34, our fork's `main`):
+- `GpuiNotifications.java` is the same as on my fork, whose CI builds the example APK.
+- On device (OnePlus CPH2581, Android 16, test app with targetSdk 34, my fork's `main`):
   - without `POST_NOTIFICATIONS`: before, `show` → `Ok(())` and `dumpsys notification` lists nothing from the app; after, `show` → `Err("java.lang.SecurityException: POST_NOTIFICATIONS is not granted; request it first")`.
   - granted: the notification is posted. Tapping it opens the app, and `take_launch_payload()` returns `Some("lab-payload")` once, then `None`.
 

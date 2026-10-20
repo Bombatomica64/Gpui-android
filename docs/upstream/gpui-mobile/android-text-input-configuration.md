@@ -49,8 +49,8 @@ Left: a field with `input_action(Search)` gets the Search key. Right: after a si
 ### Testing
 
 - `cargo fmt --all -- --check`; `cargo check --target aarch64-linux-android --all-targets` (which builds the `input_type` unit tests) and `cargo clippy --target aarch64-linux-android`: no new warnings; `cargo test --lib`: 46 passed.
-- `GpuiInputActivity.java` is the same as on our fork, whose CI builds the example APK.
-- On device (our fork's `main` with GPUI Kit's matching change): `input_action(Search/Send/Next)` show those keys; a plain single-line field gets Done with autocorrect and sentence caps; `autocorrect(false)` gives no suggestions. The keyboard's action key and an injected hardware Enter both reach the field as `PressEnter`. Enter still inserts a newline in a textarea.
+- `GpuiInputActivity.java` is the same as on my fork, whose CI builds the example APK.
+- On device (my fork's `main` with GPUI Kit's matching change): `input_action(Search/Send/Next)` show those keys; a plain single-line field gets Done with autocorrect and sentence caps; `autocorrect(false)` gives no suggestions. The keyboard's action key and an injected hardware Enter both reach the field as `PressEnter`. Enter still inserts a newline in a textarea.
 
 Thanks for taking the time to review this.
 

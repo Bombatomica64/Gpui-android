@@ -16,7 +16,7 @@ On Android, `clean_on_escape` no longer clears. Escape still dismisses the selec
 
 ## Screenshot
 
-Android (OnePlus CPH2581, Android 16), the "Type here…" input of our test app has `clean_on_escape()`:
+Android (OnePlus CPH2581, Android 16), the "Type here…" input of my test app has `clean_on_escape()`:
 
 **Before**: type "Hello" (left), back hides the keyboard (middle), back again clears the text and stays on the screen (right).
 
@@ -28,7 +28,7 @@ Android (OnePlus CPH2581, Android 16), the "Type here…" input of our test app 
 
 - `cargo clippy -p gpui-base -p gpui-component -p gpui-kit --features gpui-kit/test-support --tests -- --deny warnings`: clean
 - `cargo test -p gpui-base --lib input`: 337 passed; `cargo test -p gpui-kit --features test-support --test input --test input_focus`: input 179 passed, input_focus 4 passed
-- On Android, through our test app (Kit 0.7.1 plus this change).
+- On Android, through my test app (Kit 0.7.1 plus this change).
 
 ## Checklist
 

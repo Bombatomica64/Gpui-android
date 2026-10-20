@@ -1,10 +1,10 @@
 # Upstreaming the GPUI fixes to Zed
 
-The GPUI fixes that live only in our gpui-pre fork, prepared for
+The GPUI fixes that live only in my gpui-pre fork, prepared for
 zed-industries/zed (`crates/gpui`, which gpui-pre snapshots). Items 3 and 8
 of [CONTRIBUTING_IDEAS.md](../../CONTRIBUTING_IDEAS.md).
 
-Nothing here has been posted upstream. Each branch is on our fork
+Nothing here has been posted upstream. Each branch is on my fork
 [Bombatomica64/zed](https://github.com/Bombatomica64/zed), rebased on
 2026-10-16 onto Zed `main` 14119f8d87 (the 2026-10-09 versions are tagged
 `archive/2026-10-09/<branch>`). `cargo test -p gpui --lib` passes on each.

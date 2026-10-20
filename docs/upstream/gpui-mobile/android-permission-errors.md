@@ -2,7 +2,7 @@
 
 - Branch: [`upstream/android-permission-errors`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-permission-errors), one commit on upstream `main` (f9fe5a7)
 - Diff: 4 files, +41 −42 (two Java helpers, doc comments in two Rust modules)
-- Depends on: nothing. (Lab issue Bombatomica64/Gpui-android#46. On our fork it sits on the JNI rework from #31, but it doesn't need it.)
+- Depends on: nothing. (Lab issue Bombatomica64/Gpui-android#46. On my fork it sits on the JNI rework from #31, but it doesn't need it.)
 - Recording: none needed. The result is a return value; the before/after values measured on the device are in the Testing section (Gpui-android#46).
 
 ---
@@ -21,8 +21,8 @@ No signature changes. Behaviour change: calls that used to return an empty `Ok` 
 ### Testing
 
 - `cargo fmt --all -- --check`; `cargo check --target aarch64-linux-android --all-targets` and `cargo clippy --target aarch64-linux-android`: no new warnings; `cargo test --lib`: 46 passed.
-- The Java helpers are the same as on our fork, whose CI builds the example APK.
-- On device (OnePlus CPH2581, Android 16, our fork's `main`), without the permissions:
+- The Java helpers are the same as on my fork, whose CI builds the example APK.
+- On device (OnePlus CPH2581, Android 16, my fork's `main`), without the permissions:
   - before: `get_calendars` → `Ok([])`, `get_last_known_position` → `Ok(None)`, `get_current_position` → `Err("Failed to get current position")`
   - after: `get_calendars` → `Err("java.lang.SecurityException: Permission Denial: opening provider com.android.providers.calendar.CalendarProvider2 … requires android.permission.READ_CALENDAR …")`, and both location calls → `Err("java.lang.SecurityException: Location needs ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION")`
 

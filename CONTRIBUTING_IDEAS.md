@@ -76,9 +76,10 @@ Ordered roughly by how much they'd move the verdict above. Status as of
    TalkBack through `AccessibilityNodeProvider`.
    - Upstream: gpui-mobile [#25](https://github.com/longbridge/gpui-mobile/pull/25),
      merged 2026-10-14.
-   - Open: Kit's clear button gets a name (gpui-kit
+   - Upstream: Kit's clear and password buttons have names (gpui-kit
      [#3554](https://github.com/longbridge/gpui-kit/pull/3554)) and a masked
-     input the password role ([#3555](https://github.com/longbridge/gpui-kit/pull/3555)).
+     input the password role ([#3555](https://github.com/longbridge/gpui-kit/pull/3555)),
+     in v0.8.0.
    - Next: check the rest of Kit's controls for missing labels and roles
      with TalkBack.
 2. **Soft-keyboard and IME support.**
@@ -88,11 +89,12 @@ Ordered roughly by how much they'd move the verdict above. Status as of
      `android-ime-dismiss`); ask for the keyboard when a focused input is
      tapped, and scroll a focused input into view (gpui-kit
      `input-tap-requests-keyboard`, `input-reveal-on-focus`).
-   - Upstream: touch selection handles are in Kit `main`
-     (`touch_selection`), not yet in a release the lab pins.
-   - Open: back keeps the text in a `clean_on_escape` input (gpui-kit
-     [#3556](https://github.com/longbridge/gpui-kit/pull/3556)); inputs say
-     how the keyboard should assist them ([#3557](https://github.com/longbridge/gpui-kit/pull/3557)).
+   - Upstream: touch selection handles (`touch_selection`, Kit v0.8.0).
+   - Upstream (v0.8.0): back keeps the text in a `clean_on_escape` input
+     (gpui-kit [#3556](https://github.com/longbridge/gpui-kit/pull/3556));
+     inputs say how the keyboard should assist them
+     ([#3557](https://github.com/longbridge/gpui-kit/pull/3557)), with
+     autocorrect and caps off unless an input asks for them.
    - Not started: autofill.
 3. **Touch-drag and gesture handling.**
    - Upstream: Slider drags (gpui-kit #3313), long-press context menus
@@ -150,9 +152,9 @@ Ordered roughly by how much they'd move the verdict above. Status as of
      to propose once it has phone captures).
    - Not started: system fonts.
 8. **Upstream the fork fixes.** The branches in
-   [MOBILE_PATCHES.md](MOBILE_PATCHES.md). Open since 2026-10-16: gpui-kit
-   #3554–#3557 and gpui-mobile #39–#41; the forks are rebased onto gpui-pre
-   0.3.9, Kit v0.7.3 and gpui-mobile `main`.
+   [MOBILE_PATCHES.md](MOBILE_PATCHES.md). gpui-kit #3554–#3557 are merged
+   (v0.8.0); gpui-mobile #39–#41 are open since 2026-10-16; the forks are rebased onto gpui-pre
+   0.3.9, Kit v0.8.0 and gpui-mobile `main`.
    - The gpui-pre ones are ready for Zed in
      [docs/upstream-zed](docs/upstream-zed/README.md).
    - The gpui-mobile and Kit ones are in
