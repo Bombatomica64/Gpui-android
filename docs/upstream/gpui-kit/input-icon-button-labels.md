@@ -3,7 +3,7 @@
 - Branch: [`upstream/input-icon-button-labels`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-icon-button-labels), one commit on upstream `main` (0bbd9870)
 - Diff: 3 files, +37 (one `accessibility_label`, one localized string, a 29-line UI test)
 - Depends on: nothing.
-- **Trimmed for upstream.** My fork branch also named the password mask toggle. Open PR longbridge/gpui-kit#3424 (counterbeing, 2026-10-09) does exactly that ("Show password" / "Hide password", plus the sidebar caret), so that half is dropped here to avoid a duplicate. Our string keys (`Input.Show password`) differed from #3424's (`Input.Show Password`), so there's no conflict either way.
+- **Trimmed for upstream.** My fork branch also named the password mask toggle. Open PR longbridge/gpui-kit#3424 (counterbeing, 2026-10-09) does exactly that ("Show password" / "Hide password", plus the sidebar caret), so that half is dropped here to avoid a duplicate. My string keys (`Input.Show password`) differed from #3424's (`Input.Show Password`), so there's no conflict either way.
 - Recording: before, a `uiautomator dump` ([a11y-text-input-baseline.xml](../../demos/a11y-text-input-baseline.xml)): every clear button is an `android.widget.Button` with empty `text` and `content-desc`. After: checked with uiautomator and TalkBack (Gpui-android#38), but no screenshot. A TalkBack screenshot would help; a follow-up.
 
 ---

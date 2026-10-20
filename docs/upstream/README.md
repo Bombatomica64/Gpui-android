@@ -6,7 +6,7 @@ These are the fixes that live only in my forks of
 sent one at a time. This is item 8 of [CONTRIBUTING_IDEAS.md](../../CONTRIBUTING_IDEAS.md).
 The GPUI fixes for Zed are in [../upstream-zed](../upstream-zed/README.md).
 
-Posted so far (2026-10-16): #1–#4 as gpui-kit #3554–#3557, #20 as
+Posted so far (2026-10-16): #1–#4 as gpui-kit #3554–#3557 (merged, in v0.8.0), #20 as
 gpui-mobile #39, and the first two JNI PRs from issue #31 as gpui-mobile #40
 and #41. The Kit ones were rebased onto Kit `main` 319b56cf first; the old
 branch tips are tagged `archive/2026-10-10/upstream/<name>`. Each fix is a minimal branch named
@@ -23,10 +23,10 @@ captures in [../demos](../demos) and say where a capture is missing.
 
 | # | Repo | Branch | Status | Depends on | Recording | Draft |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | kit | [`upstream/input-icon-button-labels`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-icon-button-labels) | ✅ posted: [#3554](https://github.com/longbridge/gpui-kit/pull/3554) | — (the mask toggle half is in open #3424) | before: uiautomator dump; after: no | [draft](gpui-kit/input-icon-button-labels.md) |
-| 2 | kit | [`upstream/input-masked-password-role`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-masked-password-role) | ✅ posted: [#3555](https://github.com/longbridge/gpui-kit/pull/3555) | — | before: uiautomator dump; after: no | [draft](gpui-kit/input-masked-password-role.md) |
-| 3 | kit | [`upstream/input-back-keeps-text`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-back-keeps-text) | ✅ posted: [#3556](https://github.com/longbridge/gpui-kit/pull/3556) | — | before only | [draft](gpui-kit/input-back-keeps-text.md) |
-| 4 | kit | [`upstream/input-text-input-configuration`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-text-input-configuration) | ✅ posted: [#3557](https://github.com/longbridge/gpui-kit/pull/3557) | — (gpui-pre 0.3.8 has the API) | yes (Android, with #13) | [draft](gpui-kit/input-text-input-configuration.md) |
+| 1 | kit | [`upstream/input-icon-button-labels`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-icon-button-labels) | ✅ merged (v0.8.0): [#3554](https://github.com/longbridge/gpui-kit/pull/3554) | — (v0.8.0 names the mask toggle too) | before: uiautomator dump; after: no | [draft](gpui-kit/input-icon-button-labels.md) |
+| 2 | kit | [`upstream/input-masked-password-role`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-masked-password-role) | ✅ merged (v0.8.0): [#3555](https://github.com/longbridge/gpui-kit/pull/3555) | — | before: uiautomator dump; after: no | [draft](gpui-kit/input-masked-password-role.md) |
+| 3 | kit | [`upstream/input-back-keeps-text`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-back-keeps-text) | ✅ merged (v0.8.0): [#3556](https://github.com/longbridge/gpui-kit/pull/3556) | — | before only | [draft](gpui-kit/input-back-keeps-text.md) |
+| 4 | kit | [`upstream/input-text-input-configuration`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-text-input-configuration) | ✅ merged (v0.8.0): [#3557](https://github.com/longbridge/gpui-kit/pull/3557) | — (gpui-pre 0.3.8 has the API) | yes (Android, with #13) | [draft](gpui-kit/input-text-input-configuration.md) |
 | 5 | mobile | [`upstream/android-package-visibility`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-package-visibility) | ✅ (docs + manifest) | — | not needed | [draft](gpui-mobile/android-package-visibility.md) |
 | 6 | mobile | [`upstream/android-permission-errors`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-permission-errors) | ✅ | — | measured values | [draft](gpui-mobile/android-permission-errors.md) |
 | 7 | mobile | [`upstream/android-media-session`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-media-session) | ✅ | — | log lines | [draft](gpui-mobile/android-media-session.md) |
@@ -46,10 +46,10 @@ captures in [../demos](../demos) and say where a capture is missing.
 
 Notes on the triage:
 
-- **Not fixed upstream another way.** I checked upstream `main` and open PRs on both repos (2026-10-10). The one overlap is gpui-kit #3424 (open, by another contributor), which names the password mask toggle. Our labels branch was trimmed to the clear button, so it doesn't duplicate #3424. Kit `main` already gives `content_type(Password)` the `PasswordInput` role; #2 adds it for `masked(true)` alone.
+- **Not fixed upstream another way.** I checked upstream `main` and open PRs on both repos (2026-10-10). The one overlap is gpui-kit #3424 (open, by another contributor), which names the password mask toggle. My labels branch was trimmed to the clear button, so it doesn't duplicate #3424. Kit `main` already gives `content_type(Password)` the `PasswordInput` role; #2 adds it for `masked(true)` alone.
 - **Split for one concern each.** Fork branch `android-callbacks` became #7 (media session) + #8 (deep links), and `android-notifications-links` became #9 (notifications) + #5 (`<queries>` docs).
 - **Ported off the JNI rework.** #9, #10 and #13 used the `or_clear` helper from issue #31's rework. They now use the `map_err` + `exception_clear` idiom already in upstream `main` (one explicit clear in #13). Their Java files are byte-identical to the fork's, which the fork's CI built.
-- **Kit branches were tested against Kit `main`.** Our earlier tests were against v0.7.1, which the lab pins. #1 and #2 gained a UI test each, in the style of #3424.
+- **Kit branches were tested against Kit `main`.** My earlier tests were against v0.7.1, which the lab pins. #1 and #2 gained a UI test each, in the style of #3424.
 
 ## Checks run
 
@@ -62,7 +62,7 @@ Not compiled: #16 and #17, which need the unreleased GPUI field.
 
 ## Suggested send order
 
-#25, #29 and #30 are merged. gpui-mobile now has #39–#41 open from us, so
+#25, #29 and #30 are merged. gpui-mobile now has #39–#41 open from me, so
 send the next ones there as those land.
 
 1. **Kit, now, one or two at a time:** #1 (clear label), #2 (masked role), #3 (back keeps text), #4 (text input configuration). They're independent of each other. #4 is the only one with new public API. #3 is the one most likely to get a design question (Android-only `cfg`).

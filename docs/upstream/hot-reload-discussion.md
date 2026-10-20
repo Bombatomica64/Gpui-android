@@ -6,8 +6,8 @@
 
 ---
 
-Hi! While building a test app on gpui-mobile we made Rust hot reload work on
-Android, and we'd like to know whether you find it useful and where you'd
+Hi! While building a test app on gpui-mobile I made Rust hot reload work on
+Android, and I'd like to know whether you find it useful and where you'd
 like it to live.
 
 ## What it is
@@ -50,12 +50,12 @@ with a 32-screen test app:
 | Save → change on screen (patch) | 3.3–3.6 s |
 | Reload with a 1.4 MB delta, same screen | 8.3 s |
 
-Over USB the push part (~1.5 s of each patch) should shrink; we haven't
+Over USB the push part (~1.5 s of each patch) should shrink; I haven't
 measured that yet.
 
 ![Patches applied on the phone](https://raw.githubusercontent.com/Bombatomica64/Gpui-android/main/docs/demos/subsecond-buttons-patches.png)
 
-*From our first prototype: a title, a colour and a layout changed live while
+*From my first prototype: a title, a colour and a layout changed live while
 the click counter kept its value (3).*
 
 ## How it's split
@@ -79,7 +79,7 @@ the click counter kept its value (3).*
    - keep it as a separate project that apps opt into;
    - move the tool under longbridge;
    - or bring it into gpui-mobile itself.
-3. Would you take `GpuiLibraryLoader` as a small PR? We can open it
+3. Would you take `GpuiLibraryLoader` as a small PR? I can open it
    whenever you like.
 
 Known limits: Android arm64 debug builds only; host-driven Activities only

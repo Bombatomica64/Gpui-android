@@ -51,7 +51,7 @@ Non-blocking:
   Nothing takes `BRIDGE` on the UI thread any more. An
   `AccessibilityStateChangeListener` would need a Java class, which this crate
   doesn't ship, so I kept the per-frame call. It is a synchronized field read.
-- **Two jni versions**: the second one stays as long as we use
+- **Two jni versions**: the second one stays as long as the bridge uses
   `accesskit_android`, because `InjectingAdapter::new` takes its jni 0.21
   `JNIEnv`. The VM is no longer rebuilt per attach (31d79d8).
 - **Hover before `hit_test`** (6d443bd): moved.
