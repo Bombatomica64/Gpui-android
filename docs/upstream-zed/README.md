@@ -51,3 +51,21 @@ Changes in Zed `main` since the drafts were written:
   scrolling to the dominant axis`, #63553), and the body follows
   `.github/pull_request_template.md`: Summary, Testing, Self-review, then
   `Release Notes:` with `- N/A` for changes users don't see.
+
+## Issue drafts
+
+Short issue and discussion texts for the same changes, in
+[issues/](issues/). They are drafts: Zed's AI policy wants the human's own
+words, so rewrite them (or post them in your voice) rather than pasting.
+Nothing has been filed. Each file starts with an HTML comment holding the
+target, a suggested title and related Zed issues and PRs.
+
+- [touch-axis.md](issues/touch-axis.md): bug issue
+- [autoscroll.md](issues/autoscroll.md): bug issue
+- [touch-drag.md](issues/touch-drag.md): bug issue (a discussion first is also fine)
+- [text-input-purpose-discussion.md](issues/text-input-purpose-discussion.md): Discussion, Feature requests
+
+Suggested filing order: touch-axis, autoscroll, touch-drag, then the
+discussion. Zed `main` renamed `ScrollWheelEvent` to `ScrollEvent` on
+2026-10-20 (#65805), so the touch-axis and touch-drag branches need a rebase
+before any PR.
