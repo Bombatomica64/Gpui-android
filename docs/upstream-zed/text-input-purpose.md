@@ -1,6 +1,6 @@
 # Draft: gpui: Say what a text field holds in TextInputConfiguration
 
-- Branch: [Bombatomica64/zed `gpui-text-input-purpose`](https://github.com/Bombatomica64/zed/tree/gpui-text-input-purpose), one commit on Zed `main` (7fb155e9a2)
+- Branch: [Bombatomica64/zed `gpui-text-input-purpose`](https://github.com/Bombatomica64/zed/tree/gpui-text-input-purpose), one commit on Zed `main` (e231594b6b, 2026-11-06)
 - Diff: `crates/gpui/src/platform.rs`, `crates/gpui/src/input.rs` (test), `crates/gpui_web/src/ime_mirror.rs`, +68 −7
 - Lab fork: gpui-pre `text-input-purpose` (the `gpui` half; the `gpui_web` half is new for Zed)
 
@@ -17,7 +17,7 @@ Yes, with the `gpui_web` part. `TextInputConfiguration` (`autocorrect`,
 `autocapitalize`, `suggestions`, `input_action`) is already in Zed `main`,
 and `gpui_web`'s IME mirror maps it onto the hidden textarea's attributes.
 A `purpose` field on its own would have no consumer in Zed, so this branch
-also maps it in `gpui_web`. iOS (#63068, open) is the other obvious
+also maps it in `gpui_web`. iOS (`gpui_ios`, merged in #63068) is the other obvious
 consumer (`UIKeyboardType`, `secureTextEntry`).
 
 ---
@@ -52,8 +52,8 @@ already set.
 - `input::tests::text_input_configuration_and_focus_state_are_forwarded_on_change`
   now sets `purpose` and checks that a purpose change is forwarded to the
   platform.
-- `cargo test -p gpui --lib`: 383 passed, 0 failed. `cargo fmt --check` and `cargo clippy -p gpui --all-targets --all-features -- --deny warnings` (dev profile) are clean.
-- `cargo check -p gpui_web --target wasm32-unknown-unknown`: clean, with the same `-Zbuild-std` and atomics flags as Zed's `check_wasm` CI job (run on the pinned 1.98.1 toolchain with `RUSTC_BOOTSTRAP=1`, since there's no nightly on this machine).
+- `cargo test -p gpui --lib` (2026-11-06 rebase): 434 passed, 0 failed (the same count as `main`, since it changes an existing test). `cargo fmt --check` is clean. `cargo clippy -p gpui --all-targets --all-features -- --deny warnings` was clean on the 2026-10-16 rebase and was not re-run after the 2026-11-06 one.
+- `cargo check -p gpui_web --target wasm32-unknown-unknown` (2026-10-16 rebase; not re-run, since `ime_mirror.rs` is unchanged upstream since then): clean, with the same `-Zbuild-std` and atomics flags as Zed's `check_wasm` CI job (run on the pinned 1.98.1 toolchain with `RUSTC_BOOTSTRAP=1`, since there's no nightly on this machine).
 
 Manual: the Android lab uses the `gpui` half through gpui-mobile. Existing
 screenshots in the lab repo: `docs/demos/android-password-keyboard.png`

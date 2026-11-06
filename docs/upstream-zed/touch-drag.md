@@ -1,6 +1,6 @@
 # Draft: gpui: Let touch drag elements that only handle mouse drags
 
-- Branch: [Bombatomica64/zed `gpui-touch-drag`](https://github.com/Bombatomica64/zed/tree/gpui-touch-drag), one commit on Zed `main` (7fb155e9a2)
+- Branch: [Bombatomica64/zed `gpui-touch-drag`](https://github.com/Bombatomica64/zed/tree/gpui-touch-drag), one commit on Zed `main` (e231594b6b, 2026-11-06)
 - Diff: `crates/gpui/src/{gestures.rs, window.rs, elements/div.rs, elements/list.rs}`, +561 −25 (about 350 lines are tests)
 - Lab fork: gpui-pre `touch-drag`, which applies to Zed `main` unchanged
 
@@ -80,7 +80,7 @@ New tests:
   - `mouse_drags_and_drops_an_on_drag_element`
 - `gestures::tests::mouse_draggable_touch_drags_unless_it_pans_along_a_scroll_axis`
 
-`cargo test -p gpui --lib`: 390 passed, 0 failed. With the `allow_mouse_drag` hook disabled, three of the new touch tests fail, so `main` can't touch-drag an `on_drag` element. `cargo fmt --check` and `cargo clippy -p gpui --all-targets --all-features -- --deny warnings` (dev profile) are clean.
+`cargo test -p gpui --lib` (2026-11-06 rebase): 441 passed, 0 failed (Zed `main` has 434). With the `allow_mouse_drag` hook disabled, three of the new touch tests fail, so `main` can't touch-drag an `on_drag` element. `cargo fmt --check` is clean. `cargo clippy -p gpui --all-targets --all-features -- --deny warnings` was clean on the 2026-10-16 rebase and was not re-run after the 2026-11-06 one.
 
 Manual: Android, GPUI Mobile Lab with a lab fork of GPUI (screenshots
 above). Resizable and Dock work by touch.
@@ -113,6 +113,12 @@ Release Notes:
 
 ## Notes for the user (not part of the PR body)
 
+- 2026-11-06 rebase: the conflicts were in import lists only (upstream
+  added `BackGestureEvent` and `SingleSubscriberSet`, and #65805 renamed
+  `ScrollWheelEvent` to `ScrollEvent`), plus one test pattern renamed. No
+  logic changed. #66540 (merged, cursor reverting when a drag starts) edits
+  mouse drag start in `window.rs`, and the touch tests still pass on top of
+  it.
 - Behavior to double-check in Zed itself: the project panel scrolls on both
   axes when entries are wide, and its rows are `on_drag`. A row then drags
   only after a long press, which is probably right, but where only vertical
