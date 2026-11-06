@@ -1,6 +1,6 @@
 # android: Fail visibly when notifications are blocked; open the app on tap
 
-- Branch: [`upstream/android-notifications`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-notifications), one commit on upstream `main` (f9fe5a7)
+- Branch: [`upstream/android-notifications`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-notifications), one commit on upstream `main` (7548ebc, rebased 2026-11-06; was f9fe5a7)
 - Diff: 3 files, +82 −2
 - Depends on: nothing. This is the notifications half of fork branch `android-notifications-links` (Bombatomica64/Gpui-android#49). The fork's version used the `or_clear` helper from the #31 rework; this one uses the `map_err` + `exception_clear` idiom already in `main`.
 - Recording: none. A screenshot of the notification shade, and of the app opening on a tap, would help; a follow-up.

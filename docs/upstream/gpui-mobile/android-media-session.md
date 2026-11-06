@@ -1,6 +1,6 @@
 # android: Deliver media-session callbacks on the main Looper
 
-- Branch: [`upstream/android-media-session`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-media-session), one commit on upstream `main` (f9fe5a7)
+- Branch: [`upstream/android-media-session`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-media-session), one commit on upstream `main` (7548ebc, rebased 2026-11-06; was f9fe5a7)
 - Diff: 2 files, +20 −7
 - Depends on: nothing. This is the media-session half of fork branch `android-callbacks` (Bombatomica64/Gpui-android#48).
 - Recording: none. The results are log lines, measured on the device (below). A screenshot of the system media controls could be added.

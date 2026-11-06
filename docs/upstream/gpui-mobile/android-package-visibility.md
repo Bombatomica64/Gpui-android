@@ -1,6 +1,6 @@
 # android: Document the `<queries>` that `can_launch_url` needs
 
-- Branch: [`upstream/android-package-visibility`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-package-visibility), one commit on upstream `main` (f9fe5a7)
+- Branch: [`upstream/android-package-visibility`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-package-visibility), one commit on upstream `main` (7548ebc, rebased 2026-11-06; was f9fe5a7)
 - Diff: 3 files, +25 −1 (docs and the example manifest only)
 - Depends on: nothing. This is the links half of fork branch `android-notifications-links` (Bombatomica64/Gpui-android#49).
 - Recording: not needed (docs and manifest).

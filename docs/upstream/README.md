@@ -17,6 +17,17 @@ upstream `main` as of 2026-10-10: gpui-mobile f9fe5a7 (#24), Kit 0bbd9870
 (#3421). Each has a draft PR body next to this file. The drafts reuse the phone
 captures in [../demos](../demos) and say where a capture is missing.
 
+**Update 2026-11-06.** Since then #12, #15 and the safe-area branch were
+posted and merged (gpui-kit #3623, #3625, #3624). Upstream moved: gpui-mobile
+`main` is 7548ebc (#45: gpui-pre 0.3.10, `open_url` through the host, late
+`surfaceDestroyed` ignored), Kit `main` is 48ac25b5 (v0.9.0 plus 4 commits,
+gpui-pre 0.3.11). The unposted gpui-mobile branches #5–#11 and #13 were
+rebased onto 7548ebc; their old tips are tagged
+`archive/2026-11-06/upstream/<name>`. Three new fixes from lab issues #39
+and #50 were added as #23–#25. No other open PR on either repo overlaps
+them (checked: Kit #3818, which exposes a single-line input's text, touches
+the same node but not its disabled state).
+
 ## Status
 
 ✅ = can be sent now · ⏳ = ready, waits for another PR · ⛔ = needs work or an upstream change first
@@ -27,22 +38,27 @@ captures in [../demos](../demos) and say where a capture is missing.
 | 2 | kit | [`upstream/input-masked-password-role`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-masked-password-role) | ✅ merged (v0.8.0): [#3555](https://github.com/longbridge/gpui-kit/pull/3555) | — | before: uiautomator dump; after: no | [draft](gpui-kit/input-masked-password-role.md) |
 | 3 | kit | [`upstream/input-back-keeps-text`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-back-keeps-text) | ✅ merged (v0.8.0): [#3556](https://github.com/longbridge/gpui-kit/pull/3556) | — | before only | [draft](gpui-kit/input-back-keeps-text.md) |
 | 4 | kit | [`upstream/input-text-input-configuration`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-text-input-configuration) | ✅ merged (v0.8.0): [#3557](https://github.com/longbridge/gpui-kit/pull/3557) | — (gpui-pre 0.3.8 has the API) | yes (Android, with #13) | [draft](gpui-kit/input-text-input-configuration.md) |
-| 5 | mobile | [`upstream/android-package-visibility`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-package-visibility) | ✅ (docs + manifest) | — | not needed | [draft](gpui-mobile/android-package-visibility.md) |
-| 6 | mobile | [`upstream/android-permission-errors`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-permission-errors) | ✅ | — | measured values | [draft](gpui-mobile/android-permission-errors.md) |
-| 7 | mobile | [`upstream/android-media-session`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-media-session) | ✅ | — | log lines | [draft](gpui-mobile/android-media-session.md) |
-| 8 | mobile | [`upstream/android-deeplink`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-deeplink) | ✅ | — | log lines | [draft](gpui-mobile/android-deeplink.md) |
-| 9 | mobile | [`upstream/android-notifications`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-notifications) | ✅ | — | no | [draft](gpui-mobile/android-notifications.md) |
-| 10 | mobile | [`upstream/android-async-prepare`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-async-prepare) | ✅ | — | timings | [draft](gpui-mobile/android-async-prepare.md) |
-| 11 | mobile | [`upstream/android-ime-dismiss`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-ime-dismiss) | ✅ | — | after only | [draft](gpui-mobile/android-ime-dismiss.md) |
-| 12 | kit | [`upstream/input-tap-requests-keyboard`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-tap-requests-keyboard) | ⏳ | #11 (otherwise it's a no-op on Android) | no | [draft](gpui-kit/input-tap-requests-keyboard.md) |
-| 13 | mobile | [`upstream/android-text-input-configuration`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-text-input-configuration) | ⏳ | #11 merged, #4 released in Kit | yes | [draft](gpui-mobile/android-text-input-configuration.md) |
+| 5 | mobile | [`upstream/android-package-visibility`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-package-visibility) | ✅ (docs + manifest), rebased 2026-11-06 onto 7548ebc (clean) | — | not needed | [draft](gpui-mobile/android-package-visibility.md) |
+| 6 | mobile | [`upstream/android-permission-errors`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-permission-errors) | ✅, rebased 2026-11-06 onto 7548ebc (clean) | — | measured values | [draft](gpui-mobile/android-permission-errors.md) |
+| 7 | mobile | [`upstream/android-media-session`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-media-session) | ✅, rebased 2026-11-06 onto 7548ebc (clean) | — | log lines | [draft](gpui-mobile/android-media-session.md) |
+| 8 | mobile | [`upstream/android-deeplink`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-deeplink) | ✅, rebased 2026-11-06 onto 7548ebc (clean) | — | log lines | [draft](gpui-mobile/android-deeplink.md) |
+| 9 | mobile | [`upstream/android-notifications`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-notifications) | ✅, rebased 2026-11-06 onto 7548ebc (clean) | — | no | [draft](gpui-mobile/android-notifications.md) |
+| 10 | mobile | [`upstream/android-async-prepare`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-async-prepare) | ✅, rebased 2026-11-06 onto 7548ebc (clean). Video follows as #24 | — | timings | [draft](gpui-mobile/android-async-prepare.md) |
+| 11 | mobile | [`upstream/android-ime-dismiss`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-ime-dismiss) | ✅, rebased 2026-11-06 onto 7548ebc (conflict in `window.rs`: the keyboard methods now sit after #25's `a11y_*` methods). Send next: Kit #3623 (#12) is merged and does nothing on Android without it | — | after only | [draft](gpui-mobile/android-ime-dismiss.md) |
+| 12 | kit | [`upstream/input-tap-requests-keyboard`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-tap-requests-keyboard) | ✅ merged (2026-10-22): [#3623](https://github.com/longbridge/gpui-kit/pull/3623) | #11 for it to work on Android | no | [draft](gpui-kit/input-tap-requests-keyboard.md) |
+| 13 | mobile | [`upstream/android-text-input-configuration`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-text-input-configuration) | ⏳, rebased 2026-11-06 onto 7548ebc on top of #11 (same `window.rs` conflict, both sides kept) | #11 merged. (#4 is released: Kit v0.8.0) | yes | [draft](gpui-mobile/android-text-input-configuration.md) |
 | 14 | mobile | [`upstream/android-a11y-clear-exceptions`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-a11y-clear-exceptions) | ✅ merged with #25 | pushed to #25 (7006f50) with the review fixes | not possible (code audit) | [draft](gpui-mobile/android-a11y-clear-exceptions.md) |
-| 15 | kit | [`upstream/input-reveal-on-focus`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-reveal-on-focus) | ⏳ | Zed autoscroll PR in a gpui-pre release (its own test fails until then) | no | [draft](gpui-kit/input-reveal-on-focus.md) |
-| 16 | mobile | [`upstream/android-text-input-purpose`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-text-input-purpose) | ⛔ | #13, plus Zed `TextInputConfiguration::purpose` in a gpui-pre release; doesn't build until then | yes | [draft](gpui-mobile/android-text-input-purpose.md) |
-| 17 | kit | `input-purpose` (fork branch only) | ⛔ | #4, plus the same GPUI change; conflicts with `main` (to rebase then) | yes | — |
-| 18 | mobile | `android-activity-requests`, `android-picker-files` (fork only) | ⛔ | the JNI rework (issue #31): built on its `jni.rs` | partly ([picker screenshots](../demos/platform-apis)) | — |
-| 19 | mobile | `android-string-arrays` (fork only) | ⛔ | #6, plus the JNI rework (#31): `contacts/android.rs` was rewritten there | no | — |
-| 20 | mobile | [`dev-hot-loader`](https://github.com/Bombatomica64/gpui-mobile/tree/dev-hot-loader) (`GpuiLibraryLoader`) | ✅ posted: [#39](https://github.com/longbridge/gpui-mobile/pull/39), after #34 got no reply | — | phone strip from the A1 spike | [issue draft](hot-reload-discussion.md) |
+| 15 | kit | [`upstream/input-reveal-on-focus`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-reveal-on-focus) | ✅ merged (2026-10-23): [#3625](https://github.com/longbridge/gpui-kit/pull/3625) | The Zed autoscroll PR (not posted yet) for scrolling divs to follow | no | [draft](gpui-kit/input-reveal-on-focus.md) |
+| 16 | mobile | [`upstream/android-text-input-purpose`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-text-input-purpose) | ⛔ (unchanged 2026-11-06: gpui-pre 0.3.10 and 0.3.11 still have no `purpose`; the Zed PR isn't posted. Not rebased) | #13, plus Zed `TextInputConfiguration::purpose` in a gpui-pre release; doesn't build until then | yes | [draft](gpui-mobile/android-text-input-purpose.md) |
+| 17 | kit | `input-purpose` (fork branch only) | ⛔ (unchanged 2026-11-06) | #4 (merged), plus the same GPUI change; conflicts with `main` (to rebase then) | yes | — |
+| 18 | mobile | `android-activity-requests`, `android-picker-files` (fork only) | ⛔ (unchanged 2026-11-06) | the JNI rework (issue #31): built on its `jni.rs`. #40/#41 are its first parts, still open | partly ([picker screenshots](../demos/platform-apis)) | — |
+| 19 | mobile | `android-string-arrays` (fork only) | ⛔ (unchanged 2026-11-06) | #6, plus the JNI rework (#31): `contacts/android.rs` was rewritten there | no | — |
+| 20 | mobile | [`upstream/android-hot-loader`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-hot-loader) (`GpuiLibraryLoader`) | ✅ posted: [#39](https://github.com/longbridge/gpui-mobile/pull/39), after #34 got no reply. 2026-11-06: no review yet, GitHub says mergeable, builds merged with `main` | — | phone strip from the A1 spike | [issue draft](hot-reload-discussion.md) |
+| 21 | mobile | [`upstream/jni-docs`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/jni-docs) | ✅ posted: [#40](https://github.com/longbridge/gpui-mobile/pull/40). 2026-11-06: no review yet, mergeable, builds merged with `main` | — | not needed | — |
+| 22 | mobile | [`upstream/jni-exceptions`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/jni-exceptions) | ✅ posted: [#41](https://github.com/longbridge/gpui-mobile/pull/41). 2026-11-06: no review yet, mergeable, builds merged with `main` | — | not needed | — |
+| 23 | kit | [`upstream/input-disabled-a11y`](https://github.com/Bombatomica64/gpui-kit/tree/upstream/input-disabled-a11y) | ✅ (new 2026-11-06, on Kit `main` 48ac25b5) | — | uiautomator before/after (Gpui-android#81) | [draft](gpui-kit/input-disabled-a11y.md) |
+| 24 | mobile | [`upstream/android-video-async-prepare`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-video-async-prepare) | ⏳ (new 2026-11-06, on 7548ebc) | no code from #10, but the same design: send after #10 is reviewed | timings, 2 screenshots (Gpui-android#82) | [draft](gpui-mobile/android-video-async-prepare.md) |
+| 25 | mobile | [`upstream/android-a11y-clickable`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-a11y-clickable) | ✅ (new 2026-11-06, on 7548ebc) | — | uiautomator before/after (Gpui-android#81) | [draft](gpui-mobile/android-a11y-clickable.md) |
 
 Notes on the triage:
 
@@ -60,7 +76,21 @@ Per branch, on this server with `-j4`:
 
 Not compiled: #16 and #17, which need the unreleased GPUI field.
 
+Re-run on 2026-11-06 for the rebased and new branches, with the same
+commands. Results:
+
+- gpui-mobile (base 7548ebc): every rebased and new branch (#5–#11, #13, #24, #25), and #39, #40 and #41 each merged into `main`: fmt clean, `check --all-targets` clean, clippy has the same 9 warnings as `main` (8 before #45), `cargo test --lib` 46 passed. Each package branch also checked alone with `--no-default-features --features <package>` (#6 `permission_handler`, #7 `media_session`, #8 `deeplink`, #9 `notifications`, #10 `audio`, #24 `video_player`). #24 also: the example crate with `cargo ndk -t arm64-v8a check`, clean.
+- Kit (base 48ac25b5), #23 only: our files are fmt-clean (`cargo fmt --check` flags only upstream's `text/inline_flow.rs`, with rustfmt 1.10); check and clippy `--deny warnings` clean; `gpui-base` `input` 424 passed, `a11y_disabled` 2 passed (and fails without the fix); kit `integration input` 223 passed, 1 failed (`input::completions::ordinary_input_schedules_no_followup_frame`, which fails the same way without #23).
+- The Kit commands changed: `gpui-base` lib tests need `--features test-support` now (CI gets it from `cargo test --workspace`), and the kit tests are one `integration` target since #3481, so `--test input --test input_focus` became `--test integration input`.
+- Not re-run: #16, #17 (blocked), and no phone this round: the device results in the new drafts come from the lab PRs (#81, #82).
+
 ## Suggested send order
+
+As of 2026-11-06: gpui-mobile #39–#41 are open with no review. Next for
+gpui-mobile: #11 (Kit #3623 already asks for the keyboard, and does nothing
+on Android until #11 lands), #25 (a11y clickable), then the order below.
+Kit: #23 (disabled input) can go now.
+
 
 #25, #29 and #30 are merged. gpui-mobile now has #39–#41 open from me, so
 send the next ones there as those land.
