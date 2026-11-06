@@ -2142,7 +2142,7 @@ dependencies = [
 [[package]]
 name = "gpui-base"
 version = "0.8.0"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=18c9c775a4123d84582326aca1c79a228d399098#18c9c775a4123d84582326aca1c79a228d399098"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=df4dfdf34d257ee079f6457d48299eedbd04d3bc#df4dfdf34d257ee079f6457d48299eedbd04d3bc"
 dependencies = [
  "aho-corasick",
  "anyhow",
@@ -2182,7 +2182,7 @@ dependencies = [
 [[package]]
 name = "gpui-component"
 version = "0.8.0"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=18c9c775a4123d84582326aca1c79a228d399098#18c9c775a4123d84582326aca1c79a228d399098"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=df4dfdf34d257ee079f6457d48299eedbd04d3bc#df4dfdf34d257ee079f6457d48299eedbd04d3bc"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2228,7 +2228,7 @@ dependencies = [
 [[package]]
 name = "gpui-component-macros"
 version = "0.8.0"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=18c9c775a4123d84582326aca1c79a228d399098#18c9c775a4123d84582326aca1c79a228d399098"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=df4dfdf34d257ee079f6457d48299eedbd04d3bc#df4dfdf34d257ee079f6457d48299eedbd04d3bc"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -2239,7 +2239,7 @@ dependencies = [
 [[package]]
 name = "gpui-fps"
 version = "0.8.0"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=18c9c775a4123d84582326aca1c79a228d399098#18c9c775a4123d84582326aca1c79a228d399098"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=df4dfdf34d257ee079f6457d48299eedbd04d3bc#df4dfdf34d257ee079f6457d48299eedbd04d3bc"
 dependencies = [
  "core-graphics 0.24.0",
  "gpui-pre",
@@ -2280,7 +2280,7 @@ dependencies = [
 [[package]]
 name = "gpui-kit"
 version = "0.8.0"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=18c9c775a4123d84582326aca1c79a228d399098#18c9c775a4123d84582326aca1c79a228d399098"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=df4dfdf34d257ee079f6457d48299eedbd04d3bc#df4dfdf34d257ee079f6457d48299eedbd04d3bc"
 dependencies = [
  "gpui-base",
  "gpui-component",
@@ -2294,7 +2294,7 @@ dependencies = [
 [[package]]
 name = "gpui-kit-assets"
 version = "0.8.0"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=18c9c775a4123d84582326aca1c79a228d399098#18c9c775a4123d84582326aca1c79a228d399098"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=df4dfdf34d257ee079f6457d48299eedbd04d3bc#df4dfdf34d257ee079f6457d48299eedbd04d3bc"
 dependencies = [
  "anyhow",
  "gpui-pre",
@@ -2329,7 +2329,7 @@ dependencies = [
 [[package]]
 name = "gpui-pre"
 version = "0.3.9"
-source = "git+https://github.com/Bombatomica64/gpui-pre?rev=5df735c80e4e3ef7de813177cccfcc7d631e82f8#5df735c80e4e3ef7de813177cccfcc7d631e82f8"
+source = "git+https://github.com/Bombatomica64/gpui-pre?rev=14b3aa475c6f1188468feb15929b350feabadaa3#14b3aa475c6f1188468feb15929b350feabadaa3"
 dependencies = [
  "accesskit",
  "anyhow",
@@ -2575,7 +2575,7 @@ dependencies = [
 [[package]]
 name = "gpui-pre-mobile"
 version = "0.1.0"
-source = "git+https://github.com/Bombatomica64/gpui-mobile?rev=7f52b45fa0ae27c6c72f7fa976e4e236326ef9db#7f52b45fa0ae27c6c72f7fa976e4e236326ef9db"
+source = "git+https://github.com/Bombatomica64/gpui-mobile?rev=733572c3233f5e97cc07a2bcbf929fb8399d550e#733572c3233f5e97cc07a2bcbf929fb8399d550e"
 dependencies = [
  "accesskit_android",
  "android-activity",

@@ -59,8 +59,10 @@ gpui-mobile exposes GPUI's AccessKit tree to TalkBack (via
 - Kit's Clear (`.cleanable(true)`) and password toggle buttons are labelled.
   **Icon-only buttons you make need a label**, or TalkBack reads nothing
   useful.
+- The field being edited reports focused, a disabled `Input` reports
+  disabled, and anything with a click handler reports clickable.
 - Not yet reachable: section titles and help text (needs a GPUI/Kit change);
-  fields aren't reported as focused/disabled; no autofill.
+  no autofill.
 
 Testing TalkBack with the shared phone: hold one `phone session` only while
 actually testing, ask the user to switch TalkBack on, and ask them to switch
