@@ -131,6 +131,10 @@ Platform APIs screen exercises them; the defects are #44–#50.
   blocked; a tap opens the app with `take_launch_payload`; `<queries>`
   documented for `can_launch_url`.
 - `android-async-prepare` (#50): audio streams prepare asynchronously.
+- `android-video-async-prepare` (#50): video streams too (`set_url` returns
+  `None` while loading, `state()` reports `Loading`). The Video screen
+  exercises it through the platform-view host. Pinned from the branch until it
+  is merged into fork `main`.
 
 The Java helpers live in gpui-mobile's example project; `build.sh` copies the
 ones the lab uses from the pinned checkout.
