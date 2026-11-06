@@ -215,6 +215,18 @@ keyboard's suggestions. It gains `purpose: TextInputPurpose` (HTML
 `inputmode` values plus Password and NumericPassword). Zed `main` has the
 same struct without it.
 
+### Report text without an element id to screen readers — branch `a11y-static-text`
+
+Only elements with an element id and a role reach the AccessKit tree, so
+plain string children, `SharedString` and `StyledText`, which is how most
+headings, paragraphs and value rows are drawn, were invisible to TalkBack
+([#37](https://github.com/Bombatomica64/Gpui-android/issues/37)). They now
+add a `Label` leaf under their nearest accessible ancestor, unless that
+ancestor already speaks for its text (a label, a text field, a button with
+`aria_label`). Node ids come from the ancestor and the text's position, so
+they are stable across frames. Built on `mobile-lab` (it touches only the
+a11y builder and `elements/text.rs`).
+
 ## Still handled in the host app
 
 These belong to the embedding Activity, not to the framework:
