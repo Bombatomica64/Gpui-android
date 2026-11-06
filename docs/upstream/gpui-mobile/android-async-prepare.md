@@ -1,6 +1,6 @@
 # android: Prepare audio streams without blocking the caller
 
-- Branch: [`upstream/android-async-prepare`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-async-prepare), one commit on upstream `main` (f9fe5a7)
+- Branch: [`upstream/android-async-prepare`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-async-prepare), one commit on upstream `main` (7548ebc, rebased 2026-11-06; was f9fe5a7)
 - Diff: 3 files, +159 −29 (mostly `GpuiAudio.java`)
 - Depends on: nothing. (Lab issue Bombatomica64/Gpui-android#50. The fork's version used the `or_clear` helper from the #31 rework. This branch uses the `map_err` + `exception_clear` idiom already in `main`.)
 - Recording: none, but there are timings measured on the device (Gpui-android#50). A recording would add little.
@@ -22,7 +22,7 @@ No signature changes (`PlayerState::Loading` already exists). `set_url`'s doc sa
 - `cargo fmt --all -- --check`; `cargo check --target aarch64-linux-android --all-targets` and `cargo clippy --target aarch64-linux-android`: no new warnings; `cargo test --lib`: 46 passed.
 - `GpuiAudio.java` is the same as on my fork, whose CI builds the example APK.
 - On device (OnePlus CPH2581, Android 16, my fork's `main`), an MP3 over Wi-Fi: `set_url` took 1222 ms before and 21–27 ms after. `state()` is `Loading` until it's ready, a `play()` made while loading starts playback once it is, and pause and `state()` work afterwards. The failure path (bad URL) was not checked on the device.
-- Not changed: `GpuiVideoPlayer` prepares synchronously the same way. My test app can't exercise the video player, so I left it alone.
+- Not changed here: `GpuiVideoPlayer` prepares synchronously the same way. That fix is a separate PR (`upstream/android-video-async-prepare`), measured on the device, which I'll send once this design is settled.
 
 Thanks for taking the time to review this.
 

@@ -1,8 +1,8 @@
 # android: Keep focus when the IME's Done action hides the keyboard
 
-- Branch: [`upstream/android-ime-dismiss`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-ime-dismiss), one commit on upstream `main` (f9fe5a7)
+- Branch: [`upstream/android-ime-dismiss`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-ime-dismiss), one commit on upstream `main` (7548ebc, rebased 2026-11-06; was f9fe5a7)
 - Diff: 3 files, +21 −19
-- Depends on: nothing
+- Depends on: nothing. Kit's #3623 (merged) asks for the keyboard when a focused input is tapped through `Window::request_virtual_keyboard`; on Android that call does nothing until this PR implements `show_soft_keyboard`.
 - Recording: an "after" screenshot only (the "before" is the dialog closing, which wasn't captured)
 
 ---

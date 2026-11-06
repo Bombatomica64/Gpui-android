@@ -1,6 +1,6 @@
 # android: Deliver deep links that reach the running app
 
-- Branch: [`upstream/android-deeplink`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-deeplink), one commit on upstream `main` (f9fe5a7)
+- Branch: [`upstream/android-deeplink`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-deeplink), one commit on upstream `main` (7548ebc, rebased 2026-11-06; was f9fe5a7)
 - Diff: 3 files, +24 −4
 - Depends on: nothing. This is the deep-link half of fork branch `android-callbacks` (Bombatomica64/Gpui-android#48); the media-session half is its own PR.
 - Recording: none. The results are log lines and return values, measured on the device (below).

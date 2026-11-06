@@ -1,6 +1,6 @@
 # android: Report a missing permission instead of an empty result
 
-- Branch: [`upstream/android-permission-errors`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-permission-errors), one commit on upstream `main` (f9fe5a7)
+- Branch: [`upstream/android-permission-errors`](https://github.com/Bombatomica64/gpui-mobile/tree/upstream/android-permission-errors), one commit on upstream `main` (7548ebc, rebased 2026-11-06; was f9fe5a7)
 - Diff: 4 files, +41 −42 (two Java helpers, doc comments in two Rust modules)
 - Depends on: nothing. (Lab issue Bombatomica64/Gpui-android#46. On my fork it sits on the JNI rework from #31, but it doesn't need it.)
 - Recording: none needed. The result is a return value; the before/after values measured on the device are in the Testing section (Gpui-android#46).
