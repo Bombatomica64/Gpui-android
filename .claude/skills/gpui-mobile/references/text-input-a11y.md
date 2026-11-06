@@ -63,7 +63,9 @@ gpui-mobile exposes GPUI's AccessKit tree to TalkBack (via
   reported as a label under its nearest accessible ancestor, so headings and
   help text are reachable without ids. Text inside a labelled button, a
   field or a label is not repeated.
-- Not yet: fields aren't reported as focused/disabled; no autofill.
+- The field being edited reports focused, a disabled `Input` reports
+  disabled, and anything with a click handler reports clickable.
+- Not yet: autofill.
 
 Testing TalkBack with the shared phone: hold one `phone session` only while
 actually testing, ask the user to switch TalkBack on, and ask them to switch
