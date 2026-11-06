@@ -19,16 +19,18 @@ crate-type = ["cdylib"]
 # the gpui-mobile fork; [patch.crates-io] swaps in 0.3.9 with my touch fixes. Kit and gpui-mobile come from my forks, pinned by rev
 # (see MOBILE_PATCHES.md for what each carries on top of upstream).
 gpui = { package = "gpui-pre", version = "=0.3.9", default-features = false }
-gpui-kit = { git = "https://github.com/Bombatomica64/gpui-kit", rev = "df4dfdf34d257ee079f6457d48299eedbd04d3bc", default-features = false, features = ["component", "assets"] }
-gpui-mobile = { package = "gpui-pre-mobile", git = "https://github.com/Bombatomica64/gpui-mobile", rev = "733572c3233f5e97cc07a2bcbf929fb8399d550e", default-features = false, features = [
+gpui-kit = { git = "https://github.com/Bombatomica64/gpui-kit", rev = "6c45a1aabd7145d55e0e1f6193ce8742dd202d8c", default-features = false, features = ["component", "assets"] }
+gpui-mobile = { package = "gpui-pre-mobile", git = "https://github.com/Bombatomica64/gpui-mobile", rev = "e1fb74b5bfbb3e8f6a4f06217dffdc353751ef5c", default-features = false, features = [
     "clipboard", "share",
     # Exercised by the Platform APIs screen; build.sh copies their Java helpers from this checkout.
     "file_selector", "image_picker", "local_auth", "permission_handler", "calendar", "contacts",
     "location", "notifications", "url_launcher", "maps_launcher", "audio", "media_session",
     "microphone", "deeplink",
+    # Exercised by the Video screen; it draws through the platform-view host (GpuiPlatformView).
+    "video_player",
 ] }
 # Kit's FPS / frame-time HUD (enables gpui's `profiler` frame trace).
-gpui-fps = { git = "https://github.com/Bombatomica64/gpui-kit", rev = "df4dfdf34d257ee079f6457d48299eedbd04d3bc" }
+gpui-fps = { git = "https://github.com/Bombatomica64/gpui-kit", rev = "6c45a1aabd7145d55e0e1f6193ce8742dd202d8c" }
 anyhow = "1"
 log = "0.4"
 # Already in the tree through gpui; the Platform APIs screen reads picked images' sizes.
