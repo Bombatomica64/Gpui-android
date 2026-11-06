@@ -32,6 +32,7 @@ mod textarea;
 pub mod themes;
 mod toolbar;
 mod touch;
+mod video;
 
 pub struct ScreenDef {
     pub title: &'static str,
@@ -85,6 +86,7 @@ pub static SCREENS: &[ScreenDef] = &[
     screen!("Scroll Stress", scroll::ScrollScreen, true),
     screen!("Diagnostics", diagnostics::DiagnosticsScreen),
     screen!("Platform APIs", platform_apis::PlatformApisScreen),
+    screen!("Video", video::VideoScreen, true),
     screen!("Stress Test", stress::StressScreen),
     screen!("Themes", themes::ThemesScreen),
 ];
@@ -95,6 +97,7 @@ pub static TOOLS: &[&str] = &[
     "Scroll Stress",
     "Diagnostics",
     "Platform APIs",
+    "Video",
     "Stress Test",
     "Themes",
 ];
