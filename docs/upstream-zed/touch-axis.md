@@ -1,7 +1,7 @@
 # Draft: gpui: Don't remap touch pans onto a container's other axis
 
-- Branch: [Bombatomica64/zed `gpui-touch-axis`](https://github.com/Bombatomica64/zed/tree/gpui-touch-axis), one commit on Zed `main` (7fb155e9a2)
-- Diff: `crates/gpui/src/elements/div.rs`, `crates/gpui/src/window.rs`, +101 −10 (about 90 lines are tests)
+- Branch: [Bombatomica64/zed `gpui-touch-axis`](https://github.com/Bombatomica64/zed/tree/gpui-touch-axis), one commit on Zed `main` (e231594b6b, 2026-11-06)
+- Diff: `crates/gpui/src/elements/div.rs` only, +97 −11 (about 90 lines are tests)
 - Lab fork: gpui-pre `touch-axis`
 
 > Before posting: rewrite this in your own words. Zed's AI policy asks for
@@ -20,7 +20,7 @@ when the container scrolls only one way. Unless
 `restrict_scroll_to_axis()` is set, a vertical-only container takes `delta.x`
 as `delta.y`. That makes sense for a mouse wheel, which has one axis: the wheel
 over a horizontal-only strip scrolls it sideways. But touch pans reach the same handler as
-`ScrollWheelEvent`s from `TouchGestureRecognizer`, and #63553 already locks
+`ScrollEvent`s from `TouchGestureRecognizer`, and #63553 already locks
 each pan to its dominant axis. So a deliberate horizontal swipe arrives as
 `(dx, 0)` and moves a vertical list by `dx`. Some ways a touch user hits it:
 
@@ -35,12 +35,13 @@ container.
 
 ## Change
 
-- `Window` sets `dispatching_touch_scroll` while it dispatches a
-  `RecognizedTouchGesture::Scroll` step, momentum included.
-- The div scroll handler skips the cross-axis remap while that flag is set.
+- The div scroll handler skips the cross-axis remap when the event's
+  `source` is `ScrollSource::Touch` (pans and the fling momentum GPUI
+  synthesizes after them).
 
-The flag lives on `Window` rather than on `ScrollWheelEvent`, so the event
-type and every place that constructs one stay unchanged.
+This uses `ScrollEvent::source`, added by #65805 (merged 2026-10-20). Before
+that, the branch set a flag on `Window` while it dispatched touch scroll
+steps; that flag and its `window.rs` hunk are gone.
 
 **Desktop is unchanged:** mouse wheels, trackpads (they come from the
 platform as `ScrollWheelEvent`, not through the touch recognizer) and
@@ -57,7 +58,7 @@ Two new tests in `elements::div::tests`:
 - `horizontal_wheel_still_scrolls_a_vertical_container`: a horizontal wheel
   delta still scrolls it vertically by the same amount, as today.
 
-`cargo test -p gpui --lib`: 385 passed, 0 failed (Zed `main` has 383). With the flag never set, `horizontal_touch_pan_does_not_scroll_a_vertical_container` fails (the list moves 60px), so the bug is present on `main`. `cargo fmt --check` and `cargo clippy -p gpui --all-targets --all-features -- --deny warnings` (dev profile) are clean.
+`cargo test -p gpui --lib` (2026-11-06 rebase): 436 passed, 0 failed (Zed `main` has 434). With the `source` check disabled, `horizontal_touch_pan_does_not_scroll_a_vertical_container` fails (the list moves 60px), so the bug is present on `main`. `cargo fmt --check` is clean. `cargo clippy -p gpui --all-targets --all-features -- --deny warnings` was clean on the 2026-10-16 rebase and was not re-run after the 2026-11-06 one.
 
 Manual: **not yet verified on a device.** The lab's Scroll Stress screen
 (nested axes) is the place for it: a sideways swipe over a vertical list
@@ -80,10 +81,13 @@ Release Notes:
 ## Notes for the user (not part of the PR body)
 
 - Related upstream work: #63553 (merged, locks pans to the dominant axis),
-  #64239 (open, huacnlee, a touch that catches a fling picks its own axis).
-  Both change `gestures.rs` only and don't overlap this diff. #64534 (open)
-  adds `momentum` to `ScrollWheelEvent` and touches `window.rs` near the same
-  dispatch site, so a rebase may be needed if it lands first.
-- If a reviewer would rather mark the event than the window, a
-  `ScrollWheelEvent::touch: bool` (or reuse of #64534's field) is the
-  alternative. It's more invasive because every backend constructs the event.
+  #64239 (merged 2026-10-16, a touch that catches a fling picks its own
+  axis), #65805 (merged 2026-10-20, renamed `ScrollWheelEvent` to
+  `ScrollEvent` and added `ScrollEvent::source`, which this branch now
+  uses). Open #64534 and #66012 change `gestures.rs`/`window.rs` and add
+  fields to `ScrollEvent`. Since the 2026-11-06 rebase this branch touches
+  only `div.rs`, so they don't overlap.
+- The 2026-11-06 rebase replaced the `Window::dispatching_touch_scroll` flag
+  with `event.source == ScrollSource::Touch`. That's the "mark the event"
+  alternative an earlier version of this note suggested, and upstream has
+  now built it.

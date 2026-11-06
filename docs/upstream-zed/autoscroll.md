@@ -1,6 +1,6 @@
 # Draft: gpui: Reveal a descendant's autoscroll request in scrollable divs
 
-- Branch: [Bombatomica64/zed `gpui-autoscroll`](https://github.com/Bombatomica64/zed/tree/gpui-autoscroll), one commit on Zed `main` (7fb155e9a2)
+- Branch: [Bombatomica64/zed `gpui-autoscroll`](https://github.com/Bombatomica64/zed/tree/gpui-autoscroll), one commit on Zed `main` (e231594b6b, 2026-11-06)
 - Diff: `crates/gpui/src/elements/div.rs` only, +277 −25 (about 150 lines are tests, about 25 are a function moved out unchanged)
 - Lab fork: gpui-pre `autoscroll`
 
@@ -79,7 +79,7 @@ Three new tests in `elements::div::tests`:
 - `scroll_offset_is_untouched_without_an_autoscroll_request`: offsets set
   by hand survive redraws.
 
-`cargo test -p gpui --lib`: 386 passed, 0 failed. With the new path disabled, the two reveal tests fail, so `main` ignores the request. `cargo fmt --check` and `cargo clippy -p gpui --all-targets --all-features -- --deny warnings` (dev profile) are clean. The `editor` and `markdown` crate tests were not run (too large a build for this machine).
+`cargo test -p gpui --lib` (2026-11-06 rebase): 437 passed, 0 failed (Zed `main` has 434). With the new path disabled, the two reveal tests fail, so `main` ignores the request. `cargo fmt --check` is clean. `cargo clippy -p gpui --all-targets --all-features -- --deny warnings` was clean on the 2026-10-16 rebase and was not re-run after the 2026-11-06 one. The `editor` and `markdown` crate tests were not run (too large a build for this machine).
 
 Manual: **not yet verified on a device.** A recording is needed: in a lab
 build with this branch and *without* gpui-kit `input-reveal-on-focus`, focus
