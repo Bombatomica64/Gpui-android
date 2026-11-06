@@ -4,6 +4,8 @@
 #   ./build.sh android [--release|--debug] [--abi arm64-v8a|x86_64|all] [--install]
 #
 # Defaults: --release --abi arm64-v8a. The APK is copied to dist/.
+# Rust builds with corgi (Android NDK fork) for --debug, cargo ndk for --release;
+# set LAB_BUILDER=corgi|cargo-ndk to override.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -44,7 +46,17 @@ if [[ -z "${ANDROID_NDK_HOME:-}" ]]; then
 fi
 [[ -d "$ANDROID_HOME" ]] || { echo "Android SDK not found; set ANDROID_HOME" >&2; exit 1; }
 [[ -d "$ANDROID_NDK_HOME" ]] || { echo "Android NDK not found; set ANDROID_NDK_HOME" >&2; exit 1; }
-command -v cargo-ndk >/dev/null || { echo "cargo-ndk missing: cargo install cargo-ndk" >&2; exit 1; }
+# corgi caches every unit in a shared store, so a rebuild of an unchanged dependency
+# graph is near-instant. It does not do LTO yet, and the release profile relies on
+# fat LTO for size, so release builds stay on cargo ndk.
+BUILDER="${LAB_BUILDER:-$( [[ $PROFILE == debug ]] && echo corgi || echo cargo-ndk )}"
+case "$BUILDER" in
+    corgi)
+        command -v corgi >/dev/null || { echo "corgi missing: cargo install --locked --git https://github.com/Bombatomica64/corgi --branch android-ndk corgi-build" >&2; exit 1; }
+        ;;
+    cargo-ndk) command -v cargo-ndk >/dev/null || { echo "cargo-ndk missing: cargo install cargo-ndk" >&2; exit 1; } ;;
+    *) echo "unknown LAB_BUILDER: $BUILDER" >&2; exit 1 ;;
+esac
 
 JNI_LIBS="$ROOT/android/app/src/main/jniLibs"
 rm -rf "$JNI_LIBS"
@@ -53,14 +65,27 @@ cargo_flags=()
 [[ "$PROFILE" == release ]] && cargo_flags+=(--release)
 # Optional Cargo features, e.g. LAB_FEATURES=demo-pr3329 for demo builds.
 [[ -n "${LAB_FEATURES:-}" ]] && cargo_flags+=(--features "$LAB_FEATURES")
-ndk_targets=()
-for abi in "${ABIS[@]}"; do
-    ndk_targets+=(-t "$abi")
-    rustup target add "$( [[ $abi == arm64-v8a ]] && echo aarch64-linux-android || echo x86_64-linux-android )" >/dev/null
-done
+triple() { [[ $1 == arm64-v8a ]] && echo aarch64-linux-android || echo x86_64-linux-android; }
 
-echo "==> cargo ndk ${ABIS[*]} ($PROFILE)"
-(cd "$ROOT" && cargo ndk "${ndk_targets[@]}" --platform "$MIN_API" -o "$JNI_LIBS" build "${cargo_flags[@]}")
+if [[ "$BUILDER" == corgi ]]; then
+    # corgi downloads the pinned Rust (rust-toolchain.toml) and target std itself,
+    # and runs the NDK's Clang read-only inside its sandbox.
+    export CORGI_ANDROID_NDK="$ANDROID_NDK_HOME"
+    for abi in "${ABIS[@]}"; do
+        echo "==> corgi build $(triple "$abi") (API $MIN_API, $PROFILE)"
+        (cd "$ROOT" && corgi build --target "$(triple "$abi").$MIN_API" "${cargo_flags[@]}")
+        mkdir -p "$JNI_LIBS/$abi"
+        cp "$ROOT/target/$(triple "$abi")/$PROFILE/libgpui_mobile_lab.so" "$JNI_LIBS/$abi/"
+    done
+else
+    ndk_targets=()
+    for abi in "${ABIS[@]}"; do
+        ndk_targets+=(-t "$abi")
+        rustup target add "$(triple "$abi")" >/dev/null
+    done
+    echo "==> cargo ndk ${ABIS[*]} ($PROFILE)"
+    (cd "$ROOT" && cargo ndk "${ndk_targets[@]}" --platform "$MIN_API" -o "$JNI_LIBS" build "${cargo_flags[@]}")
+fi
 # gpui-mobile also declares a cdylib; the lab links it statically.
 find "$JNI_LIBS" \( -name "libgpui_mobile.so" -o -name "libgpui_mobile-*.so" \) -delete
 
