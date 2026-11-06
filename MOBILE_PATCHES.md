@@ -107,6 +107,14 @@ as eight small PRs. The first two are open, ported onto upstream `main`:
 SAFETY comments) and [#41](https://github.com/longbridge/gpui-mobile/pull/41)
 (`or_clear` / `or_catch` in the core files).
 
+### Report clickable nodes to accessibility services — branch `a11y-clickable`
+
+accesskit_android 0.7.5 offers `ACTION_CLICK` but never calls
+`setClickable`, so every node, buttons included, reported `clickable=false`
+to UI Automator and to services that read the flag. The injecting adapter
+marks a node clickable when it offers the click
+([#39](https://github.com/Bombatomica64/Gpui-android/issues/39)).
+
 ### Make the platform packages behave — seven branches, merged as gpui-mobile #2–#8
 
 Each branch is based on fork `main` at `4dd00ad` (two are stacked), so it
@@ -131,6 +139,10 @@ Platform APIs screen exercises them; the defects are #44–#50.
   blocked; a tap opens the app with `take_launch_payload`; `<queries>`
   documented for `can_launch_url`.
 - `android-async-prepare` (#50): audio streams prepare asynchronously.
+- `android-video-async-prepare` (#50): video streams too (`set_url` returns
+  `None` while loading, `state()` reports `Loading`). The Video screen
+  exercises it through the platform-view host. Pinned from the branch until it
+  is merged into fork `main`.
 
 The Java helpers live in gpui-mobile's example project; `build.sh` copies the
 ones the lab uses from the pinned checkout.
@@ -174,6 +186,13 @@ whole viewport. The sheet host and the notification layer are now inset by
 already used; on desktop nothing changes. A Kit UI test covers it. Not
 proposed yet: it waits for before/after captures on the phone.
 
+### Report a disabled input as disabled — branch `input-a11y-disabled`
+
+Every other control marks its accessibility node disabled through
+`A11yDisabledExt`; `InputBase` only styled itself, so a disabled `Input`
+reached TalkBack as `enabled=true`. It now wraps its root the same way
+([#39](https://github.com/Bombatomica64/Gpui-android/issues/39)).
+
 ## GPUI (gpui-pre 0.3.9)
 
 Each was checked against Zed `main`: none of the three is fixed there. The
@@ -214,6 +233,29 @@ platform could pick a numeric keyboard or keep a password out of the
 keyboard's suggestions. It gains `purpose: TextInputPurpose` (HTML
 `inputmode` values plus Password and NumericPassword). Zed `main` has the
 same struct without it.
+
+### Report text without an element id to screen readers — branch `a11y-static-text`
+
+Only elements with an element id and a role reach the AccessKit tree, so
+plain string children, `SharedString` and `StyledText`, which is how most
+headings, paragraphs and value rows are drawn, were invisible to TalkBack
+([#37](https://github.com/Bombatomica64/Gpui-android/issues/37)). They now
+add a `Label` leaf under their nearest accessible ancestor, unless that
+ancestor already speaks for its text (a label, a text field, a button with
+`aria_label`). Node ids come from the ancestor and the text's position, so
+they are stable across frames. Built on `mobile-lab` (it touches only the
+a11y builder and `elements/text.rs`).
+
+### Report focus for a focused element with no node of its own — branch `a11y-focus-ancestor`
+
+GPUI only reported focus for a focused element that had an accessibility
+node. Kit's `Input` keeps focus on its editor, which has no role, and puts
+the role on the frame, so the tree had no focus and every text field read
+`focused=false` while editing. Focus now goes to the nearest ancestor that
+has a node and a focus handle (the frame), and only without one to the
+window. Tracking the editor's handle on the frame instead registers it as a
+tab stop twice, which Kit reverted upstream (longbridge/gpui-kit#3253)
+([#39](https://github.com/Bombatomica64/Gpui-android/issues/39)).
 
 ## Still handled in the host app
 
