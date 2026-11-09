@@ -65,7 +65,18 @@ gpui-mobile exposes GPUI's AccessKit tree to TalkBack (via
   field or a label is not repeated.
 - The field being edited reports focused, a disabled `Input` reports
   disabled, and anything with a click handler reports clickable.
-- Not yet: autofill.
+
+## Autofill
+
+Password managers fill GPUI fields through `GpuiAutofillSurfaceView`
+(gpui-mobile). A host uses it as its surface, forwards `gpuiAutofillFields` to
+`setFields`, and sets `IMPORTANT_FOR_AUTOFILL_NO` on the IME proxy. Hints come
+from the role (`.masked(true)` or `InputContentType::Password`, `EmailAddress`,
+`TelephoneNumber`), then `Input::accessibility_id`, then words in the label or
+placeholder ("username", "one-time code"); the plain field before a password is
+its username. Nothing is offered unless some field looks like one of these.
+
+Not yet: save-password prompts, and suggestions inside the keyboard.
 
 Testing TalkBack with the shared phone: hold one `phone session` only while
 actually testing, ask the user to switch TalkBack on, and ask them to switch
