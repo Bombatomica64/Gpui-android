@@ -220,4 +220,4 @@ themes/                   Kit theme JSONs bundled into the app
 
 AGPL-3.0 (see `LICENSE`). Dependencies keep their own licenses: gpui-mobile
 is GPL-3.0-or-later / AGPL-3.0-or-later / Apache-2.0; GPUI, gpui-base,
-gpui-component and gpui-fps are Apache-2.0. `NotoColorEmoji.ttf` is under the SIL Open Font License.
+gpui-component and gpui-fps are Apache-2.0. `NotoColorEmoji.ttf` is under the SIL Open Font License, downscaled to 72 ppem with `tools/shrink-emoji-font.py`.

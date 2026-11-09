@@ -1,4 +1,5 @@
-# Builds the release APK (arm64-v8a + x86_64) on every push to main and every PR.
+# Builds the release APK (arm64-v8a) on every push to main and every PR. For an
+# emulator APK, run this by hand with abi=x86_64 or all (docs/binary-size.md).
 # Pushing a `v*` tag also publishes the APK on a GitHub release for that tag.
 name: Android APK
 
@@ -8,6 +9,10 @@ on:
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
+    inputs:
+      abi:
+        description: "ABI to build: arm64-v8a, x86_64 (emulators) or all"
+        default: arm64-v8a
 
 concurrency:
   group: android-${{ github.ref }}
@@ -36,7 +41,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android,x86_64-linux-android
+          targets: ${{ inputs.abi == 'arm64-v8a' && 'aarch64-linux-android' || inputs.abi == '' && 'aarch64-linux-android' || 'aarch64-linux-android,x86_64-linux-android' }}
 
       - uses: Swatinem/rust-cache@v2
 
@@ -46,7 +51,16 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Build
-        run: ./build.sh android --release --abi all
+        run: ./build.sh android --release --abi "${{ inputs.abi || 'arm64-v8a' }}"
+
+      - name: Only the app's own native library is packaged
+        run: |
+          # gpui-mobile also declares a cdylib; build.sh and Gradle must keep it out.
+          stray=$(unzip -Z1 dist/*.apk | grep '^lib/.*\.so$' | grep -v '/libgpui_mobile_lab\.so$' || true)
+          if [[ -n "$stray" ]]; then
+            echo "::error::unexpected native libraries in the APK: $stray"
+            exit 1
+          fi
 
       - name: Size summary
         run: |
@@ -56,9 +70,13 @@ jobs:
             echo
             echo "| | MB |"
             echo "|---|---:|"
-            echo "| APK | $(stat -c %s "$apk" | awk '{printf "%.2f", $1/1e6}') |"
+            echo "| APK (download) | $(stat -c %s "$apk" | awk '{printf "%.2f", $1/1e6}') |"
             for so in android/app/src/main/jniLibs/*/*.so; do
               echo "| \`$(basename "$(dirname "$so")")\` .so | $(stat -c %s "$so" | awk '{printf "%.2f", $1/1e6}') |"
+            done
+            for so in android/app/src/main/jniLibs/*/*.so; do
+              # The APK stays on the device and the compressed library is extracted next to it.
+              echo "| Installed, \`$(basename "$(dirname "$so")")\` (APK + extracted .so) | $(( $(stat -c %s "$apk") + $(stat -c %s "$so") )) | " | awk -F'|' '{printf "|%s| %.2f |\n", $2, $3/1e6}'
             done
             echo
             echo "Largest APK entries (bytes as stored in the APK):"
