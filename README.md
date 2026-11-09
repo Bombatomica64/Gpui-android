@@ -19,8 +19,8 @@ version of every `gpui-pre-*` crate.
 
 | Dependency | Version / revision |
 |---|---|
-| GPUI Kit (`gpui-kit`, `gpui-component`, `gpui-base`, `gpui-fps`) | 0.9.1 from [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) `mobile-lab` (tag `v0.8.0` + 6 commits) |
-| GPUI (`gpui-pre`) | 0.3.12 from [Bombatomica64/gpui-pre](https://github.com/Bombatomica64/gpui-pre) `mobile-lab` (crates.io 0.3.9 + 3 touch fixes and `TextInputConfiguration::purpose`), via `[patch.crates-io]` |
+| GPUI Kit (`gpui-kit`, `gpui-component`, `gpui-base`, `gpui-fps`) | 0.9.1 from [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) `mobile-lab` (tag `v0.9.1` + 6 commits) |
+| GPUI (`gpui-pre`) | 0.3.12 from [Bombatomica64/gpui-pre](https://github.com/Bombatomica64/gpui-pre) `mobile-lab` (crates.io 0.3.12 + 3 touch fixes and `TextInputConfiguration::purpose`), via `[patch.crates-io]` |
 | GPUI's other crates (`gpui-pre-wgpu`, …) | 0.3.12 from crates.io (the snapshot GPUI Kit 0.9.1 pins) |
 | gpui-mobile (`gpui-pre-mobile`) | [Bombatomica64/gpui-mobile](https://github.com/Bombatomica64/gpui-mobile) `main` (upstream `main` + the fork-only branches in MOBILE_PATCHES.md) |
 | Renderer | `wgpu` 29.0.4 (Vulkan preferred, GLES fallback) |
