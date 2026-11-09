@@ -73,7 +73,7 @@ MOBILE_DIR="$(cd "$ROOT" && cargo metadata --format-version 1 \
 HELPERS_SRC="$MOBILE_DIR/example/android/gradle/app/src/main/java/dev/gpui/mobile"
 HELPERS_DST="$ROOT/android/app/build/generated/gpui-helpers/dev/gpui/mobile"
 rm -rf "$HELPERS_DST" && mkdir -p "$HELPERS_DST"
-for helper in Audio AuthActivity Calendar Contacts FilePicker ImagePicker LocalAuth Location \
+for helper in Audio AutofillSurfaceView AuthActivity Calendar Contacts FilePicker ImagePicker LocalAuth Location \
               MediaSession Microphone Notifications PermissionActivity Permissions PickerActivity \
               VideoPlayer PlatformView Camera; do
     cp "$HELPERS_SRC/Gpui$helper.java" "$HELPERS_DST/"

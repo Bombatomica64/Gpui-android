@@ -66,6 +66,19 @@ impl TextInputScreen {
             make("disabled", window, cx, &|s| {
                 s.default_value("Disabled input")
             }),
+            make("login username", window, cx, &|s| {
+                s.autocorrect(false)
+                    .autocapitalize(Autocapitalize::None)
+                    .input_action(TextInputAction::Next)
+                    .placeholder("Username")
+            }),
+            make("login password", window, cx, &|s| {
+                s.masked(true).placeholder("Password")
+            }),
+            make("login otp", window, cx, &|s| {
+                s.input_purpose(gpui::TextInputPurpose::Numeric)
+                    .placeholder("One-time code")
+            }),
             make("email", window, cx, &|s| s.placeholder("Email (email keyboard)")),
             make("search", window, cx, &|s| {
                 s.input_action(TextInputAction::Search)
@@ -282,6 +295,12 @@ impl Render for TextInputScreen {
                             .mask_toggle()
                             .prefix(gpui_kit::component::Icon::new(IconName::EyeOff).small()),
                     ),
+            )
+            .child(
+                ui::section("Login form (autofill)", cx)
+                    .child(Input::new(self.field("login username")))
+                    .child(Input::new(self.field("login password")).mask_toggle())
+                    .child(Input::new(self.field("login otp"))),
             )
             .child(
                 ui::section("Formatted input", cx)
