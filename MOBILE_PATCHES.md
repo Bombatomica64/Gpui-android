@@ -1,15 +1,16 @@
 # What the forks carry on top of upstream
 
-The lab builds against one GPUI snapshot (`gpui-pre` 0.3.9) and three forks,
-each pinned by `rev` in `Cargo.toml`. Every fix lives on its own branch,
-based on upstream, so it can be proposed upstream on its own; a combined
-branch is what the lab pins.
+The lab builds against one GPUI snapshot (`gpui-pre` 0.3.12) and three forks,
+each pinned by `rev` in `Cargo.toml`. The forks are the source of truth: fixes
+land on the branch the lab pins, and proposing them upstream is optional. The
+per-fix branches named below predate the 0.3.12 rebase and stay on their old
+bases; the combined branch is the current version of each fix.
 
 | Fork | Upstream | Branch the lab pins |
 |---|---|---|
 | [Bombatomica64/gpui-mobile](https://github.com/Bombatomica64/gpui-mobile) | [longbridge/gpui-mobile](https://github.com/longbridge/gpui-mobile) `main` | `main` (upstream `main` + the branches below, merged) |
-| [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) | [longbridge/gpui-kit](https://github.com/longbridge/gpui-kit) tag `v0.8.0` | `mobile-lab` (`v0.8.0` + the commits below) |
-| [Bombatomica64/gpui-pre](https://github.com/Bombatomica64/gpui-pre) | `gpui-pre` 0.3.9 from crates.io (a snapshot of [zed-industries/zed](https://github.com/zed-industries/zed) `crates/gpui`) | `mobile-lab` (branch `0.3.9` + the branches below) |
+| [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) | [longbridge/gpui-kit](https://github.com/longbridge/gpui-kit) tag `v0.9.1` | `mobile-lab` (`v0.9.1` + the commits below) |
+| [Bombatomica64/gpui-pre](https://github.com/Bombatomica64/gpui-pre) | `gpui-pre` 0.3.12 from crates.io (a snapshot of [zed-industries/zed](https://github.com/zed-industries/zed) `crates/gpui`) | `mobile-lab` (branch `0.3.12` + the commits below) |
 
 Versions of these branches rebased onto upstream `main`, with draft PR
 texts, are in [docs/upstream](docs/upstream/README.md) (gpui-mobile, Kit)
@@ -27,7 +28,11 @@ on the host path, Slider touch drags and the gpui-fps Android font (gpui-kit
 #3313, in v0.7.1), long-press context menus (gpui-kit #3393, in v0.7.2), and
 the input keyboard configuration, names for the clear and password buttons,
 the password role and back keeping the text (gpui-kit #3554–#3557, in
-v0.8.0).
+v0.8.0); tapping a focused input asks for the keyboard (gpui-kit #3623, v0.9.0
+or later), a focused input asks scroll containers to reveal it (#3625), and
+sheets and toasts stay inside the visible area, all in Kit v0.9.1. gpui-mobile
+#45 (gpui-pre 0.3.10, Android host fixes) is merged into the fork's `main`, and
+the fork carries #46's 0.3.11 bump plus 0.3.12.
 
 Two things the merged versions changed for hosts: the TalkBack adapter goes
 on each host's own Activity, so hosts call `host::set_activity(env, host,
@@ -39,7 +44,9 @@ Activity that handles `uiMode` itself calls
 The commits the lab pinned before the 0.3.9 rebase are kept as tags:
 `archive/pre-0.3.9/main` (gpui-mobile), `archive/v0.7.1/mobile-lab` and
 `archive/v0.7.3/mobile-lab` (Kit), and
-`archive/0.3.8/*` (gpui-pre).
+`archive/0.3.8/*` (gpui-pre). The commits pinned before the 0.3.12 / v0.9.1
+rebase are `archive/0.3.9/mobile-lab` (gpui-pre) and
+`archive/v0.8.0/mobile-lab` (Kit).
 
 ## gpui-mobile
 
@@ -141,29 +148,12 @@ Platform APIs screen exercises them; the defects are #44–#50.
 - `android-async-prepare` (#50): audio streams prepare asynchronously.
 - `android-video-async-prepare` (#50): video streams too (`set_url` returns
   `None` while loading, `state()` reports `Loading`). The Video screen
-  exercises it through the platform-view host. Pinned from the branch until it
-  is merged into fork `main`.
+  exercises it through the platform-view host.
 
 The Java helpers live in gpui-mobile's example project; `build.sh` copies the
 ones the lab uses from the pinned checkout.
 
 ## GPUI Kit
-
-### Ask for the virtual keyboard when a focused input is tapped — branch `input-tap-requests-keyboard`
-
-After the user hides the keyboard, the input keeps focus, and a later tap
-does not change focus, so nothing asked for the keyboard again. A touch
-press on a focused input calls `Window::request_virtual_keyboard`.
-
-### Ask scroll containers to reveal a focused input — branch `input-reveal-on-focus`
-
-When the IME opens, `adjustResize` shrinks the viewport, but nothing scrolled
-the focused input back into view. A focused input calls
-`Window::request_autoscroll` for its text area (the caret line in a
-textarea) when it gains focus or `Window::fully_visible_bounds()` changes:
-the viewport resizing under `adjustResize`, or the keyboard arriving as an
-inset on an edge-to-edge window. Needs the GPUI autoscroll fix below to work
-in plain scroll containers.
 
 ### Say what an input holds — branch `input-purpose`
 
@@ -177,15 +167,6 @@ implies (email, phone, URL, password), with `input_purpose` to override it,
 like React Native's `keyboardType` and `secureTextEntry`. It needs the GPUI
 branch below.
 
-### Keep sheets and toasts out from under the system bars — branch `upstream/overlays-safe-area`
-
-On an edge-to-edge window a sheet's title and close button sat under the
-status bar, and toasts under the keyboard: both were laid out against the
-whole viewport. The sheet host and the notification layer are now inset by
-`Window::fully_visible_bounds()`, on top of the frame insets the sheet
-already used; on desktop nothing changes. A Kit UI test covers it. Not
-proposed yet: it waits for before/after captures on the phone.
-
 ### Report a disabled input as disabled — branch `input-a11y-disabled`
 
 Every other control marks its accessibility node disabled through
@@ -193,11 +174,10 @@ Every other control marks its accessibility node disabled through
 reached TalkBack as `enabled=true`. It now wraps its root the same way
 ([#39](https://github.com/Bombatomica64/Gpui-android/issues/39)).
 
-## GPUI (gpui-pre 0.3.9)
+## GPUI (gpui-pre 0.3.12)
 
-Each was checked against Zed `main`: none of the three is fixed there. The
-touch-drag patch applies to Zed `main` as is; the files the other two touch
-are unchanged there.
+None of these is in 0.3.12. Kit's input reveal, now upstream, still needs the
+autoscroll patch to work in plain scroll containers.
 
 ### Let touch drag elements that only handle mouse drags — branch `touch-drag`
 

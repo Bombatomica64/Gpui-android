@@ -154,7 +154,7 @@ Ordered roughly by how much they'd move the verdict above. Status as of
 8. **Upstream the fork fixes.** The branches in
    [MOBILE_PATCHES.md](MOBILE_PATCHES.md). gpui-kit #3554–#3557 are merged
    (v0.8.0); gpui-mobile #39–#41 are open since 2026-10-16; the forks are rebased onto gpui-pre
-   0.3.9, Kit v0.8.0 and gpui-mobile `main`.
+   0.3.12, Kit v0.9.1 and gpui-mobile `main`.
    - The gpui-pre ones are ready for Zed in
      [docs/upstream-zed](docs/upstream-zed/README.md).
    - The gpui-mobile and Kit ones are in
