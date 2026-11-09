@@ -124,7 +124,9 @@ Copy `LabActivity.java` and rename. What it must do:
   as `escape`), send printable keys to the IME proxy while it has focus.
 - **IME contract.** Rust calls these public methods on the Activity:
   `gpuiShowKeyboardWithInputType(int inputType, int imeOptions, long session)`,
-  `gpuiHideKeyboard(long session)`, `gpuiResetComposition(long session)`.
+  `gpuiHideKeyboard(long session)`, `gpuiResetComposition(long session)`, and
+  optionally `gpuiUpdateCursorAnchor(float x, float top, float baseline, float bottom)`
+  (caret in surface pixels, for IMEs that ask through `requestCursorUpdates`).
   The `InputProxy` (a 1×1 invisible `EditText` with an
   `InputConnectionWrapper`) turns keyboard input into `nativeIme` calls.
   Copy it as is.
