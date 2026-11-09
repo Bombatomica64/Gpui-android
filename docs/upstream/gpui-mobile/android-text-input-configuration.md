@@ -4,7 +4,7 @@
 - Diff (own commits): 7 files, about +310 −15, of which 156 lines are the new `input_type.rs` mapping and its tests
 - Depends on:
   - **android-ime-dismiss** (uses its `keyboard_done()` to put the keyboard away after Done/Go/Search/Send). Send that first, then rebase.
-  - **gpui-kit `input-text-input-configuration` merged and released first.** GPUI's default `TextInputConfiguration` turns all assistance off. Without Kit providing one, this PR would give every Kit field a keyboard with no suggestions and no auto-capitalization, which is a regression for plain text. With a Kit that provides it, plain text keeps autocorrect, suggestions and sentence caps.
+  - **gpui-kit `input-text-input-configuration` merged and released first** (done: #3557, in v0.8.0). GPUI's default `TextInputConfiguration` turns all assistance off. Without Kit providing one, this PR would give every Kit field a keyboard with no suggestions and no auto-capitalization, which is a regression for plain text. With a Kit that provides it, plain text keeps autocorrect, suggestions and sentence caps.
   - The fork's version used the `or_clear` helper from the #31 rework; this one clears the `NoSuchMethodError` explicitly.
 - Recording: [password suggestions, before](../../demos/password-suggestions.png); [password keyboard before/after](../../demos/android-password-keyboard.png) (the "after" was taken with the purpose PR on top, see below); [Search key, Enter](../../demos/android-ime-actions.png).
 
