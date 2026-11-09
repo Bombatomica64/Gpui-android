@@ -9,8 +9,8 @@ GPUI is Zed's Rust UI framework. This stack runs it on Android:
 
 | Layer | Crate | Where |
 |---|---|---|
-| GPUI | `gpui-pre` 0.3.9 + touch/IME patches | `Bombatomica64/gpui-pre` branch `mobile-lab`, via `[patch.crates-io]` |
-| Components | `gpui-kit` 0.8.0 (`gpui-component`) | `Bombatomica64/gpui-kit` branch `mobile-lab` |
+| GPUI | `gpui-pre` 0.3.12 + touch/IME patches | `Bombatomica64/gpui-pre` branch `mobile-lab`, via `[patch.crates-io]` |
+| Components | `gpui-kit` 0.9.1 (`gpui-component`) | `Bombatomica64/gpui-kit` branch `mobile-lab` |
 | Platform | `gpui-pre-mobile` (`use gpui_mobile::…`) | `Bombatomica64/gpui-mobile` `main` |
 | Reference app | GPUI Mobile Lab | `Bombatomica64/Gpui-android` |
 

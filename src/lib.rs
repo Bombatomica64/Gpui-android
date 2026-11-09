@@ -1,4 +1,4 @@
-//! GPUI Kit Mobile Lab: an on-device component gallery for GPUI Kit v0.8.0.
+//! GPUI Kit Mobile Lab: an on-device component gallery for GPUI Kit v0.9.1.
 
 extern crate gpui_mobile;
 
@@ -12,8 +12,8 @@ mod ui;
 
 use gpui::{App, AppContext as _, WindowOptions};
 
-pub const GPUI_KIT_VERSION: &str = "0.8.0";
-pub const GPUI_VERSION: &str = "gpui-pre 0.3.9";
+pub const GPUI_KIT_VERSION: &str = "0.9.1";
+pub const GPUI_VERSION: &str = "gpui-pre 0.3.12";
 pub const GPUI_MOBILE_REVISION: &str = "Bombatomica64/gpui-mobile 7f52b45";
 
 /// Runs on the GPUI render thread once the first surface exists.
