@@ -1,8 +1,56 @@
 # Binary size: where the ~30 MB per ABI goes, and what cuts it
 
-Status, October 2026: measured on CI. The APK went from 74.0 MB to 35.1 MB
-(#56, merged). A size-tuned release profile (#60) takes the arm64 library from
-29.5 to 15.6 MB and is waiting for a frame-rate check on the phone.
+Status, November 2026: measured on CI. The release APK is 15.39 MB (arm64-v8a),
+from 74.0 MB originally. See [Current numbers](#current-numbers-november-2026).
+
+## Current numbers (November 2026)
+
+From CI APKs: `main` at 9f0938a against the #25 branch. "Installed" is the APK
+plus the extracted library, computed from their sizes rather than read from a
+device.
+
+| | Download before | Download after | Installed before | Installed after |
+|---|---:|---:|---:|---:|
+| arm64-v8a | 26.57 (both ABIs) | **15.39** | 42.72 | **31.54** |
+| x86_64 (emulators) | 26.57 (both ABIs) | **15.65** | 46.38 | **35.46** |
+
+| Step | Saved in the arm64 APK (MB) |
+|---|---:|
+| Drop x86_64 from the default APK | 8.05 |
+| Emoji font: 72 ppem strike, 64 colours (10.59 to 7.08) | 3.13 |
+| Stray gpui-mobile cdylib | 0: none was packaged; now guarded |
+
+Decisions:
+
+- **ABIs.** The lab is sideloaded, so per-ABI APKs need nothing beyond the
+  existing `--abi` flag, and an App Bundle would add a tool for no gain. CI and
+  `./build.sh android --release` build arm64-v8a. For an emulator, use
+  `./build.sh android --release --abi x86_64` (or `all`), or
+  `gh workflow run android.yml -f abi=x86_64`.
+- **Stray cdylib.** gpui-mobile's `crate-type` includes `cdylib`, so Cargo links
+  a `libgpui_mobile*.so` too. `build.sh` deletes it, Gradle excludes it for
+  anything else that fills `jniLibs`, and CI fails if the APK holds any library
+  but the app's.
+- **Compressed libraries** stay on (`useLegacyPackaging`, #56). The trade-off,
+  calculated for arm64: 15.39 MB to download and 31.54 MB installed, against
+  about 23.75 MB for both when stored uncompressed. The app is pushed and
+  downloaded far more often than disk space matters here. A Play release would
+  use an App Bundle, where Play decides.
+- **Emoji.** `tools/shrink-emoji-font.py` downscales the CBDT strike from 109 to
+  72 ppem and re-quantizes to 64 colours. All glyphs stay, so skin tones and
+  flags work, and advances don't change. With swash 0.2.10 on a host, sample
+  glyphs at 24 to 144 px keep their placement (1 px wider from rounding); they
+  look the same up to 72 px and slightly softer at 144 px. Pillow's quantizer
+  and zlib give back the saving, hence imagequant and zopfli. Not chosen:
+  subsetting (breaks sequences), compressing further (the PNGs don't deflate),
+  downloading on demand (needs network and gpui-mobile changes), Twemoji
+  COLRv0 (changes the style, not tried on a device), and relying on the
+  system's CBDT font (not on every build).
+- **Rust.** The profile already has `z`, fat LTO, `codegen-units = 1`, `strip`,
+  `panic = "abort"` and packed relocations. `-Wl,--icf=all` was measured on top:
+  `.so` 16.15 to 15.96 MB, gzip 7.77 to 7.69 MB. Rejected: 0.08 MB of download
+  for merging functions by content. Not done: the image-decoder feature below,
+  which needs the fork branch rebased onto 0.3.12 for about 0.8 MB of `.so`.
 
 ## How it is measured
 
@@ -96,7 +144,8 @@ is `gzip -9` of it, a stand-in for its compressed size in the APK.
 | R8 on the Java side | APK | | | APK −1.36 (dex 4.54 → 0.61) | lab | #57 draft, needs a phone check |
 | One skrifa/read-fonts (lockfile) | `.so` | 29.47 | 11.14 | −0.02 | — | not worth it |
 | One png, via image 0.25.6 (lockfile) | `.so` | 29.34 | 11.15 | −0.15 | — | not worth a downgrade |
-| One APK per ABI (splits or AAB) | APK | | | arm64 APK ≈ 35.06 − 11.80 = 23.3 | lab, for distribution | not done: sideload APK, and build.sh is shared with the hot-reload work |
+| One ABI per APK | APK | | | 26.57 → 18.52 (arm64) | lab | done (#25) |
+| Emoji strike 72 ppem, 64 colours | APK | | | −3.13 | lab | done (#25), needs a phone check |
 | Twemoji COLRv0 instead of the bundled CBDT Noto (1.47 vs 10.59 MB) | APK | | | ≈ −8.3, estimated | lab; gpui-mobile example | idea; changes the emoji style, needs a phone check |
 
 With #56 and #60 together (the APK job of #60), the APK is **27.34 MB**
