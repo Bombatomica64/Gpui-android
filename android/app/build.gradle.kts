@@ -46,6 +46,8 @@ android {
             useLegacyPackaging = true
             // cargo already strips release builds; keep symbols in debug builds.
             keepDebugSymbols += listOf("**/libgpui_mobile_lab.so")
+            // gpui-mobile also declares a cdylib; the lab links it statically.
+            excludes += listOf("**/libgpui_mobile.so", "**/libgpui_mobile-*.so")
         }
     }
 
