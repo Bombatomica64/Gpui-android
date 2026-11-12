@@ -102,18 +102,49 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeOpenScreen<'lo
     .resolve::<LogErrorAndDefault>();
 }
 
+/// A `gpuilab://` link: `running` when it arrived through `onNewIntent`, `false`
+/// for the one the app was launched with. Both are routed to a screen
+/// (`nav::Route`); only a running one updates `deeplink::get_latest_link` and
+/// reaches the deep link handler, as the launch link is `get_initial_link`.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeDeepLink<'local>(
     mut env: EnvUnowned<'local>,
     _this: JObject<'local>,
     url: JString<'local>,
+    running: bool,
 ) {
     env.with_env(|env| -> jni::errors::Result<()> {
         let url = url.try_to_string(env)?;
-        gpui_mobile::packages::deeplink::handle_link(&url);
+        log::info!("deep link {url:?} (running: {running})");
+        if running {
+            gpui_mobile::packages::deeplink::handle_link(&url);
+        }
+        match crate::nav::Route::parse(&url) {
+            Some(route) => diagnostics::request_route(route),
+            None => log::warn!("deep link {url:?} names no screen"),
+        }
         Ok(())
     })
     .resolve::<LogErrorAndDefault>();
+}
+
+/// Back from `OnBackAnimationCallback` (Android 14+), `OnBackInvokedCallback`
+/// (13) or the back key (older): see `host::BackEvent::from_host` for the values.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeBack<'local>(
+    _env: EnvUnowned<'local>,
+    _this: JObject<'local>,
+    host: i64,
+    kind: i32,
+    progress: f32,
+    edge: i32,
+    x: f32,
+    y: f32,
+) {
+    match host::BackEvent::from_host(kind, progress, edge, x, y) {
+        Some(event) => host::back_event(host as host::HostId, event),
+        None => log::warn!("unknown back event kind {kind}"),
+    }
 }
 
 #[unsafe(no_mangle)]
@@ -268,7 +299,8 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeIme<'local>(
 }
 
 /// Send the task to the background, as the launcher Activity does on back since
-/// Android 12. Called when back reaches the catalog root with nothing to close.
+/// Android 12. Called if Back reaches the catalog root anyway (a race with the
+/// last pop: the host only sends Back while a screen is open).
 pub fn move_task_to_back() {
     let result = mobile_jni::with_env(|env| {
         let activity = mobile_jni::activity(env)?;

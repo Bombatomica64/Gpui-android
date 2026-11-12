@@ -93,6 +93,7 @@ impl NavigationScreen {
 #[gpui_hot::hot]
 impl Render for NavigationScreen {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let stack = crate::app::stack(cx);
         let crumbs = PATH[..self.depth].iter().enumerate().map(|(ix, name)| {
             BreadcrumbItem::new(*name).on_click(cx.listener(move |this, _, _, cx| {
                 this.depth = ix + 1;
@@ -126,6 +127,61 @@ impl Render for NavigationScreen {
 
         v_flex()
             .gap_3()
+            .child(
+                ui::section("Screen stack", cx)
+                    .child(ui::value_row(
+                        "Stack",
+                        format!("Catalog › {}", stack.join(" › ")),
+                        cx,
+                    ))
+                    .child(
+                        h_flex()
+                            .flex_wrap()
+                            .gap_1()
+                            .child(
+                                Button::new("push-self")
+                                    .small()
+                                    .outline()
+                                    .label("Push Navigation")
+                                    .on_click(|_, window, cx| {
+                                        crate::app::push("Navigation", window, cx)
+                                    }),
+                            )
+                            .child(
+                                Button::new("push-buttons")
+                                    .small()
+                                    .outline()
+                                    .label("Push Buttons")
+                                    .on_click(|_, window, cx| {
+                                        crate::app::push("Buttons", window, cx)
+                                    }),
+                            )
+                            .child(
+                                Button::new("pop")
+                                    .small()
+                                    .outline()
+                                    .label("Pop")
+                                    .on_click(|_, window, cx| crate::app::pop(window, cx)),
+                            )
+                            .child(
+                                Button::new("pop-to-catalog")
+                                    .small()
+                                    .outline()
+                                    .label("Pop to catalog")
+                                    .on_click(|_, window, cx| {
+                                        crate::app::pop_to_catalog(window, cx)
+                                    }),
+                            ),
+                    )
+                    .child(ui::hint(
+                        "Back pops one screen; on Android 14+ a back swipe from either edge \
+                         previews it, and letting go early cancels. Back closes an open \
+                         dialog, sheet or menu first, and leaves a field's text alone. At \
+                         the catalog the system takes Back (home). Deep links build a \
+                         stack: gpuilab://screen/Navigation/Buttons.",
+                        cx,
+                    )),
+            )
             .child(
                 ui::section("Tabs", cx)
                     .child(self.tab_bar("tabs-default", self.tab, 0, cx, |this, ix| this.tab = ix))

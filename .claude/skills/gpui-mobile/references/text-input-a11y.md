@@ -43,10 +43,24 @@ Enter in a textarea inserts a newline.
 
 ## Back
 
-Back reaches GPUI as `escape`. With the keyboard up, the first Back only
-hides it. With Kit's `mobile-lab` branch, a field with `clean_on_escape()`
-keeps its text and Back navigates instead of clearing. If the README and
-behaviour disagree, trust the device.
+With the keyboard up, the first Back only hides it (the IME takes it).
+
+A host that registers `host::on_back` gets Back as its own event
+(`BackEvent::{Started, Progressed, Cancelled, Invoked}`, with the swipe's
+progress on Android 14+), not as `escape`. The lab's pattern (`src/app.rs`):
+
+- Call `host::set_back_enabled(has_somewhere_to_go_back)` from `render`; it is
+  cheap when unchanged. When false the system takes Back (home).
+- On `Invoked`, offer `escape` first with `window.dispatch_keystroke`, which
+  closes Kit's dialogs, sheets, popovers and menus and returns whether
+  anything took it; a plain focused field lets it through. Otherwise pop.
+- Treat `Started`/`Progressed` as a preview only; `Cancelled` must undo it.
+- The host Activity needs `android:enableOnBackInvokedCallback="true"` and a
+  `gpuiSetBackEnabled(boolean)` method (see the lab's `LabActivity`).
+
+Without `on_back`, Back still arrives as `escape`. With Kit's `mobile-lab`
+branch, a field with `clean_on_escape()` keeps its text on Android either way.
+If the README and behaviour disagree, trust the device.
 
 Known gap: `OtpInput` and `TimeField` never raise the soft keyboard.
 

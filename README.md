@@ -88,10 +88,16 @@ adb shell am start -n dev.gpui.mobile.lab/.LabActivity --es screen "'Text Input'
 
 The catalog lists every component grouped by category, with version info,
 Android API level, viewport size, a search field and working/partial/broken
-counters (tap a counter to filter). Tap a component to open its screen; the
-header's **‹ Catalog** button and Android back return to the catalog. Back
-closes the keyboard, then any open overlay, then the screen; at the catalog
-it sends the app to the background like a launcher Activity.
+counters (tap a counter to filter). Tap a component to open its screen.
+Screens stack and slide in and out (`src/app.rs`, motion in `src/nav.rs`); the
+header's **‹** button and Android Back pop one. Back closes the keyboard, then
+any open overlay (dialog, sheet, menu), then the screen, and never clears a
+field. On Android 14+ a back swipe previews the pop: the screen follows the
+finger and the one underneath shows, and letting go early cancels. At the
+catalog the system takes Back and sends the app home. The Navigation screen's
+**Screen stack** section pushes and pops, and deep links open a stack:
+`adb shell am start -a android.intent.action.VIEW -d gpuilab://screen/Navigation/Buttons`
+(`gpuilab://catalog` goes back to the catalog).
 
 Lab tools: **Touch Lab** (tap, double-tap, long-press, drag, pinch counters),
 **Scroll Stress** (100 rows, 10,000 virtual rows, nested axes, long text),
@@ -110,7 +116,9 @@ process-lived render thread, so the app keeps its state across surface
 destruction (Home/resume) and Activity recreation: the Activity keeps its
 `HostId` in its saved state, so a recreated instance gets its own window
 back, and a fresh launch opens a new one. The Activity forwards
-touch (`MotionEvent`), keys (back arrives in GPUI as `escape`), lifecycle,
+touch (`MotionEvent`), keys, Back (an `OnBackAnimationCallback` on Android
+14+, registered only while a screen is open; see gpui-mobile's
+`host::on_back`), deep links, lifecycle,
 configuration changes and an IME `InputConnection` proxy adapted from gpui-mobile's
 `GpuiInputActivity`. `adjustResize` shrinks GPUI's viewport above the
 keyboard; the app is locked to portrait.
@@ -193,9 +201,6 @@ Each is detailed in the matrix; fixes carried by my forks are in MOBILE_PATCHES.
 - A horizontal swipe no longer scrolls a vertical-only page.
 - Night mode follows the system at launch and when it changes; emoji render
   on the host-driven entry point.
-
-Back with the keyboard hidden still arrives as `escape`, so an input that
-opts into `clean_on_escape()` clears its text instead of navigating back.
 
 **Other**
 
