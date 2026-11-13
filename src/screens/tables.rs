@@ -293,6 +293,10 @@ impl Render for TablesScreen {
                             .with_size(self.size),
                     ),
                 )
+                .child(ui::hint(
+                    "Drag a column's edge in the header to resize it; long-press a header and drag to move the column.",
+                    cx,
+                ))
                 .child(self.log.render(cx))
                 .into_any_element()
         };
