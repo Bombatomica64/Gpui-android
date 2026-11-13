@@ -238,6 +238,17 @@ context menu covers only the body, and `ResizeHandle` (Resizable panels,
 Dock edges) drags at once too
 ([#28](https://github.com/Bombatomica64/Gpui-android/issues/28)).
 
+### Report a preedit kept by unmark as a change — gpui-kit [#2](https://github.com/Bombatomica64/gpui-kit/pull/2)
+
+Marked (composing) text never emits `InputEvent::Change`; the commit does.
+Android keyboards compose every word and, when the keyboard is hidden,
+gpui-mobile ends the composition with `unmark_text` alone, which emitted
+nothing. Fields showed the typed text while their subscribers never saw
+it: the catalog search didn't filter
+([#109](https://github.com/Bombatomica64/Gpui-android/issues/109)).
+`unmark_text` now reports the change when the text differs from the text
+before the composition.
+
 ## GPUI (gpui-pre 0.3.12)
 
 None of these is in 0.3.12. Kit's input reveal, now upstream, still needs the
