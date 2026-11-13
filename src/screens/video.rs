@@ -1,7 +1,8 @@
 //! Exercises gpui-mobile's video player: a stream loaded from the GPUI thread
-//! must not block it, report `Loading` until it is ready, and start if Play was
-//! pressed meanwhile. The video draws in a native SurfaceView (a platform view)
-//! placed over the box at the top of the screen.
+//! must not block it, report `Loading` until it is ready, start if Play was
+//! pressed meanwhile, and report `Completed` (not `Paused`) when the clip ends.
+//! The video draws in a native SurfaceView (a platform view) placed over the box
+//! at the top of the screen.
 
 use std::cell::Cell;
 use std::rc::Rc;
