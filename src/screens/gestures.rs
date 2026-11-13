@@ -1,6 +1,8 @@
 //! Pinch to zoom and swipe actions on list rows, built on GPUI's own
 //! gestures: `on_pinch` for two fingers, `on_drag` for a row's sideways swipe.
 
+use std::time::{Duration, Instant};
+
 use gpui::{
     AnyElement, AppContext as _, Bounds, ClickEvent, Context, DragMoveEvent, Empty,
     InteractiveElement, IntoElement, MouseButton, MouseDownEvent, ParentElement, PinchEvent,
@@ -17,6 +19,9 @@ const MIN_ZOOM: f32 = 0.5;
 const MAX_ZOOM: f32 = 6.;
 /// How far a row must travel before letting go deletes or archives it.
 const SWIPE_COMMIT: f32 = 110.;
+/// Where a committed row slides to: past the edge of a phone screen.
+const SWIPE_OUT: f32 = 420.;
+const SETTLE: Duration = Duration::from_millis(200);
 
 const MESSAGES: [(&str, &str); 8] = [
     ("Ada", "Notes from the gesture review"),
@@ -46,6 +51,28 @@ struct Swipe {
     offset: Pixels,
 }
 
+/// A released row on its way back to rest, or off the screen.
+struct Settling {
+    row: usize,
+    from: Pixels,
+    to: Pixels,
+    start: Instant,
+    /// What the row's removal logs once it is off the screen.
+    action: Option<&'static str>,
+}
+
+impl Settling {
+    fn progress(&self) -> f32 {
+        (self.start.elapsed().as_secs_f32() / SETTLE.as_secs_f32()).min(1.)
+    }
+
+    /// Eases out, so the row leaves the finger at speed and slows to rest.
+    fn offset(&self) -> Pixels {
+        let t = 1. - (1. - self.progress()).powi(3);
+        self.from + (self.to - self.from) * t
+    }
+}
+
 pub struct GesturesScreen {
     zoom: f32,
     /// Where the grid's top-left corner sits in the pad, before any zoom.
@@ -56,6 +83,7 @@ pub struct GesturesScreen {
     /// Indices into `MESSAGES` still in the inbox.
     inbox: Vec<usize>,
     swipe: Option<Swipe>,
+    settling: Vec<Settling>,
     log: EventLog,
 }
 
@@ -69,6 +97,7 @@ impl GesturesScreen {
             pinches: 0,
             inbox: (0..MESSAGES.len()).collect(),
             swipe: None,
+            settling: Vec::new(),
             log: EventLog::default(),
         }
     }
@@ -102,19 +131,50 @@ impl GesturesScreen {
         self.origin = point(px(16.), px(16.));
     }
 
-    /// Ends a swipe: past the threshold it deletes (left) or archives
-    /// (right); short of it the row slides back.
+    /// Ends a swipe: past the threshold the row slides off and is deleted
+    /// (left) or archived (right); short of it the row slides back.
     fn settle(&mut self, row: usize, cx: &mut Context<Self>) {
         let Some(swipe) = self.swipe.take_if(|swipe| swipe.row == row) else {
             return;
         };
-        let (subject, offset) = (MESSAGES[row].1, f32::from(swipe.offset));
-        if offset.abs() >= SWIPE_COMMIT {
-            self.inbox.retain(|ix| *ix != row);
-            let action = if offset < 0. { "deleted" } else { "archived" };
-            self.log.push(format!("{action} “{subject}”"));
+        let offset = f32::from(swipe.offset);
+        if offset == 0. {
+            return;
         }
+        let (to, action) = if offset.abs() < SWIPE_COMMIT {
+            (0., None)
+        } else if offset < 0. {
+            (-SWIPE_OUT, Some("deleted"))
+        } else {
+            (SWIPE_OUT, Some("archived"))
+        };
+        self.settling.push(Settling {
+            row,
+            from: swipe.offset,
+            to: px(to),
+            start: Instant::now(),
+            action,
+        });
         cx.notify();
+    }
+
+    /// Finishes the rows that have arrived, and asks for another frame while
+    /// any is still moving.
+    fn advance_settling(&mut self, window: &mut Window) {
+        let (done, moving): (Vec<_>, Vec<_>) = std::mem::take(&mut self.settling)
+            .into_iter()
+            .partition(|settling| settling.progress() >= 1.);
+        self.settling = moving;
+        for settling in done {
+            if let Some(action) = settling.action {
+                self.inbox.retain(|ix| *ix != settling.row);
+                self.log
+                    .push(format!("{action} “{}”", MESSAGES[settling.row].1));
+            }
+        }
+        if !self.settling.is_empty() {
+            window.request_animation_frame();
+        }
     }
 
     fn render_zoom_pad(&self, cx: &mut Context<Self>) -> AnyElement {
@@ -196,7 +256,14 @@ impl GesturesScreen {
             .swipe
             .as_ref()
             .filter(|swipe| swipe.row == row)
-            .map_or(px(0.), |swipe| swipe.offset);
+            .map(|swipe| swipe.offset)
+            .or_else(|| {
+                self.settling
+                    .iter()
+                    .find(|settling| settling.row == row)
+                    .map(Settling::offset)
+            })
+            .unwrap_or(px(0.));
         let committing = f32::from(offset).abs() >= SWIPE_COMMIT;
         let action = |label: &'static str, color: gpui::Hsla| {
             div()
@@ -258,10 +325,16 @@ impl GesturesScreen {
             .on_mouse_down(
                 MouseButton::Left,
                 cx.listener(move |this, event: &MouseDownEvent, _, _| {
+                    // A finger catching a row on its way back holds it there.
+                    let offset = this
+                        .settling
+                        .iter()
+                        .position(|settling| settling.row == row && settling.action.is_none())
+                        .map_or(px(0.), |ix| this.settling.remove(ix).offset());
                     this.swipe = Some(Swipe {
                         row,
-                        start_x: event.position.x,
-                        offset: px(0.),
+                        start_x: event.position.x - offset,
+                        offset,
                     });
                 }),
             )
@@ -295,7 +368,8 @@ impl GesturesScreen {
 
 #[gpui_hot::hot]
 impl Render for GesturesScreen {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        self.advance_settling(window);
         let rows: Vec<_> = self
             .inbox
             .clone()
@@ -362,6 +436,7 @@ impl Render for GesturesScreen {
                             .on_click(cx.listener(|this, _, _, cx| {
                                 this.inbox = (0..MESSAGES.len()).collect();
                                 this.swipe = None;
+                                this.settling.clear();
                                 cx.notify();
                             })),
                     ),
