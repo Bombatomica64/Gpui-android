@@ -101,11 +101,12 @@ impl TableDelegate for StockDelegate {
         cx: &mut Context<TableState<Self>>,
     ) -> impl IntoElement {
         let row = &self.rows[row_ix];
-        match col_ix {
-            0 => div().child(row_ix.to_string()),
-            1 => div().child(row.symbol.clone()),
-            2 => div().child(format!("{:.2}", row.price)),
-            3 => div()
+        // By key, not index: columns can be moved.
+        match self.columns[col_ix].key.as_ref() {
+            "#" => div().child(row_ix.to_string()),
+            "symbol" => div().child(row.symbol.clone()),
+            "price" => div().child(format!("{:.2}", row.price)),
+            "change" => div()
                 .text_color(if row.change >= 0.0 {
                     cx.theme().success
                 } else {
@@ -116,6 +117,17 @@ impl TableDelegate for StockDelegate {
         }
     }
 
+    fn move_column(
+        &mut self,
+        col_ix: usize,
+        to_ix: usize,
+        _: &mut Window,
+        _: &mut Context<TableState<Self>>,
+    ) {
+        let column = self.columns.remove(col_ix);
+        self.columns.insert(to_ix, column);
+    }
+
     fn perform_sort(
         &mut self,
         col_ix: usize,
@@ -124,11 +136,12 @@ impl TableDelegate for StockDelegate {
         _: &mut Context<TableState<Self>>,
     ) {
         let descending = matches!(sort, ColumnSort::Descending);
+        let key = self.columns[col_ix].key.clone();
         self.rows.sort_by(|a, b| {
-            let ordering = match col_ix {
-                1 => a.symbol.cmp(&b.symbol),
-                2 => a.price.total_cmp(&b.price),
-                3 => a.change.total_cmp(&b.change),
+            let ordering = match key.as_ref() {
+                "symbol" => a.symbol.cmp(&b.symbol),
+                "price" => a.price.total_cmp(&b.price),
+                "change" => a.change.total_cmp(&b.change),
                 _ => a.volume.cmp(&b.volume),
             };
             if descending {
