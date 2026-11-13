@@ -168,16 +168,6 @@ pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeSurfaceDestroy
 }
 
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeHostDestroyed<'local>(
-    _env: EnvUnowned<'local>,
-    _this: JObject<'local>,
-    host: i64,
-) {
-    log::info!("activity finishing; closing its window");
-    host::host_destroyed(host as host::HostId);
-}
-
-#[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_gpui_mobile_lab_LabActivity_nativeResumed<'local>(
     _env: EnvUnowned<'local>,
     _this: JObject<'local>,

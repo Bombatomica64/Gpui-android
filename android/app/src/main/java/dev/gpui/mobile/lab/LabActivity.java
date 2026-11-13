@@ -49,6 +49,13 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
 
     /** Names this Activity's GPUI window. Kept across recreation; a fresh launch gets a new one. */
     private static long nextHostId = 1;
+    /**
+     * The host of an instance that finished, kept for the next launch. Back at the
+     * catalog is left to the system, which finishes this Activity (it does not move
+     * the task back); the GPUI window, and the catalog's state with it, then come
+     * back with the next launch, as they do after a recreation.
+     */
+    private static long parkedHostId = 0;
     private long hostId;
     private SurfaceView surface;
     private InputProxy input;
@@ -70,7 +77,14 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
         super.onCreate(state);
         // Debuggable builds prefer a library pushed by `cargo gpui reload`.
         GpuiLibraryLoader.load(this, "gpui_mobile_lab");
-        hostId = state != null ? state.getLong("gpuiHostId", nextHostId++) : nextHostId++;
+        if (state != null) {
+            hostId = state.getLong("gpuiHostId", nextHostId++);
+        } else if (parkedHostId != 0) {
+            hostId = parkedHostId;
+            parkedHostId = 0;
+        } else {
+            hostId = nextHostId++;
+        }
         surface = new SurfaceView(this);
         surface.getHolder().addCallback(this);
         surface.setFocusable(true);
@@ -146,7 +160,9 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
 
     @Override
     protected void onDestroy() {
-        if (isFinishing()) nativeHostDestroyed(hostId);
+        // Not nativeHostDestroyed: launchMode is singleTask, so the next instance
+        // takes this host over (see parkedHostId).
+        if (isFinishing()) parkedHostId = hostId;
         super.onDestroy();
     }
 
@@ -517,7 +533,6 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     private static native void nativeConfigurationChanged(int uiMode);
     private static native void nativeSurfaceChanged(long host, android.view.Surface surface, float scale);
     private static native void nativeSurfaceDestroyed(long host);
-    private static native void nativeHostDestroyed(long host);
     private static native void nativeResumed(long host);
     private static native void nativePaused(long host);
     private static native void nativeInsets(long host, int top, int bottom, int left, int right, int ime);
