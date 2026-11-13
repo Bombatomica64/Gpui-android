@@ -18,7 +18,7 @@ use gpui_kit::component::{
 };
 use gpui_mobile::components::platform_view_element::platform_view_element;
 use gpui_mobile::packages::camera::{self, CameraHandle, CameraLensDirection, ResolutionPreset};
-use gpui_mobile::packages::maps::{LatLng, MapMarker, MapSettings, MapView};
+use gpui_mobile::packages::maps::{LatLng, MapMarker, MapSettings, MapView, TileMapProvider};
 use gpui_mobile::packages::permission_handler as perms;
 use gpui_mobile::packages::webview::{self, WebViewHandle, WebViewSettings, WebViewState};
 use gpui_mobile::platform_view::PlatformViewHandle;
@@ -75,11 +75,15 @@ impl NativeViewsScreen {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let mut log = EventLog::default();
 
-        let map = MapView::new(MapSettings {
-            center: ROME,
-            zoom: 14.,
-            ..Default::default()
-        });
+        // The default provider, named: apps plug in their own with maps::MapProvider.
+        let map = MapView::with_provider(
+            &TileMapProvider::openstreetmap(),
+            MapSettings {
+                center: ROME,
+                zoom: 14.,
+                ..Default::default()
+            },
+        );
         let map = match map {
             Ok(map) => {
                 let colosseum = MapMarker {
@@ -89,13 +93,13 @@ impl NativeViewsScreen {
                     snippet: Some("Tap a pin to open its bubble".into()),
                 };
                 log.push(format!(
-                    "MapView::new -> Ok, add_marker -> {:?}",
+                    "MapView -> Ok, add_marker -> {:?}",
                     map.add_marker(&colosseum)
                 ));
                 Some(map)
             }
             Err(err) => {
-                log.push(format!("MapView::new -> {err}"));
+                log.push(format!("MapView -> {err}"));
                 None
             }
         };

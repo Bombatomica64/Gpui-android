@@ -94,6 +94,7 @@ closes the keyboard, then any open overlay, then the screen; at the catalog
 it sends the app to the background like a launcher Activity.
 
 Lab tools: **Touch Lab** (tap, double-tap, long-press, drag, pinch counters),
+**Gestures** (pinch to zoom, swipe actions on rows),
 **Scroll Stress** (100 rows, 10,000 virtual rows, nested axes, long text),
 **Diagnostics** (viewport, scale, visual viewport, keyboard, focus, scroll,
 foreground state, gpui-fps HUD, render cadence), **Stress Test**

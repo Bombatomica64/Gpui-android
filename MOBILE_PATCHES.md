@@ -156,7 +156,7 @@ Platform APIs screen exercises them; the defects are #44–#50.
   seek, stop and a new source. `LoopMode::One` and `All` both repeat the one
   source, since a player has no playlist.
 
-### Platform views: maps, web view controls, camera preview, Activity recreation — gpui-mobile #21
+### Platform views: maps, web view controls, camera preview, Activity recreation — gpui-mobile #21, #23, #24
 
 From the JNI audit (#26, #87). The platform-view host kept its views in the
 first Activity it saw. Now `host::set_activity` calls
@@ -173,7 +173,11 @@ What changed per package:
   `go_forward`, `state()`, and `evaluate_javascript_for_result`, which returns
   the script's result through a native callback.
 - **Maps:** the log-only Android stubs are replaced by `GpuiMapView`, an
-  OpenStreetMap tile map with no SDK and no API key.
+  OpenStreetMap tile map with no SDK and no API key. Maps are drawn by a
+  `MapProvider` (gpui-mobile #24). `TileMapProvider` is the default:
+  OpenStreetMap, or any `{z}/{x}/{y}` tile server. Apps can plug in another
+  SDK by implementing `MapProvider` and `MapController` and registering their
+  view with `GpuiPlatformView.registerViewType`.
 - **Camera:**
   - the preview is removed on the UI thread;
   - photos and videos are written to the app cache instead of public storage;
@@ -208,6 +212,17 @@ Every other control marks its accessibility node disabled through
 reached TalkBack as `enabled=true`. It now wraps its root the same way
 ([#39](https://github.com/Bombatomica64/Gpui-android/issues/39)).
 
+### Resize and move table columns by touch — branch `table-touch-drag`
+
+In a DataTable wider than the screen, a finger could neither resize nor
+move a column: the resize handle's drag became a sideways scroll of the
+header, and the rows' context menu, which covered the header too, took the
+long press that should pick a column up (it opened an empty menu). Resize
+handles are drag handles now (GPUI's `drag_handle`, below), the rows'
+context menu covers only the body, and `ResizeHandle` (Resizable panels,
+Dock edges) drags at once too
+([#28](https://github.com/Bombatomica64/Gpui-android/issues/28)).
+
 ## GPUI (gpui-pre 0.3.12)
 
 None of these is in 0.3.12. Kit's input reveal, now upstream, still needs the
@@ -225,6 +240,29 @@ through the mouse drag path, so `on_drag_move`, `on_drop` and drag-over
 styles work unchanged. Handles drag directly; rows of a scrolling list
 scroll, and drag after a long press or a sideways move. Mouse input is
 unchanged.
+
+### Let drag handles drag at once by touch — branch `drag-handle`
+
+On top of `touch-drag`: an `on_drag` element inside a scroll container
+yields a pan along the container's axis to scrolling, which is right for
+list rows and wrong for handles. A DataTable column resize handle sits in a
+header that scrolls sideways, so a finger could only scroll the header.
+`drag_handle()` marks an element whose touch drag starts as soon as it leaves
+the slop, along any axis. Kit's table resize handles and `ResizeHandle`
+(Resizable, Dock) use it
+([#28](https://github.com/Bombatomica64/Gpui-android/issues/28)).
+
+### Recognize two-finger pinches — branch `touch-pinch`
+
+The portable recognizer ignored every touch after the first, so a phone
+never produced a `PinchEvent` and `on_pinch` only worked with a trackpad. A
+second touch landing while the first is pending or panning now starts a
+pinch: the pan ends, and `PinchEvent`s follow at the point between the
+fingers, each `delta` the change in their distance since the last step
+(`zoom *= 1 + delta`). When either finger lifts the pinch ends; the other
+does nothing until it lifts. Touches that claimed a drag or a long press,
+and third fingers, are still ignored. No rotation yet: `PinchEvent` has no
+angle ([#28](https://github.com/Bombatomica64/Gpui-android/issues/28)).
 
 ### Reveal a descendant's autoscroll request in scrollable divs — branch `autoscroll`
 

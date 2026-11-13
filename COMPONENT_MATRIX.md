@@ -101,7 +101,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | Component | Included in APK | Mobile status | Demo screen | Notes |
 |---|---|---|---|---|
 | Table | Yes | PARTIAL | Tables | Renders, but the last column is clipped at 411 pt (no shrinking or horizontal scroll). |
-| DataTable | Yes | WORKING | Tables | 1,000 virtualized rows: row/column selection, sort chevron, pinned column with horizontal scroll, fling, `scroll_to_row`. Column resize/reorder still do not work on touch, even with the GPUI touch-drag fix (direct or after a long press); not yet investigated. A tap also emitted `RightClickedRow(None)`. |
+| DataTable | Yes | WORKING | Tables | 1,000 virtualized rows: row/column selection, sort chevron, pinned column with horizontal scroll, fling, `scroll_to_row`. (patched) Columns resize by dragging their header edge and move after a long press on the header (#28); the delegate must implement `move_column` and pick cell content by column key. A tap also emitted `RightClickedRow(None)`. |
 | List | Yes | WORKING | Lists & Trees | 1,000 virtualized rows, fling, tap-to-stop, select/confirm, built-in search with keyboard, empty state. |
 | Tree | Yes | WORKING | Lists & Trees | Expand/collapse, select, scroll. |
 | VirtualList | Yes | WORKING | Lists & Trees | 1,000 variable-height rows, fling. |
@@ -133,7 +133,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 |---|---|---|---|---|
 | Separator | Yes | WORKING | Layout | Horizontal, vertical, dashed, labelled. |
 | Scrollbar / ScrollableElement | Yes | WORKING | Layout | Thin mobile scrollbars; nested vertical scroller and horizontal strips. Vertical-only containers need `restrict_scroll_to_axis()` on touch (see README). |
-| Resizable panels | Yes | WORKING | Layout | Dividers drag by touch with the GPUI fork's touch-drag fix. A divider whose drag runs along the page's scroll axis needs a long press first (a plain swipe scrolls the page). |
+| Resizable panels | Yes | WORKING | Layout | (patched) Dividers drag by touch with the GPUI fork's touch-drag fix, at once also along the page's scroll axis (`drag_handle`, #28). |
 | h_flex / v_flex | Yes | WORKING | Layout | Truncation and fixed/flexible children at phone width. |
 | Root (overlay host) | Yes | WORKING | Dialogs & Sheets | v0.7.0 Root hosts dialogs, sheets and notifications with no manual layers. |
 | TitleBar | No | NOT_APPLICABLE | — | Desktop window chrome (traffic lights, caption buttons, window dragging). Android owns the status bar. |
@@ -181,5 +181,7 @@ limits of the test device, are in [README.md](README.md#how-statuses-were-verifi
 | Theme / ThemeRegistry | Yes | WORKING | Themes | Runtime System/Light/Dark and bundled Kit themes. System follows Android dark mode once the host forwards `uiMode` (see README). |
 | FPS monitor (gpui-fps) | Yes | WORKING | Diagnostics | (patched) Opening the HUD panicked (`monospace` font unresolvable on Android) until a fix that is upstream since v0.7.1 (#3313). FPS/frame time and CPU/memory rows populate. |
 | Touch input (tap / long press / fling) | Yes | WORKING | Touch Lab | Tap, double-tap (`click_count` 2), claimed long-press (Started/Ended), touch drag, fling, tap-to-stop-fling without activating the row. |
+| Pinch to zoom | Yes | UNTESTED | Gestures | (patched) `on_pinch` from two fingers (GPUI fork, #28): zoom about the fingers' midpoint, pan as it moves, double-tap resets. No rotation gesture yet. |
+| Swipe actions on rows | Yes | WORKING | Gestures | Rows built on `on_drag`: a sideways swipe drags the row (delete left, archive right, slide back short of the threshold), a vertical one scrolls the page. |
 | Scrolling stress | Yes | WORKING | Scroll Stress | 100 plain rows, 10,000 virtual rows, nested axes and long text; one axis per gesture once containers restrict their axis. |
 | Rendering stress | Yes | WORKING | Stress Test | Start/Stop/Reset; per-frame `render()` cost is reported alongside frame intervals. |

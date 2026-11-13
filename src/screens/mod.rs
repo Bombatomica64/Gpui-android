@@ -14,6 +14,7 @@ mod disclosure;
 mod display;
 mod dock;
 mod feedback;
+mod gestures;
 mod layout;
 mod lists;
 mod native_views;
@@ -84,6 +85,7 @@ pub static SCREENS: &[ScreenDef] = &[
     screen!("Rich Text", rich_text::RichTextScreen),
     screen!("Chat", chat::ChatScreen, true),
     screen!("Touch Lab", touch::TouchScreen),
+    screen!("Gestures", gestures::GesturesScreen),
     screen!("Scroll Stress", scroll::ScrollScreen, true),
     screen!("Diagnostics", diagnostics::DiagnosticsScreen),
     screen!("Platform APIs", platform_apis::PlatformApisScreen),
@@ -96,6 +98,7 @@ pub static SCREENS: &[ScreenDef] = &[
 /// Lab tools listed above the component catalog.
 pub static TOOLS: &[&str] = &[
     "Touch Lab",
+    "Gestures",
     "Scroll Stress",
     "Diagnostics",
     "Platform APIs",
