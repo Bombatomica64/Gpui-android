@@ -66,7 +66,7 @@ find "$JNI_LIBS" \( -name "libgpui_mobile.so" -o -name "libgpui_mobile-*.so" \) 
 
 # The platform packages call Java helpers that gpui-mobile ships in its example
 # project; take them from the checkout Cargo resolved, so they match the pinned rev.
-# Camera is not used by the lab; GpuiPlatformView (the Video screen's host) refers to it.
+# Camera and MapView are not used by the lab; GpuiPlatformView (the Video screen's host) refers to them.
 MOBILE_DIR="$(cd "$ROOT" && cargo metadata --format-version 1 \
     | python3 -c 'import json, sys; print(next(p["manifest_path"] for p in json.load(sys.stdin)["packages"] if p["name"] == "gpui-pre-mobile"))' \
     | xargs dirname)"
@@ -75,7 +75,7 @@ HELPERS_DST="$ROOT/android/app/build/generated/gpui-helpers/dev/gpui/mobile"
 rm -rf "$HELPERS_DST" && mkdir -p "$HELPERS_DST"
 for helper in Audio AuthActivity Calendar Contacts FilePicker ImagePicker LocalAuth Location \
               MediaSession Microphone Notifications PermissionActivity Permissions PickerActivity \
-              VideoPlayer PlatformView Camera; do
+              VideoPlayer PlatformView Camera MapView; do
     cp "$HELPERS_SRC/Gpui$helper.java" "$HELPERS_DST/"
 done
 
