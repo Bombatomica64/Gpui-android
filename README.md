@@ -105,7 +105,9 @@ Lab tools: **Touch Lab** (tap, double-tap, long-press, drag, pinch counters),
 **Diagnostics** (viewport, scale, visual viewport, keyboard, focus, scroll,
 foreground state, gpui-fps HUD, render cadence), **Stress Test**
 (Start/Stop/Reset over 120 buttons, 400 text nodes, inputs, a 5,000-row list
-and a per-frame chart) and **Themes** (System/Light/Dark and bundled Kit
+and a per-frame chart), **Native Views** (an OpenStreetMap tile map, a WebView
+with navigation and JavaScript, a camera preview, and a button that recreates
+the Activity to check they survive it) and **Themes** (System/Light/Dark and bundled Kit
 themes, switched at runtime).
 
 ## Android host

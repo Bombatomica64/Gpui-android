@@ -118,10 +118,13 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
         });
 
         nativeOnCreate(this, hostId, Build.VERSION.SDK_INT);
-        forwardScreenExtra(getIntent());
-        // The link the app was launched with; a recreation must not route it again.
-        if (state == null && getIntent() != null && getIntent().getData() != null) {
-            nativeDeepLink(getIntent().getData().toString(), false);
+        // Only on a fresh start: a recreated Activity gets the launch intent again, and
+        // reopening its screen (or routing its link) would replace the stack the app has.
+        if (state == null) {
+            forwardScreenExtra(getIntent());
+            if (getIntent() != null && getIntent().getData() != null) {
+                nativeDeepLink(getIntent().getData().toString(), false);
+            }
         }
     }
 
@@ -184,6 +187,17 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     // ── Input ──────────────────────────────────────────────────────────────
 
     private boolean forwardMotion(MotionEvent event) {
+        // A touch on GPUI takes focus back from an embedded native view (a WebView
+        // field keeps the keyboard up otherwise).
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            View focused = getCurrentFocus();
+            if (focused != null && focused != surface && focused != input) {
+                ((InputMethodManager) getSystemService(INPUT_METHOD_SERVICE))
+                        .hideSoftInputFromWindow(focused.getWindowToken(), 0);
+                focused.clearFocus();
+                surface.requestFocus();
+            }
+        }
         int count = event.getPointerCount();
         int[] ids = new int[count];
         float[] xs = new float[count];
@@ -215,6 +229,12 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
                 }
             }
             return true;
+        }
+        // A native view embedded by gpui-mobile (a WebView's text field) has focus:
+        // its keys are its own.
+        View focused = getCurrentFocus();
+        if (focused != null && focused != surface && focused != input) {
+            return super.dispatchKeyEvent(event);
         }
         // While the IME proxy is focused it turns printable keys into commits; only
         // navigation and shortcut keys go to GPUI directly.
@@ -292,6 +312,11 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     private void forwardBack(int kind, BackEvent event) {
         nativeBack(hostId, kind, event.getProgress(), event.getSwipeEdge(),
                 event.getTouchX(), event.getTouchY());
+    }
+
+    /** Recreate this Activity, for the Native Views screen's lifecycle check. Called from Rust. */
+    public void gpuiRecreate() {
+        runOnUiThread(this::recreate);
     }
 
     /** Dark status and navigation bar icons over a light app theme. Called from Rust. */

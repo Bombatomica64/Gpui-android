@@ -17,6 +17,7 @@ mod feedback;
 mod gestures;
 mod layout;
 mod lists;
+mod native_views;
 mod navigation;
 mod number_otp;
 mod platform_apis;
@@ -89,6 +90,7 @@ pub static SCREENS: &[ScreenDef] = &[
     screen!("Diagnostics", diagnostics::DiagnosticsScreen),
     screen!("Platform APIs", platform_apis::PlatformApisScreen),
     screen!("Video", video::VideoScreen, true),
+    screen!("Native Views", native_views::NativeViewsScreen),
     screen!("Stress Test", stress::StressScreen),
     screen!("Themes", themes::ThemesScreen),
 ];
@@ -101,6 +103,7 @@ pub static TOOLS: &[&str] = &[
     "Diagnostics",
     "Platform APIs",
     "Video",
+    "Native Views",
     "Stress Test",
     "Themes",
 ];

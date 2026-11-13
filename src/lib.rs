@@ -15,7 +15,7 @@ use gpui::{App, AppContext as _, WindowOptions};
 
 pub const GPUI_KIT_VERSION: &str = "0.9.1";
 pub const GPUI_VERSION: &str = "gpui-pre 0.3.12";
-pub const GPUI_MOBILE_REVISION: &str = "Bombatomica64/gpui-mobile ce1465e";
+pub const GPUI_MOBILE_REVISION: &str = "Bombatomica64/gpui-mobile f148364";
 
 /// Runs on the GPUI render thread once the first surface exists.
 pub fn launch(cx: &mut App) {

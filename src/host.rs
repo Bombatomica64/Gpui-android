@@ -332,3 +332,17 @@ pub fn set_light_system_bars(light: bool) {
         log::error!("gpuiSetLightSystemBars failed: {err}");
     }
 }
+
+/// Recreate the Activity, as a configuration change LabActivity doesn't handle
+/// would (Native Views screen): the GPUI app and its platform views must survive.
+pub fn recreate_activity() -> Result<(), String> {
+    mobile_jni::with_env(|env| {
+        let activity = mobile_jni::activity(env)?;
+        env.call_method(&activity, jni::jni_str!("gpuiRecreate"), jni::jni_sig!("()V"), &[])
+            .map_err(|e| {
+                env.exception_clear();
+                e.to_string()
+            })?;
+        Ok(())
+    })
+}
