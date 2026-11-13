@@ -433,6 +433,14 @@ impl Render for PlatformApisScreen {
                                 this.run("audio loop One", move || player.set_loop_mode(audio::LoopMode::One), cx)
                             }
                         }),
+                        // The song is minutes long: jump to 3 s before the end to see it complete.
+                        Self::button("audio-end", "Near end", cx, |this, cx| {
+                            if let Some(player) = this.player.clone() {
+                                this.run("audio seek near end", move || {
+                                    player.seek(player.duration()?.saturating_sub(3_000))
+                                }, cx)
+                            }
+                        }),
                         Self::button("audio-state", "State", cx, |this, cx| {
                             if let Some(player) = this.player.clone() {
                                 this.run("audio state", move || (player.state(), player.position(), player.duration()), cx)

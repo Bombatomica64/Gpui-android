@@ -149,6 +149,12 @@ Platform APIs screen exercises them; the defects are #44–#50.
 - `android-video-async-prepare` (#50): video streams too (`set_url` returns
   `None` while loading, `state()` reports `Loading`). The Video screen
   exercises it through the platform-view host.
+- `android-player-completed` (gpui-mobile #22, for
+  [#88](https://github.com/Bombatomica64/Gpui-android/issues/88)): a clip that
+  plays to the end reports `Completed`, not `Paused`. Audio and video record
+  `OnCompletionListener` under the async-prepare lock and clear it on play,
+  seek, stop and a new source. `LoopMode::One` and `All` both repeat the one
+  source, since a player has no playlist.
 
 ### Platform views: maps, web view controls, camera preview, Activity recreation — gpui-mobile #21
 
