@@ -156,6 +156,38 @@ Platform APIs screen exercises them; the defects are #44–#50.
   seek, stop and a new source. `LoopMode::One` and `All` both repeat the one
   source, since a player has no playlist.
 
+### Platform views: maps, web view controls, camera preview, Activity recreation — gpui-mobile #21, #23, #24
+
+From the JNI audit (#26, #87). The platform-view host kept its views in the
+first Activity it saw. Now `host::set_activity` calls
+`GpuiPlatformView.attachToActivity`, which moves every view into the new
+Activity; the views are built on a `MutableContextWrapper` that switches to it.
+
+`platform_view_element` is a real element. It places the view, clips it to the
+scroll area, and hides it when the element isn't painted. Native views draw
+above GPUI, so an app hides them under a GPUI overlay with `set_visible(false)`.
+
+What changed per package:
+- **Web view:** the controls act on the platform view's own `WebView`. Before,
+  they acted on a static `WebView` that nothing set. New calls: `navigate`,
+  `go_forward`, `state()`, and `evaluate_javascript_for_result`, which returns
+  the script's result through a native callback.
+- **Maps:** the log-only Android stubs are replaced by `GpuiMapView`, an
+  OpenStreetMap tile map with no SDK and no API key. Maps are drawn by a
+  `MapProvider` (gpui-mobile #24). `TileMapProvider` is the default:
+  OpenStreetMap, or any `{z}/{x}/{y}` tile server. Apps can plug in another
+  SDK by implementing `MapProvider` and `MapController` and registering their
+  view with `GpuiPlatformView.registerViewType`.
+- **Camera:**
+  - the preview is removed on the UI thread;
+  - photos and videos are written to the app cache instead of public storage;
+  - output is tagged with the display rotation;
+  - the preview is cropped to fill its view instead of stretched.
+
+The Native Views screen exercises all of this. `LabActivity` gives keys to a
+focused native view (a WebView field), takes focus back on a GPUI touch, and
+adds `gpuiRecreate` for the screen's "Recreate Activity" button.
+
 The Java helpers live in gpui-mobile's example project; `build.sh` copies the
 ones the lab uses from the pinned checkout.
 

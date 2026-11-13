@@ -66,7 +66,6 @@ find "$JNI_LIBS" \( -name "libgpui_mobile.so" -o -name "libgpui_mobile-*.so" \) 
 
 # The platform packages call Java helpers that gpui-mobile ships in its example
 # project; take them from the checkout Cargo resolved, so they match the pinned rev.
-# Camera and MapView are not used by the lab; GpuiPlatformView (the Video screen's host) refers to them.
 MOBILE_DIR="$(cd "$ROOT" && cargo metadata --format-version 1 \
     | python3 -c 'import json, sys; print(next(p["manifest_path"] for p in json.load(sys.stdin)["packages"] if p["name"] == "gpui-pre-mobile"))' \
     | xargs dirname)"
