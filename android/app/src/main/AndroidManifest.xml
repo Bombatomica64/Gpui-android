@@ -37,6 +37,7 @@
 
     <application
         android:allowBackup="false"
+        android:enableOnBackInvokedCallback="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="GPUI Kit Mobile Lab"
@@ -55,7 +56,8 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Deep links for the deeplink package: gpuilab://... -->
+            <!-- Deep links for the deeplink package, routed to screens by src/nav.rs:
+                 gpuilab://screen/Navigation/Buttons, gpuilab://catalog -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

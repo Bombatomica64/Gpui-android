@@ -1,5 +1,6 @@
 package dev.gpui.mobile.lab;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,6 +21,10 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputConnectionWrapper;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.window.BackEvent;
+import android.window.OnBackAnimationCallback;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -44,17 +49,42 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
 
     /** Names this Activity's GPUI window. Kept across recreation; a fresh launch gets a new one. */
     private static long nextHostId = 1;
+    /**
+     * The host of an instance that finished, kept for the next launch. Back at the
+     * catalog is left to the system, which finishes this Activity (it does not move
+     * the task back); the GPUI window, and the catalog's state with it, then come
+     * back with the next launch, as they do after a recreation.
+     */
+    private static long parkedHostId = 0;
     private long hostId;
     private SurfaceView surface;
     private InputProxy input;
     private boolean keyboardVisible;
+    /** Rust wants Back (a screen is open); otherwise the system handles it. */
+    private boolean backEnabled;
+    /** The registered OnBackInvokedCallback (Android 13+), while backEnabled. */
+    private Object backCallback;
+
+    // Back event kinds for nativeBack (gpui-mobile's host::BackEvent::from_host).
+    private static final int BACK_STARTED = 0;
+    private static final int BACK_PROGRESSED = 1;
+    private static final int BACK_CANCELLED = 2;
+    private static final int BACK_INVOKED = 3;
+    private static final int EDGE_NONE = 2;
 
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         // Debuggable builds prefer a library pushed by `cargo gpui reload`.
         GpuiLibraryLoader.load(this, "gpui_mobile_lab");
-        hostId = state != null ? state.getLong("gpuiHostId", nextHostId++) : nextHostId++;
+        if (state != null) {
+            hostId = state.getLong("gpuiHostId", nextHostId++);
+        } else if (parkedHostId != 0) {
+            hostId = parkedHostId;
+            parkedHostId = 0;
+        } else {
+            hostId = nextHostId++;
+        }
         surface = new SurfaceView(this);
         surface.getHolder().addCallback(this);
         surface.setFocusable(true);
@@ -89,8 +119,13 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
 
         nativeOnCreate(this, hostId, Build.VERSION.SDK_INT);
         // Only on a fresh start: a recreated Activity gets the launch intent again, and
-        // reopening its screen would replace the one the app already has open.
-        if (state == null) forwardScreenExtra(getIntent());
+        // reopening its screen (or routing its link) would replace the stack the app has.
+        if (state == null) {
+            forwardScreenExtra(getIntent());
+            if (getIntent() != null && getIntent().getData() != null) {
+                nativeDeepLink(getIntent().getData().toString(), false);
+            }
+        }
     }
 
     // uiMode is in configChanges, so dark-mode toggles arrive here instead of
@@ -109,7 +144,7 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
         // Later getIntent() calls (deep links, notification payloads) see this one.
         setIntent(intent);
         forwardScreenExtra(intent);
-        if (intent.getData() != null) nativeDeepLink(intent.getData().toString());
+        if (intent.getData() != null) nativeDeepLink(intent.getData().toString(), true);
     }
 
     private static void forwardScreenExtra(android.content.Intent intent) {
@@ -128,7 +163,9 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
 
     @Override
     protected void onDestroy() {
-        if (isFinishing()) nativeHostDestroyed(hostId);
+        // Not nativeHostDestroyed: launchMode is singleTask, so the next instance
+        // takes this host over (see parkedHostId).
+        if (isFinishing()) parkedHostId = hostId;
         super.onDestroy();
     }
 
@@ -180,11 +217,16 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
                 || code == KeyEvent.KEYCODE_VOLUME_MUTE) {
             return super.dispatchKeyEvent(event);
         }
-        // Back reaches GPUI as "escape": overlays close first, then the app pops its
-        // screen stack, and at the catalog root it calls moveTaskToBack().
+        // Android 13+ sends Back to the OnBackInvokedCallback below instead (the
+        // manifest opts in). Here, on older versions, it is a plain Back request
+        // while Rust wants one, and a trip home at the catalog root.
         if (code == KeyEvent.KEYCODE_BACK) {
-            if (event.getAction() == KeyEvent.ACTION_DOWN || event.getAction() == KeyEvent.ACTION_UP) {
-                nativeKey(code, event.getAction(), event.getMetaState());
+            if (event.getAction() == KeyEvent.ACTION_UP && !event.isCanceled()) {
+                if (backEnabled) {
+                    nativeBack(hostId, BACK_INVOKED, 0f, EDGE_NONE, 0f, 0f);
+                } else {
+                    moveTaskToBack(true);
+                }
             }
             return true;
         }
@@ -219,6 +261,57 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
             default:
                 return false;
         }
+    }
+
+    // ── Back (gpui-mobile host::set_back_enabled / host::back_event) ────────
+
+    /**
+     * Called from Rust while a screen is open (true) or not (false). Android picks who
+     * gets a back gesture when it starts, so the callback is registered only while
+     * the app has somewhere to go back to; otherwise the system handles Back, with
+     * its back-to-home animation.
+     */
+    public void gpuiSetBackEnabled(boolean enabled) {
+        runOnUiThread(() -> {
+            backEnabled = enabled;
+            if (Build.VERSION.SDK_INT >= 33) updateBackCallback();
+        });
+    }
+
+    @TargetApi(33)
+    private void updateBackCallback() {
+        OnBackInvokedDispatcher dispatcher = getOnBackInvokedDispatcher();
+        if (backEnabled && backCallback == null) {
+            OnBackInvokedCallback callback = Build.VERSION.SDK_INT >= 34
+                    ? animatedBackCallback()
+                    : () -> nativeBack(hostId, BACK_INVOKED, 0f, EDGE_NONE, 0f, 0f);
+            dispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, callback);
+            backCallback = callback;
+        } else if (!backEnabled && backCallback != null) {
+            dispatcher.unregisterOnBackInvokedCallback((OnBackInvokedCallback) backCallback);
+            backCallback = null;
+        }
+    }
+
+    /** Android 14+: the gesture's progress too, for the predictive back preview. */
+    @TargetApi(34)
+    private OnBackInvokedCallback animatedBackCallback() {
+        return new OnBackAnimationCallback() {
+            @Override public void onBackStarted(BackEvent event) { forwardBack(BACK_STARTED, event); }
+            @Override public void onBackProgressed(BackEvent event) { forwardBack(BACK_PROGRESSED, event); }
+            @Override public void onBackCancelled() {
+                nativeBack(hostId, BACK_CANCELLED, 0f, EDGE_NONE, 0f, 0f);
+            }
+            @Override public void onBackInvoked() {
+                nativeBack(hostId, BACK_INVOKED, 0f, EDGE_NONE, 0f, 0f);
+            }
+        };
+    }
+
+    @TargetApi(34)
+    private void forwardBack(int kind, BackEvent event) {
+        nativeBack(hostId, kind, event.getProgress(), event.getSwipeEdge(),
+                event.getTouchX(), event.getTouchY());
     }
 
     /** Recreate this Activity, for the Native Views screen's lifecycle check. Called from Rust. */
@@ -460,11 +553,11 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
 
     private static native void nativeOnCreate(Activity activity, long host, int apiLevel);
     private static native void nativeOpenScreen(String screen);
-    private static native void nativeDeepLink(String url);
+    private static native void nativeDeepLink(String url, boolean running);
+    private static native void nativeBack(long host, int kind, float progress, int edge, float x, float y);
     private static native void nativeConfigurationChanged(int uiMode);
     private static native void nativeSurfaceChanged(long host, android.view.Surface surface, float scale);
     private static native void nativeSurfaceDestroyed(long host);
-    private static native void nativeHostDestroyed(long host);
     private static native void nativeResumed(long host);
     private static native void nativePaused(long host);
     private static native void nativeInsets(long host, int top, int bottom, int left, int right, int ime);

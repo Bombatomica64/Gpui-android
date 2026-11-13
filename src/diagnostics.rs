@@ -5,6 +5,8 @@
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU64, Ordering};
 
+use crate::nav::Route;
+
 static API_LEVEL: AtomicI32 = AtomicI32::new(0);
 static FOREGROUND: AtomicBool = AtomicBool::new(false);
 static KEYBOARD_VISIBLE: AtomicBool = AtomicBool::new(false);
@@ -14,14 +16,19 @@ static LAST_TOUCH: Mutex<Option<TouchSample>> = Mutex::new(None);
 /// Vertical scroll offset of the open screen's container, in logical pixels.
 static SCREEN_SCROLL_Y: AtomicI32 = AtomicI32::new(0);
 
-static REQUESTED_SCREEN: Mutex<Option<String>> = Mutex::new(None);
+static REQUESTED_ROUTE: Mutex<Option<Route>> = Mutex::new(None);
 /// A screen asked for through the launch intent (`--es screen <title>`).
 pub fn request_screen(screen: String) {
-    *REQUESTED_SCREEN.lock().expect("poisoned") = Some(screen);
+    request_route(Route::Screens(vec![screen]));
 }
 
-pub fn take_requested_screen() -> Option<String> {
-    REQUESTED_SCREEN.lock().expect("poisoned").take()
+/// A route from a deep link or the launch intent; the latest one wins.
+pub fn request_route(route: Route) {
+    *REQUESTED_ROUTE.lock().expect("poisoned") = Some(route);
+}
+
+pub fn take_requested_route() -> Option<Route> {
+    REQUESTED_ROUTE.lock().expect("poisoned").take()
 }
 
 pub fn set_screen_scroll(y: f32) {

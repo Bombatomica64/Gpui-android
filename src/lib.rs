@@ -7,6 +7,7 @@ pub mod diagnostics;
 #[cfg(target_os = "android")]
 mod host;
 mod matrix;
+mod nav;
 mod screens;
 mod ui;
 

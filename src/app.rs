@@ -1,9 +1,19 @@
-//! Root view: the catalog, and one open screen at a time under a persistent header.
+//! Root view: the catalog, and a stack of screens over it under a persistent
+//! header. Pushes and pops slide; on Android 14+ a back swipe previews the pop.
+//!
+//! Back is not `escape`: gpui-mobile reports it through `host::on_back`, and the
+//! lab decides. An open Kit overlay (dialog, sheet, popover, menu) gets an
+//! `escape` first, since that is how Kit closes them; otherwise the top screen
+//! pops. With no screen open the lab tells the host it does not want Back, so the
+//! system handles it (back to home, with its own predictive animation).
+
+use std::time::Instant;
 
 use gpui::{
-    AnyView, App, AppContext as _, Context, Entity, FocusHandle, Focusable, InteractiveElement,
-    IntoElement, KeyBinding, ParentElement, ScrollHandle, SharedString, StatefulInteractiveElement,
-    Styled, Subscription, Window, actions, div, prelude::*, px,
+    AnyView, AnyWindowHandle, App, AppContext as _, Context, Entity, FocusHandle, Focusable,
+    Global, InteractiveElement, IntoElement, ParentElement, ScrollHandle, SharedString,
+    StatefulInteractiveElement, Styled, Subscription, WeakEntity, Window, div, prelude::*, px,
+    relative,
 };
 use gpui_kit::component::{
     IconName,
@@ -14,22 +24,117 @@ use gpui_kit::component::{
 };
 
 use crate::matrix::{self, Status};
+use crate::nav::{self, Motion, Preview, Route, Transition};
 use crate::screens::{self, ScreenDef};
 use crate::ui::{self, prelude::*};
 
-actions!(lab, [GoBack]);
+/// Where Back and screen requests go: the catalog of the newest window.
+struct Navigator {
+    app: WeakEntity<LabApp>,
+    window: AnyWindowHandle,
+}
 
-const CONTEXT: &str = "LabApp";
+impl Global for Navigator {}
 
-pub fn init(cx: &mut App) {
-    // Android back arrives as "escape". Kit overlays and inputs bind escape in
-    // deeper contexts, so they close first; only unhandled presses reach GoBack.
-    cx.bind_keys([KeyBinding::new("escape", GoBack, Some(CONTEXT))]);
+pub fn init(_: &mut App) {
+    #[cfg(target_os = "android")]
+    gpui_mobile::android::host::on_back(|_, event, cx| on_back(event, cx));
+}
+
+/// What a back request means right now, worked out outside the catalog's own
+/// update so that overlay `escape` handlers may touch any entity.
+#[cfg(target_os = "android")]
+fn on_back(event: gpui_mobile::android::host::BackEvent, cx: &mut App) {
+    use gpui::Keystroke;
+    use gpui_kit::component::WindowExt as _;
+    use gpui_mobile::android::host::{BackEdge, BackEvent};
+
+    let Some(navigator) = cx.try_global::<Navigator>() else {
+        log::warn!("back: no catalog window");
+        return;
+    };
+    let (app, handle) = (navigator.app.clone(), navigator.window);
+    let result = handle.update(cx, |_, window, cx| {
+        let overlay = window.has_active_dialog(cx) || window.has_active_sheet(cx);
+        let back = match event {
+            BackEvent::Started(at) => Back::Started {
+                progress: at.progress,
+                from_right: at.edge == BackEdge::Right,
+                overlay,
+            },
+            BackEvent::Progressed(at) => Back::Progressed(at.progress),
+            BackEvent::Cancelled => Back::Cancelled,
+            BackEvent::Invoked => {
+                // Kit closes its overlays, and fields their selection handles, on
+                // escape; a plain field lets it through, so this is `false` then.
+                let escape = Keystroke::parse("escape").expect("valid keystroke");
+                let closed = window.dispatch_keystroke(escape, cx);
+                Back::Invoked {
+                    handled: closed || overlay,
+                }
+            }
+        };
+        app.update(cx, |this, cx| this.back(back, window, cx))
+    });
+    if let Err(err) = result {
+        log::warn!("back: catalog window gone: {err}");
+    }
+}
+
+/// A back request, platform-independent.
+#[derive(Clone, Copy, Debug)]
+enum Back {
+    Started {
+        progress: f32,
+        from_right: bool,
+        /// A Kit dialog or sheet is open: Back is for it, not for the screen.
+        overlay: bool,
+    },
+    Progressed(f32),
+    Cancelled,
+    Invoked {
+        /// An overlay took it (or is still open and refused to close).
+        handled: bool,
+    },
+}
+
+/// Push a screen by title onto the stack of the catalog window.
+pub fn push(title: &str, window: &mut Window, cx: &mut App) {
+    with_app(cx, |this, cx| this.push(title, true, window, cx));
+}
+
+/// Pop the top screen, as the back button does.
+pub fn pop(window: &mut Window, cx: &mut App) {
+    with_app(cx, |this, cx| this.pop(0.0, window, cx));
+}
+
+/// Pop every screen, back to the catalog.
+pub fn pop_to_catalog(window: &mut Window, cx: &mut App) {
+    with_app(cx, |this, cx| this.route(Route::Catalog, window, cx));
+}
+
+/// Titles of the open screens, bottom first.
+pub fn stack(cx: &App) -> Vec<&'static str> {
+    cx.try_global::<Navigator>()
+        .and_then(|navigator| navigator.app.upgrade())
+        .map(|app| app.read(cx).stack.iter().map(|s| s.def.title).collect())
+        .unwrap_or_default()
+}
+
+fn with_app(cx: &mut App, f: impl FnOnce(&mut LabApp, &mut Context<LabApp>)) {
+    let app = cx
+        .try_global::<Navigator>()
+        .and_then(|navigator| navigator.app.upgrade());
+    match app {
+        Some(app) => app.update(cx, f),
+        None => log::warn!("navigation: no catalog window"),
+    }
 }
 
 struct OpenScreen {
     def: &'static ScreenDef,
     view: AnyView,
+    scroll: ScrollHandle,
 }
 
 pub struct LabApp {
@@ -37,9 +142,14 @@ pub struct LabApp {
     search: Entity<InputState>,
     query: SharedString,
     filter: Option<Status>,
-    screen: Option<OpenScreen>,
+    /// Open screens over the catalog, bottom first.
+    stack: Vec<OpenScreen>,
+    /// The push, pop or settle under way. A popping screen stays on the stack
+    /// until its motion ends.
+    transition: Option<Transition>,
+    /// A back swipe in progress (Android 14+), before it commits or cancels.
+    preview: Option<Preview>,
     catalog_scroll: ScrollHandle,
-    screen_scroll: ScrollHandle,
     /// Last bar appearance sent to the host, so it is only sent on change.
     light_system_bars: Option<bool>,
     _subscriptions: Vec<Subscription>,
@@ -56,16 +166,20 @@ impl LabApp {
         });
         let focus = cx.focus_handle();
         focus.focus(window, cx);
-        // Requests from the Java thread (intent-requested screens) are
+        cx.set_global(Navigator {
+            app: cx.weak_entity(),
+            window: window.window_handle(),
+        });
+        // Requests from the Java thread (intent-requested screens, deep links) are
         // picked up here, on the GPUI thread.
         cx.spawn_in(window, async move |this, cx| {
             loop {
                 cx.background_executor()
                     .timer(std::time::Duration::from_millis(150))
                     .await;
-                if let Some(screen) = crate::diagnostics::take_requested_screen() {
+                if let Some(route) = crate::diagnostics::take_requested_route() {
                     let result =
-                        this.update_in(cx, |this, window, cx| this.open(&screen, window, cx));
+                        this.update_in(cx, |this, window, cx| this.route(route, window, cx));
                     if result.is_err() {
                         break;
                     }
@@ -81,54 +195,175 @@ impl LabApp {
             search,
             query: SharedString::default(),
             filter: None,
-            screen: None,
+            stack: Vec::new(),
+            transition: None,
+            preview: None,
             catalog_scroll: ScrollHandle::new(),
-            screen_scroll: ScrollHandle::new(),
             light_system_bars: None,
             _subscriptions: vec![subscription, appearance],
         }
     }
 
-    pub fn open(&mut self, id: &str, window: &mut Window, cx: &mut Context<Self>) {
+    /// Open a screen over the current one. `animate` is off for the screens under
+    /// the top one of a route, which are never seen arriving.
+    pub fn push(&mut self, id: &str, animate: bool, window: &mut Window, cx: &mut Context<Self>) {
         let Some(def) = screens::find(id) else {
             log::error!("no demo screen named {id:?}");
             return;
         };
-        log::info!("open screen: {}", def.title);
-        // A reload (`cargo gpui`) reopens it: LabActivity reads this extra.
-        gpui_hot::remember("screen", Some(def.title));
+        self.finish_transition();
+        self.preview = None;
+        log::info!(
+            "push screen: {} (depth {})",
+            def.title,
+            self.stack.len() + 1
+        );
         let view = (def.build)(window, cx);
-        self.screen = Some(OpenScreen { def, view });
-        self.screen_scroll = ScrollHandle::new();
-        self.focus.focus(window, cx);
-        cx.notify();
-    }
-
-    fn close_screen(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        if let Some(screen) = self.screen.take() {
-            log::info!("close screen: {}", screen.def.title);
-            gpui_hot::remember("screen", None);
+        self.stack.push(OpenScreen {
+            def,
+            view,
+            scroll: ScrollHandle::new(),
+        });
+        if animate {
+            self.transition = Some(Transition::push(Instant::now()));
         }
+        self.remember_top();
         self.focus.focus(window, cx);
         cx.notify();
     }
 
-    fn go_back(&mut self, _: &GoBack, window: &mut Window, cx: &mut Context<Self>) {
-        if self.screen.is_some() {
-            self.close_screen(window, cx);
+    /// Slide the top screen out from `from` (where a back preview left it, or 0).
+    fn pop(&mut self, from: f32, window: &mut Window, cx: &mut Context<Self>) {
+        if self.stack.is_empty() {
+            return;
+        }
+        let from = match self.transition.take() {
+            Some(transition) if transition.motion == Motion::Pop => {
+                self.transition = Some(transition);
+                return;
+            }
+            // Popping a screen still sliding in starts from where it is.
+            Some(transition) => transition.sample(Instant::now()).0,
+            None => from,
+        };
+        if let Some(top) = self.stack.last() {
+            log::info!("pop screen: {}", top.def.title);
+        }
+        self.transition = Some(Transition::pop(Instant::now(), from));
+        self.focus.focus(window, cx);
+        cx.notify();
+    }
+
+    /// Replace the stack with a route's screens; only the top one slides in.
+    fn route(&mut self, route: Route, window: &mut Window, cx: &mut Context<Self>) {
+        self.finish_transition();
+        self.preview = None;
+        match route {
+            Route::Catalog => {
+                // Drop what is underneath and slide the top one out over the catalog.
+                let keep = self.stack.len().saturating_sub(1);
+                self.stack.drain(..keep);
+                self.pop(0.0, window, cx);
+            }
+            Route::Screens(titles) => {
+                log::info!("route to {titles:?}");
+                self.stack.clear();
+                let last = titles.len().saturating_sub(1);
+                for (ix, title) in titles.iter().enumerate() {
+                    self.push(title, ix == last, window, cx);
+                }
+            }
+        }
+        self.remember_top();
+        cx.notify();
+    }
+
+    fn back(&mut self, back: Back, window: &mut Window, cx: &mut Context<Self>) {
+        let now = Instant::now();
+        match back {
+            Back::Started {
+                progress,
+                from_right,
+                overlay,
+            } => {
+                self.finish_transition();
+                self.preview = (!overlay && !self.stack.is_empty()).then_some(Preview {
+                    progress,
+                    from_right,
+                });
+            }
+            Back::Progressed(progress) => {
+                if let Some(preview) = &mut self.preview {
+                    preview.progress = progress;
+                }
+            }
+            Back::Cancelled => {
+                if let Some(preview) = self.preview.take() {
+                    self.transition = Some(Transition::settle(now, preview.offset()));
+                }
+            }
+            Back::Invoked { handled } => {
+                let from = self.preview.take().map(|preview| preview.offset());
+                if handled {
+                    log::info!("back: an overlay took it");
+                    if let Some(from) = from {
+                        self.transition = Some(Transition::settle(now, from));
+                    }
+                } else if self.stack.is_empty() {
+                    // The host only sends Back while a screen is open; this is a
+                    // race with the last pop.
+                    log::info!("back at catalog root: moving task to background");
+                    #[cfg(target_os = "android")]
+                    crate::host::move_task_to_back();
+                } else {
+                    self.pop(from.unwrap_or(0.0), window, cx);
+                }
+            }
+        }
+        cx.notify();
+    }
+
+    /// End the running motion at once: a popping screen is dropped.
+    fn finish_transition(&mut self) {
+        if let Some(transition) = self.transition.take()
+            && transition.motion == Motion::Pop
+        {
+            self.stack.pop();
+            self.remember_top();
+        }
+    }
+
+    /// A reload (`cargo gpui`) reopens the top screen: LabActivity reads this extra.
+    fn remember_top(&self) {
+        gpui_hot::remember("screen", self.stack.last().map(|s| s.def.title));
+    }
+
+    /// The top page's offset this frame, ending a finished motion.
+    fn step(&mut self, window: &mut Window) -> f32 {
+        let preview = self.preview.map(|p| p.offset()).unwrap_or(0.0);
+        let Some(transition) = self.transition else {
+            return preview;
+        };
+        let (offset, done) = transition.sample(Instant::now());
+        if done {
+            self.finish_transition();
+            0.0
         } else {
-            log::info!("back at catalog root: moving task to background");
-            #[cfg(target_os = "android")]
-            crate::host::move_task_to_back();
+            window.request_animation_frame();
+            offset
         }
     }
 
     fn render_header(&self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let title: SharedString = self
-            .screen
-            .as_ref()
+            .stack
+            .last()
             .map(|s| s.def.title.into())
             .unwrap_or_else(|| "GPUI Kit Mobile Lab".into());
+        let back_label = match self.stack.len() {
+            0 | 1 => "Catalog",
+            n => self.stack[n - 2].def.title,
+        };
         h_flex()
             .w_full()
             .h(px(52.))
@@ -138,13 +373,13 @@ impl LabApp {
             .border_b_1()
             .border_color(cx.theme().border)
             .bg(cx.theme().title_bar)
-            .when(self.screen.is_some(), |this| {
+            .when(!self.stack.is_empty(), |this| {
                 this.child(
                     Button::new("back")
                         .ghost()
                         .icon(IconName::ChevronLeft)
-                        .label("Catalog")
-                        .on_click(cx.listener(|this, _, window, cx| this.close_screen(window, cx))),
+                        .label(back_label)
+                        .on_click(cx.listener(|this, _, window, cx| this.pop(0.0, window, cx))),
                 )
             })
             .child(
@@ -155,14 +390,16 @@ impl LabApp {
                     .font_semibold()
                     .child(title),
             )
-            .when(self.screen.is_none(), |this| {
+            .when(self.stack.is_empty(), |this| {
                 this.child(
                     Button::new("open-themes")
                         .ghost()
                         .small()
                         .icon(IconName::Palette)
                         .on_click(
-                            cx.listener(|this, _, window, cx| this.open("Themes", window, cx)),
+                            cx.listener(|this, _, window, cx| {
+                                this.push("Themes", true, window, cx)
+                            }),
                         ),
                 )
             })
@@ -255,7 +492,9 @@ impl LabApp {
                     .outline()
                     .small()
                     .label(id)
-                    .on_click(cx.listener(move |this, _, window, cx| this.open(id, window, cx)))
+                    .on_click(
+                        cx.listener(move |this, _, window, cx| this.push(id, true, window, cx)),
+                    )
             })
             .collect();
 
@@ -332,7 +571,7 @@ impl LabApp {
             .border_color(cx.theme().border)
             .when(has_screen, |this| {
                 this.active(|this| this.bg(cx.theme().accent)).on_click(
-                    cx.listener(move |this, _, window, cx| this.open(row.screen, window, cx)),
+                    cx.listener(move |this, _, window, cx| this.push(row.screen, true, window, cx)),
                 )
             })
             .child(
@@ -355,7 +594,6 @@ impl LabApp {
     }
 
     fn render_screen(&self, screen: &OpenScreen, cx: &mut Context<Self>) -> impl IntoElement {
-        crate::diagnostics::set_screen_scroll(-self.screen_scroll.offset().y.as_f32());
         let covered: Vec<_> = matrix::for_screen(screen.def.title).collect();
         let header = (!covered.is_empty()).then(|| {
             h_flex()
@@ -391,7 +629,7 @@ impl LabApp {
                 .flex_1()
                 .min_h_0()
                 .overflow_y_scroll()
-                .track_scroll(&self.screen_scroll)
+                .track_scroll(&screen.scroll)
                 .child(
                     v_flex()
                         .children(header)
@@ -412,8 +650,8 @@ impl Focusable for LabApp {
 #[gpui_hot::hot]
 impl Render for LabApp {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        // Back needs a focused node inside this key context. When a focused input
-        // is removed or blurs, nothing is focused and back would be dropped.
+        // Keyboard input needs a focused node. When a focused input is removed or
+        // blurs, nothing is focused; keep focus inside the app.
         if window.focused(cx).is_none() {
             self.focus.focus(window, cx);
         }
@@ -423,10 +661,52 @@ impl Render for LabApp {
             #[cfg(target_os = "android")]
             crate::host::set_light_system_bars(light);
         }
-        let body = match &self.screen {
-            Some(screen) => self.render_screen(screen, cx).into_any_element(),
-            None => self.render_catalog(window, cx).into_any_element(),
+        let offset = self.step(window);
+        // Android decides at the start of a gesture who gets Back: the lab while a
+        // screen is open, the system (back to home) at the catalog.
+        #[cfg(target_os = "android")]
+        gpui_mobile::android::host::set_back_enabled(!self.stack.is_empty());
+        if let Some(top) = self.stack.last() {
+            crate::diagnostics::set_screen_scroll(-top.scroll.offset().y.as_f32());
+        }
+        let moving = offset != 0.0 || self.transition.is_some();
+        let depth = self.stack.len();
+        let background = cx.theme().background;
+        let page = |depth: usize,
+                    offset: f32,
+                    this: &Self,
+                    window: &mut Window,
+                    cx: &mut Context<Self>| {
+            let content = match depth {
+                0 => this.render_catalog(window, cx).into_any_element(),
+                n => this
+                    .render_screen(&this.stack[n - 1], cx)
+                    .into_any_element(),
+            };
+            v_flex()
+                .id(("page", depth))
+                .absolute()
+                .top_0()
+                .bottom_0()
+                .w_full()
+                .left(relative(offset))
+                .bg(background)
+                .child(content)
         };
+        let mut body = div().relative().flex_1().min_h_0().overflow_hidden();
+        if moving && depth > 0 {
+            body = body
+                .child(page(depth - 1, nav::under_offset(offset), self, window, cx))
+                .child(
+                    div()
+                        .absolute()
+                        .inset_0()
+                        .bg(gpui::black().opacity(nav::scrim(offset))),
+                );
+        }
+        body = body.child(
+            page(depth, offset, self, window, cx).when(moving, |page| page.shadow_lg().occlude()),
+        );
         // The window is edge to edge: keep the content inside the part GPUI knows
         // is clear of the system bars, the cutout and the keyboard, with the
         // title bar color underneath them.
@@ -441,9 +721,7 @@ impl Render for LabApp {
             .bg(cx.theme().title_bar)
             .child(
                 v_flex()
-                    .key_context(CONTEXT)
                     .track_focus(&self.focus)
-                    .on_action(cx.listener(Self::go_back))
                     .size_full()
                     .bg(cx.theme().background)
                     .text_color(cx.theme().foreground)

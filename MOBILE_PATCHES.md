@@ -90,6 +90,21 @@ change. `safe_area_insets()` and `keyboard_height()` return them too, as on
 iOS. LabActivity calls it from its `OnApplyWindowInsetsListener`.
 Draft upstream PR: [docs/upstream/safe-area-insets.md](docs/upstream/safe-area-insets.md).
 
+### Back as its own event, with predictive back — branch `feat/predictive-back`
+
+The host turned Back into `escape`, so an app could not tell "go back" from a
+key, and Android 14's predictive back gesture had no way in. Hosts now report
+Back with `host::back_event` (from an `OnBackAnimationCallback` on Android 14+,
+an `OnBackInvokedCallback` on 13, `KEYCODE_BACK` before), as
+`BackEvent::{Started, Progressed, Cancelled, Invoked}` with the gesture's
+progress and edge; apps take it with `host::on_back`. `host::set_back_enabled`
+calls the host's `gpuiSetBackEnabled(boolean)`, so the callback is registered
+only while the app has somewhere to go back to and the system keeps Back (and
+its back-to-home animation) otherwise. Without an `on_back` handler a committed
+Back still reaches GPUI as `escape`. The lab's stack navigation uses it
+([#27](https://github.com/Bombatomica64/Gpui-android/issues/27)).
+Merged into the fork's `main` as gpui-mobile #20.
+
 ### Load a pushed debug library without reinstalling — branch `dev-hot-loader`
 
 `GpuiLibraryLoader.load(context, name)`, a Java helper next to the others in
@@ -316,5 +331,7 @@ These belong to the embedding Activity, not to the framework:
 - The `SurfaceView`, lifecycle, touch/key forwarding and the IME
   `InputConnection` proxy (`LabActivity`, `src/host.rs`), as gpui-mobile's
   host entry point expects.
-- Back navigation: back arrives as `escape`, which the shell binds to
-  closing the open screen.
+- Back navigation: the screen stack and its transitions (`src/app.rs`,
+  `src/nav.rs`), and the back callbacks in `LabActivity`. Back reaches the
+  lab through gpui-mobile's `host::on_back`; the lab offers it to Kit
+  overlays as `escape` first (that is how Kit closes them), then pops.
