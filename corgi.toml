@@ -1,0 +1,4 @@
+# corgi (https://github.com/ConradIrwin/corgi) builds in a sandbox that only
+# sees declared inputs; these files are read by include_str! outside src/.
+[extra-inputs]
+gpui-mobile-lab = ["COMPONENT_MATRIX.md", "themes/**"]

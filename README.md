@@ -24,7 +24,7 @@ version of every `gpui-pre-*` crate.
 | GPUI's other crates (`gpui-pre-wgpu`, …) | 0.3.12 from crates.io (the snapshot GPUI Kit 0.9.1 pins) |
 | gpui-mobile (`gpui-pre-mobile`) | [Bombatomica64/gpui-mobile](https://github.com/Bombatomica64/gpui-mobile) `main` (upstream `main` + the fork-only branches in MOBILE_PATCHES.md) |
 | Renderer | `wgpu` 29.0.4 (Vulkan preferred, GLES fallback) |
-| Rust | 1.98.1 stable, edition 2024 |
+| Rust | 1.99.1 stable (pinned in `rust-toolchain.toml`), edition 2024 |
 | Android | NDK 27.2.12479018, compileSdk 35, targetSdk 34, minSdk 26, AGP 9.1.0, Gradle 9.4.1, JDK 17 |
 
 ## Build
@@ -32,9 +32,11 @@ version of every `gpui-pre-*` crate.
 Prerequisites (Linux or macOS):
 
 ```sh
-# Rust + Android targets + cargo-ndk
+# Rust (rust-toolchain.toml pins the version and Android targets)
 curl -sSf https://sh.rustup.rs | sh
-rustup target add aarch64-linux-android x86_64-linux-android
+# corgi, with Android NDK support (debug builds; cached, sandboxed)
+cargo install --locked --git https://github.com/Bombatomica64/corgi --branch android-ndk corgi-build
+# cargo-ndk (release builds, which need fat LTO)
 cargo install cargo-ndk
 
 # JDK 17 and the Android SDK/NDK (command-line tools)
@@ -51,11 +53,25 @@ Build the APK:
 ./build.sh android --release --install       # also adb install + launch
 ```
 
-The script compiles the Rust library with `cargo ndk` into
-`android/app/src/main/jniLibs/`, then runs Gradle (`assembleRelease` or
+The script compiles the Rust library into `android/app/src/main/jniLibs/`,
+then runs Gradle (`assembleRelease` or
 `assembleDebug`) and copies the result to
 `dist/gpui-mobile-lab-<version>-<profile>.apk`. Once the native libraries are
 in `jniLibs/`, `cd android && ./gradlew assembleRelease` works on its own.
+
+Debug builds use [corgi](https://github.com/ConradIrwin/corgi) (from the
+[Bombatomica64 fork](https://github.com/Bombatomica64/corgi/tree/android-ndk),
+until Android support lands upstream). Corgi caches every compiled unit in a
+store shared by all checkouts on the machine, so a rebuild with nothing
+changed takes under a second, and a new worktree reuses dependencies another
+one already built. It runs `corgi build --target aarch64-linux-android.26`
+with `CORGI_ANDROID_NDK=$ANDROID_NDK_HOME`. `corgi.toml` declares the files
+that `include_str!` reads outside `src/`, because corgi's sandbox only sees
+declared inputs; add any new ones there.
+
+Release builds stay on `cargo ndk`: corgi does not do LTO yet, and the release
+profile relies on fat LTO for size. `LAB_BUILDER=corgi` or
+`LAB_BUILDER=cargo-ndk` overrides the choice.
 
 The release APK is signed with the local Android **debug** key so it can be
 sideloaded without a keystore. It is a test app, not for store distribution.
@@ -205,7 +221,8 @@ opts into `clean_on_escape()` clears its text instead of navigating back.
 ## Project layout
 
 ```
-build.sh                  build script (cargo ndk + Gradle)
+build.sh                  build script (corgi or cargo ndk, then Gradle)
+corgi.toml                corgi inputs outside src/
 Cargo.toml                the lab crate (cdylib); forks pinned by rev, [patch.crates-io] for gpui-pre
 src/lib.rs                GPUI launch, window
 src/host.rs               JNI entry points for LabActivity

@@ -1,0 +1,4 @@
+[toolchain]
+# Pinned so corgi (which needs a concrete channel) and cargo/rustup agree.
+channel = "1.99.1"
+targets = ["aarch64-linux-android", "x86_64-linux-android"]
