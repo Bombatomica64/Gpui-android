@@ -88,7 +88,9 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
         });
 
         nativeOnCreate(this, hostId, Build.VERSION.SDK_INT);
-        forwardScreenExtra(getIntent());
+        // Only on a fresh start: a recreated Activity gets the launch intent again, and
+        // reopening its screen would replace the one the app already has open.
+        if (state == null) forwardScreenExtra(getIntent());
     }
 
     // uiMode is in configChanges, so dark-mode toggles arrive here instead of
