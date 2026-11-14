@@ -2087,7 +2087,7 @@ dependencies = [
 [[package]]
 name = "gpui-base"
 version = "0.9.1"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=47abebfba43180151e11c221df30a121bcb4bae1#47abebfba43180151e11c221df30a121bcb4bae1"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=ffdbe72bc887f0aaeb1500e3448ce509a2c6ea32#ffdbe72bc887f0aaeb1500e3448ce509a2c6ea32"
 dependencies = [
  "aho-corasick",
  "anyhow",
@@ -2117,6 +2117,7 @@ dependencies = [
  "serde_json",
  "smallvec",
  "smol",
+ "sys-locale",
  "tracing",
  "unicode-linebreak",
  "unicode-segmentation",
@@ -2127,7 +2128,7 @@ dependencies = [
 [[package]]
 name = "gpui-component"
 version = "0.9.1"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=47abebfba43180151e11c221df30a121bcb4bae1#47abebfba43180151e11c221df30a121bcb4bae1"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=ffdbe72bc887f0aaeb1500e3448ce509a2c6ea32#ffdbe72bc887f0aaeb1500e3448ce509a2c6ea32"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2173,7 +2174,7 @@ dependencies = [
 [[package]]
 name = "gpui-component-macros"
 version = "0.9.1"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=47abebfba43180151e11c221df30a121bcb4bae1#47abebfba43180151e11c221df30a121bcb4bae1"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=ffdbe72bc887f0aaeb1500e3448ce509a2c6ea32#ffdbe72bc887f0aaeb1500e3448ce509a2c6ea32"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -2184,7 +2185,7 @@ dependencies = [
 [[package]]
 name = "gpui-fps"
 version = "0.9.1"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=47abebfba43180151e11c221df30a121bcb4bae1#47abebfba43180151e11c221df30a121bcb4bae1"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=ffdbe72bc887f0aaeb1500e3448ce509a2c6ea32#ffdbe72bc887f0aaeb1500e3448ce509a2c6ea32"
 dependencies = [
  "core-graphics 0.24.0",
  "gpui-pre",
@@ -2225,7 +2226,7 @@ dependencies = [
 [[package]]
 name = "gpui-kit"
 version = "0.9.1"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=47abebfba43180151e11c221df30a121bcb4bae1#47abebfba43180151e11c221df30a121bcb4bae1"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=ffdbe72bc887f0aaeb1500e3448ce509a2c6ea32#ffdbe72bc887f0aaeb1500e3448ce509a2c6ea32"
 dependencies = [
  "gpui-base",
  "gpui-component",
@@ -2239,7 +2240,7 @@ dependencies = [
 [[package]]
 name = "gpui-kit-assets"
 version = "0.9.1"
-source = "git+https://github.com/Bombatomica64/gpui-kit?rev=47abebfba43180151e11c221df30a121bcb4bae1#47abebfba43180151e11c221df30a121bcb4bae1"
+source = "git+https://github.com/Bombatomica64/gpui-kit?rev=ffdbe72bc887f0aaeb1500e3448ce509a2c6ea32#ffdbe72bc887f0aaeb1500e3448ce509a2c6ea32"
 dependencies = [
  "anyhow",
  "gpui-pre",

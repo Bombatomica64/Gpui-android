@@ -9,7 +9,7 @@ bases; the combined branch is the current version of each fix.
 | Fork | Upstream | Branch the lab pins |
 |---|---|---|
 | [Bombatomica64/gpui-mobile](https://github.com/Bombatomica64/gpui-mobile) | [longbridge/gpui-mobile](https://github.com/longbridge/gpui-mobile) `main` | `main` (upstream `main` + the branches below, merged) |
-| [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) | [longbridge/gpui-kit](https://github.com/longbridge/gpui-kit) tag `v0.9.1` | `mobile-lab` (`v0.9.1` + the commits below) |
+| [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) | [longbridge/gpui-kit](https://github.com/longbridge/gpui-kit) `main` | `mobile-lab-2` (upstream `main` at `4379eebf` + the commits below) |
 | [Bombatomica64/gpui-pre](https://github.com/Bombatomica64/gpui-pre) | `gpui-pre` 0.3.12 from crates.io (a snapshot of [zed-industries/zed](https://github.com/zed-industries/zed) `crates/gpui`) | `mobile-lab` (branch `0.3.12` + the commits below) |
 
 Versions of these branches rebased onto upstream `main`, with draft PR
@@ -32,7 +32,9 @@ v0.8.0); tapping a focused input asks for the keyboard (gpui-kit #3623, v0.9.0
 or later), a focused input asks scroll containers to reveal it (#3625), and
 sheets and toasts stay inside the visible area, all in Kit v0.9.1. gpui-mobile
 #45 (gpui-pre 0.3.10, Android host fixes) is merged into the fork's `main`, and
-the fork carries #46's 0.3.11 bump plus 0.3.12.
+the fork carries #46's 0.3.11 bump plus 0.3.12. A disabled input reported as
+disabled (gpui-kit #3877) and a preedit kept by unmark reported as a change
+(#3965) are in Kit's `main`.
 
 Two things the merged versions changed for hosts: the TalkBack adapter goes
 on each host's own Activity, so hosts call `host::set_activity(env, host,
@@ -46,7 +48,8 @@ The commits the lab pinned before the 0.3.9 rebase are kept as tags:
 `archive/v0.7.3/mobile-lab` (Kit), and
 `archive/0.3.8/*` (gpui-pre). The commits pinned before the 0.3.12 / v0.9.1
 rebase are `archive/0.3.9/mobile-lab` (gpui-pre) and
-`archive/v0.8.0/mobile-lab` (Kit).
+`archive/v0.8.0/mobile-lab` (Kit). Kit's `mobile-lab` (v0.9.1 + 5 commits,
+`47abebfb`) stays as it was; `mobile-lab-2` replaces it.
 
 ## gpui-mobile
 
@@ -220,13 +223,6 @@ implies (email, phone, URL, password), with `input_purpose` to override it,
 like React Native's `keyboardType` and `secureTextEntry`. It needs the GPUI
 branch below.
 
-### Report a disabled input as disabled — branch `input-a11y-disabled`
-
-Every other control marks its accessibility node disabled through
-`A11yDisabledExt`; `InputBase` only styled itself, so a disabled `Input`
-reached TalkBack as `enabled=true`. It now wraps its root the same way
-([#39](https://github.com/Bombatomica64/Gpui-android/issues/39)).
-
 ### Resize and move table columns by touch — branch `table-touch-drag`
 
 In a DataTable wider than the screen, a finger could neither resize nor
@@ -237,17 +233,6 @@ handles are drag handles now (GPUI's `drag_handle`, below), the rows'
 context menu covers only the body, and `ResizeHandle` (Resizable panels,
 Dock edges) drags at once too
 ([#28](https://github.com/Bombatomica64/Gpui-android/issues/28)).
-
-### Report a preedit kept by unmark as a change — gpui-kit [#2](https://github.com/Bombatomica64/gpui-kit/pull/2)
-
-Marked (composing) text never emits `InputEvent::Change`; the commit does.
-Android keyboards compose every word and, when the keyboard is hidden,
-gpui-mobile ends the composition with `unmark_text` alone, which emitted
-nothing. Fields showed the typed text while their subscribers never saw
-it: the catalog search didn't filter
-([#109](https://github.com/Bombatomica64/Gpui-android/issues/109)).
-`unmark_text` now reports the change when the text differs from the text
-before the composition.
 
 ## GPUI (gpui-pre 0.3.12)
 
