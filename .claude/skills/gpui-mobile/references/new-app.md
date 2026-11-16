@@ -15,12 +15,13 @@ piece does so you can also wire an existing crate.
 
 ## Toolchain
 
-Rust 1.98+ (edition 2024), NDK 27.2.12479018, compileSdk 35, **targetSdk
+Rust 1.99.1 (pinned in `rust-toolchain.toml`, edition 2024), NDK 27.2.12479018, compileSdk 35, **targetSdk
 34**, minSdk 26, JDK 17.
 
 ```sh
 rustup target add aarch64-linux-android x86_64-linux-android
-cargo install cargo-ndk
+cargo install --locked --git https://github.com/Bombatomica64/corgi --branch android-ndk corgi-build   # debug builds
+cargo install cargo-ndk                                                                                    # release builds
 sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018"
 export ANDROID_HOME=$HOME/Android/Sdk
 ```
@@ -166,8 +167,12 @@ as boxes on Android 13+.
 LAB_FEATURES=demo-pr3329 ./build.sh android --debug
 ```
 
-It runs `cargo ndk -t <abi> --platform 26 -o android/app/src/main/jniLibs build`,
-deletes gpui-mobile's own `.so` (it's linked statically), copies the
+For `--debug` it runs `corgi build --target <triple>.26` (the API level
+follows the dot) with `CORGI_ANDROID_NDK=$ANDROID_NDK_HOME` and copies
+`target/<triple>/debug/lib<name>.so` into `jniLibs/<abi>/`. For `--release`
+it runs `cargo ndk -t <abi> --platform 26 -o android/app/src/main/jniLibs build`,
+because corgi does not do LTO yet. `LAB_BUILDER=corgi|cargo-ndk` overrides.
+It then deletes gpui-mobile's own `.so` (it's linked statically), copies the
 gpui-mobile Java helpers (`Gpui*.java`, found via `cargo metadata`) into
 `android/app/build/generated/gpui-helpers`, and runs Gradle. The APK lands in
 `dist/<name>-<version>-<profile>.apk`.
@@ -175,6 +180,14 @@ gpui-mobile Java helpers (`Gpui*.java`, found via `cargo metadata`) into
 The helper list in `build.sh` is hard-coded: enabling a package whose Java
 helper isn't in the loop compiles fine, and the package's calls then return
 a class-not-found error at run time. Add the helper's name.
+
+Corgi builds in a sandbox that only sees declared inputs: a file read by
+`include_str!`/`include_bytes!` outside `src/` must be listed under
+`[extra-inputs]` in `corgi.toml` (directories as `dir/**`), or the build
+fails with "couldn't read". Its store is shared, so a second worktree or a
+rebuild with no changes reuses every unit. Corgi needs a concrete channel in
+`rust-toolchain.toml`; list the Android targets there too so plain cargo/cargo
+ndk builds and CI pick them up.
 
 Avoid `--install` on a shared phone; it calls `adb` directly. Install inside
 a `phone session` instead.
