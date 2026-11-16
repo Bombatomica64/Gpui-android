@@ -1,6 +1,6 @@
 ---
 name: gpui-mobile
-description: Build, run and debug Android apps written in Rust with GPUI, using the Bombatomica64 forks (gpui-pre, gpui-kit `mobile-lab`, gpui-mobile `main`) and the GPUI Mobile Lab as the reference app. Covers starting a new app (Cargo pins, the Java host Activity, manifest), the dev loop (hot patching with Subsecond, fast library reload, full APK builds, CI), platform packages (share, pickers, permissions, notifications, deep links…), keyboards and TalkBack, and testing on a shared phone. Use this whenever someone works on the Gpui-android lab or gpui-mobile, wants a Rust/GPUI app on a phone, asks about hot reload or hot patching of Rust on Android, adds a screen, calls a gpui_mobile package, wires JNI or a host Activity, or debugs an APK, even if they don't say "skill" or name the forks.
+description: Build, run and debug Android apps written in Rust with GPUI, using the Bombatomica64 forks (gpui-pre `mobile-lab-0.3.13`, gpui-kit `mobile-lab-3`, gpui-mobile `gpui-0.3.13`) and the GPUI Mobile Lab as the reference app. Covers starting a new app (Cargo pins, the Java host Activity, manifest), the dev loop (hot patching with Subsecond, fast library reload, full APK builds, CI), platform packages (share, pickers, permissions, notifications, deep links…), keyboards and TalkBack, and testing on a shared phone. Use this whenever someone works on the Gpui-android lab or gpui-mobile, wants a Rust/GPUI app on a phone, asks about hot reload or hot patching of Rust on Android, adds a screen, calls a gpui_mobile package, wires JNI or a host Activity, or debugs an APK, even if they don't say "skill" or name the forks.
 ---
 
 # GPUI on Android (Bombatomica64 stack)
@@ -9,9 +9,9 @@ GPUI is Zed's Rust UI framework. This stack runs it on Android:
 
 | Layer | Crate | Where |
 |---|---|---|
-| GPUI | `gpui-pre` 0.3.12 + touch/IME patches | `Bombatomica64/gpui-pre` branch `mobile-lab`, via `[patch.crates-io]` |
-| Components | `gpui-kit` 0.9.1 (`gpui-component`) | `Bombatomica64/gpui-kit` branch `mobile-lab` |
-| Platform | `gpui-pre-mobile` (`use gpui_mobile::…`) | `Bombatomica64/gpui-mobile` `main` |
+| GPUI | `gpui-pre` 0.3.13 + touch/IME patches | `Bombatomica64/gpui-pre` branch `mobile-lab-0.3.13`, via `[patch.crates-io]` |
+| Components | `gpui-kit` 0.10.0 (`gpui-component`) | `Bombatomica64/gpui-kit` branch `mobile-lab-3` |
+| Platform | `gpui-pre-mobile` (`use gpui_mobile::…`) | `Bombatomica64/gpui-mobile` branch `gpui-0.3.13` (`main` + the 0.3.13 bump) |
 | Reference app | GPUI Mobile Lab | `Bombatomica64/Gpui-android` |
 
 The app is a Rust `cdylib`, loaded by a small Java host Activity that owns a

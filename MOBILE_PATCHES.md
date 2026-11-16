@@ -1,6 +1,6 @@
 # What the forks carry on top of upstream
 
-The lab builds against one GPUI snapshot (`gpui-pre` 0.3.12) and three forks,
+The lab builds against one GPUI snapshot (`gpui-pre` 0.3.13) and three forks,
 each pinned by `rev` in `Cargo.toml`. The forks are the source of truth: fixes
 land on the branch the lab pins, and proposing them upstream is optional. The
 per-fix branches named below predate the 0.3.12 rebase and stay on their old
@@ -8,9 +8,9 @@ bases; the combined branch is the current version of each fix.
 
 | Fork | Upstream | Branch the lab pins |
 |---|---|---|
-| [Bombatomica64/gpui-mobile](https://github.com/Bombatomica64/gpui-mobile) | [longbridge/gpui-mobile](https://github.com/longbridge/gpui-mobile) `main` | `main` (upstream `main` + the branches below, merged) |
-| [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) | [longbridge/gpui-kit](https://github.com/longbridge/gpui-kit) `main` | `mobile-lab-2` (upstream `main` at `4379eebf` + the commits below) |
-| [Bombatomica64/gpui-pre](https://github.com/Bombatomica64/gpui-pre) | `gpui-pre` 0.3.12 from crates.io (a snapshot of [zed-industries/zed](https://github.com/zed-industries/zed) `crates/gpui`) | `mobile-lab` (branch `0.3.12` + the commits below) |
+| [Bombatomica64/gpui-mobile](https://github.com/Bombatomica64/gpui-mobile) | [longbridge/gpui-mobile](https://github.com/longbridge/gpui-mobile) `main` | `gpui-0.3.13` (`main`, i.e. upstream `main` + the branches below, merged, bumped to 0.3.13) |
+| [Bombatomica64/gpui-kit](https://github.com/Bombatomica64/gpui-kit) | [longbridge/gpui-kit](https://github.com/longbridge/gpui-kit) `main` | `mobile-lab-3` (upstream `main` at `f1d1f5a6`, v0.10.0, + the commits below + the port to 0.3.13) |
+| [Bombatomica64/gpui-pre](https://github.com/Bombatomica64/gpui-pre) | `gpui-pre` 0.3.13 from crates.io (a snapshot of [zed-industries/zed](https://github.com/zed-industries/zed) `crates/gpui`) | `mobile-lab-0.3.13` (branch `0.3.13` + the commits below) |
 
 Versions of these branches rebased onto upstream `main`, with draft PR
 texts, are in [docs/upstream](docs/upstream/README.md) (gpui-mobile, Kit)
@@ -49,7 +49,14 @@ The commits the lab pinned before the 0.3.9 rebase are kept as tags:
 `archive/0.3.8/*` (gpui-pre). The commits pinned before the 0.3.12 / v0.9.1
 rebase are `archive/0.3.9/mobile-lab` (gpui-pre) and
 `archive/v0.8.0/mobile-lab` (Kit). Kit's `mobile-lab` (v0.9.1 + 5 commits,
-`47abebfb`) stays as it was; `mobile-lab-2` replaces it.
+`47abebfb`) stays as it was; `mobile-lab-2` replaced it and `mobile-lab-3` (on
+0.3.13) replaces that. gpui-pre's `mobile-lab` (0.3.12, `99de0790`) stays as it
+was; `mobile-lab-0.3.13` replaces it.
+
+Kit's `mobile-lab-3` moves every `gpui-pre-*` requirement to `=0.3.13`, but its
+own `Cargo.lock` stays on 0.3.12: `gpui-fast` 0.1.16 still requires 0.3.12, so
+Kit's workspace can't lock until `gpui-fast` moves. The lab doesn't enable
+`gpui-fast` and resolves without it.
 
 ## gpui-mobile
 
@@ -234,9 +241,20 @@ context menu covers only the body, and `ResizeHandle` (Resizable panels,
 Dock edges) drags at once too
 ([#28](https://github.com/Bombatomica64/Gpui-android/issues/28)).
 
-## GPUI (gpui-pre 0.3.12)
+### Port to gpui-pre 0.3.13 — branch `mobile-lab-3`
 
-None of these is in 0.3.12. Kit's input reveal, now upstream, still needs the
+GPUI 0.3.13 gives every `Element` a blanket `IntoElement`, makes `Path`
+opaque (no bounds or vertices), drops `paint_layer`'s bounds and
+`FillOptions::tolerance`, and makes `dismiss_system_notification` return a
+task. Kit's hand-written `IntoElement` impls go; `PathCache` can no longer move
+a built path, so it keys on the origin too and a chart that moves (a scrolling
+list) builds its path again; two tests read rounded quads the way 0.3.13 paints
+them (a masked square center plus rounded edge strips). Kit upstream hasn't
+moved to 0.3.13 yet, so this is lab-only until it does.
+
+## GPUI (gpui-pre 0.3.13)
+
+None of these is in 0.3.13. Kit's input reveal, now upstream, still needs the
 autoscroll patch to work in plain scroll containers.
 
 ### Let touch drag elements that only handle mouse drags — branch `touch-drag`
