@@ -58,8 +58,12 @@ Hot patching and reload live in [Bombatomica64/cargo-gpui](https://github.com/Bo
 `GpuiLibraryLoader`; details in
 `references/hot-reload.md`.
 
-Local builds: debug arm64 builds fit on a small server (clean build ~5 min,
-~2 GB peak per rustc). Release builds with LTO need far more memory; on a
+Local builds: `./build.sh android --debug` uses corgi (the
+`Bombatomica64/corgi` `android-ndk` fork), which caches every unit in a
+store shared across checkouts: an unchanged rebuild takes under a second, and a
+new worktree reuses dependencies another one built. Release builds stay on
+cargo ndk (corgi has no LTO yet). Debug arm64 builds fit on a small server
+(clean build ~5 min, ~2 GB peak per rustc). Release builds with LTO need far more memory; on a
 shared or small machine, push and let CI build the release APK instead of
 building it locally. Wait on CI with a background waiter, not a sleep loop.
 
