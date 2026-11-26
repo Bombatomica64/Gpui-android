@@ -162,7 +162,8 @@ as boxes on Android 13+.
 
 ```sh
 ./build.sh android --debug                     # arm64, local dev
-./build.sh android --release --abi all         # what CI runs
+./build.sh android --release                   # arm64, what CI runs
+./build.sh android --release --abi all         # adds x86_64 for emulators
 LAB_FEATURES=demo-pr3329 ./build.sh android --debug
 ```
 
