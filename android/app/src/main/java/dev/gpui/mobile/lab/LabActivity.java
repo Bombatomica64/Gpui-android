@@ -8,13 +8,16 @@ import android.text.Editable;
 import android.text.Selection;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewStructure;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.autofill.AutofillValue;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
@@ -30,6 +33,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import dev.gpui.mobile.GpuiAutofill;
 import dev.gpui.mobile.GpuiLibraryLoader;
 
 
@@ -58,6 +62,8 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
     private static long parkedHostId = 0;
     private long hostId;
     private SurfaceView surface;
+    /** GPUI's text fields for password managers, on the IME proxy. */
+    private GpuiAutofill autofill;
     private InputProxy input;
     private boolean keyboardVisible;
     /** Rust wants Back (a screen is open); otherwise the system handles it. */
@@ -341,6 +347,9 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
                 input = new InputProxy();
                 input.setAlpha(0f);
                 input.setPadding(0, 0, 0, 0);
+                // GPUI's fields are virtual children of the proxy (see GpuiAutofill).
+                input.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_YES);
+                autofill = new GpuiAutofill(input, surface);
                 addContentView(input, new ViewGroup.LayoutParams(1, 1));
             }
             input.reset(session);
@@ -369,6 +378,13 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
             if (input == null) return;
             input.reset(session);
             ((InputMethodManager) getSystemService(INPUT_METHOD_SERVICE)).restartInput(input);
+        });
+    }
+
+    /** The GPUI text fields on screen, for password managers. See GpuiAutofill. */
+    public void gpuiAutofillFields(int[] ints, String[] strings, int focused) {
+        runOnUiThread(() -> {
+            if (autofill != null) autofill.setFields(ints, strings, focused);
         });
     }
 
@@ -452,6 +468,19 @@ public class LabActivity extends Activity implements SurfaceHolder.Callback {
         // Both the IME's action key and a hardware Enter on a single-line field end up here.
         @Override public void onEditorAction(int action) {
             nativeIme(session, 6, "", action, 0);
+        }
+
+        // The proxy holds nothing to fill; GPUI's fields are its virtual children.
+        @Override public int getAutofillType() {
+            return AUTOFILL_TYPE_NONE;
+        }
+
+        @Override public void onProvideAutofillVirtualStructure(ViewStructure structure, int flags) {
+            if (autofill != null) autofill.provideStructure(structure);
+        }
+
+        @Override public void autofill(SparseArray<AutofillValue> values) {
+            if (autofill != null) autofill.fill(values);
         }
 
         @Override public InputConnection onCreateInputConnection(EditorInfo info) {
