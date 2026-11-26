@@ -82,15 +82,22 @@ gpui-mobile exposes GPUI's AccessKit tree to TalkBack (via
 
 ## Autofill
 
-Password managers fill GPUI fields through `GpuiAutofillSurfaceView`
-(gpui-mobile). A host uses it as its surface, forwards `gpuiAutofillFields` to
-`setFields`, and sets `IMPORTANT_FOR_AUTOFILL_NO` on the IME proxy. Hints come
+Password managers fill GPUI fields through `GpuiAutofill` (gpui-mobile), which
+hangs them as virtual children of the IME proxy: Android drops the fill request
+when the fields are on another view than the one the keyboard is connected to.
+The proxy is `IMPORTANT_FOR_AUTOFILL_YES`, returns `AUTOFILL_TYPE_NONE` from
+`getAutofillType()`, and forwards `onProvideAutofillVirtualStructure` to
+`provideStructure` and `autofill(SparseArray)` to `fill`; the Activity forwards
+`gpuiAutofillFields` to `setFields` (see `LabActivity`). Hints come
 from the role (`.masked(true)` or `InputContentType::Password`, `EmailAddress`,
 `TelephoneNumber`), then `Input::accessibility_id`, then words in the label or
 placeholder ("username", "one-time code"); the plain field before a password is
 its username. Nothing is offered unless some field looks like one of these.
 
-Not yet: save-password prompts, and suggestions inside the keyboard.
+Closing the keyboard (Done, Back or blur) after a password was typed commits
+the session, which is when the password manager offers to save the login. To
+debug, `adb shell cmd autofill set log_level verbose` and read the
+`AutofillSession` lines.
 
 Testing TalkBack with the shared phone: hold one `phone session` only while
 actually testing, ask the user to switch TalkBack on, and ask them to switch

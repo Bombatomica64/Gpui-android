@@ -60,11 +60,14 @@ Kit's workspace can't lock until `gpui-fast` moves. The lab doesn't enable
 
 ## gpui-mobile
 
-### Android Autofill for GPUI text fields — [gpui-mobile #19](https://github.com/Bombatomica64/gpui-mobile/pull/19)
+### Android Autofill for GPUI text fields — [gpui-mobile #19](https://github.com/Bombatomica64/gpui-mobile/pull/19), [#25](https://github.com/Bombatomica64/gpui-mobile/pull/25)
 
-`GpuiAutofillSurfaceView` exposes GPUI's text fields to password managers as
-virtual children of the surface, built from the AccessKit tree while a keyboard
-is up, and fills them through the `SetValue` action.
+`GpuiAutofill` exposes GPUI's text fields to password managers as virtual
+children of the IME proxy (Android drops the fill request when the fields hang
+off a view the keyboard isn't connected to), built from the AccessKit tree while
+a keyboard is up, and fills them through the `SetValue` action. A masked field's
+text comes from the input handler, and closing the keyboard after a password was
+typed commits the session, so the password manager offers to save the login.
 
 ### Keep focus when the IME's Done action hides the keyboard — branch `android-ime-dismiss`
 
